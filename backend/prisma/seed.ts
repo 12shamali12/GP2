@@ -166,33 +166,38 @@ const SUPERVISOR_NAMES: ReadonlyArray<{ name: string; username: string; email: s
   { name: "Dr. Tariq Saadeh", username: "dr.tariq.saadeh", email: "tariq.saadeh@example.com", phone: "0790000104" },
 ];
 
-const DOCTOR_NAMES: ReadonlyArray<{ name: string; username: string; idNumber: string; phone: string }> = [
+// Doctors and supervisors REQUIRE an email per AuthService.register()
+// (auth.service.ts:97). We follow the same rule in the seed so the seeded
+// data matches what the registration form would produce in real life.
+const DOCTOR_NAMES: ReadonlyArray<{ name: string; username: string; idNumber: string; email: string; phone: string }> = [
   // Year 4 — Semester 2 (8 doctors)
-  { name: "Yousef Al-Najjar", username: "y.alnajjar", idNumber: "D2024001", phone: "0791100201" },
-  { name: "Layla Abu Hamdan", username: "l.abuhamdan", idNumber: "D2024002", phone: "0791100202" },
-  { name: "Khaled Bani Hani", username: "k.banihani", idNumber: "D2024003", phone: "0791100203" },
-  { name: "Maya Salhab", username: "m.salhab", idNumber: "D2024004", phone: "0791100204" },
-  { name: "Rami Qudah", username: "r.qudah", idNumber: "D2024005", phone: "0791100205" },
-  { name: "Nour Atallah", username: "n.atallah", idNumber: "D2024006", phone: "0791100206" },
-  { name: "Hassan Daoud", username: "h.daoud", idNumber: "D2024007", phone: "0791100207" },
-  { name: "Rana Zayadeen", username: "r.zayadeen", idNumber: "D2024008", phone: "0791100208" },
+  { name: "Yousef Al-Najjar", username: "y.alnajjar", idNumber: "D2024001", email: "yousef.alnajjar@students.dentyhub.edu", phone: "0791100201" },
+  { name: "Layla Abu Hamdan", username: "l.abuhamdan", idNumber: "D2024002", email: "layla.abuhamdan@students.dentyhub.edu", phone: "0791100202" },
+  { name: "Khaled Bani Hani", username: "k.banihani", idNumber: "D2024003", email: "khaled.banihani@students.dentyhub.edu", phone: "0791100203" },
+  { name: "Maya Salhab", username: "m.salhab", idNumber: "D2024004", email: "maya.salhab@students.dentyhub.edu", phone: "0791100204" },
+  { name: "Rami Qudah", username: "r.qudah", idNumber: "D2024005", email: "rami.qudah@students.dentyhub.edu", phone: "0791100205" },
+  { name: "Nour Atallah", username: "n.atallah", idNumber: "D2024006", email: "nour.atallah@students.dentyhub.edu", phone: "0791100206" },
+  { name: "Hassan Daoud", username: "h.daoud", idNumber: "D2024007", email: "hassan.daoud@students.dentyhub.edu", phone: "0791100207" },
+  { name: "Rana Zayadeen", username: "r.zayadeen", idNumber: "D2024008", email: "rana.zayadeen@students.dentyhub.edu", phone: "0791100208" },
   // Year 5 — Semester 1 (4 doctors)
-  { name: "Adam Tahboub", username: "a.tahboub", idNumber: "D2024009", phone: "0791100209" },
-  { name: "Dina Sweidan", username: "d.sweidan", idNumber: "D2024010", phone: "0791100210" },
-  { name: "Faris Obeidat", username: "f.obeidat", idNumber: "D2024011", phone: "0791100211" },
-  { name: "Hala Masri", username: "h.masri", idNumber: "D2024012", phone: "0791100212" },
+  { name: "Adam Tahboub", username: "a.tahboub", idNumber: "D2024009", email: "adam.tahboub@students.dentyhub.edu", phone: "0791100209" },
+  { name: "Dina Sweidan", username: "d.sweidan", idNumber: "D2024010", email: "dina.sweidan@students.dentyhub.edu", phone: "0791100210" },
+  { name: "Faris Obeidat", username: "f.obeidat", idNumber: "D2024011", email: "faris.obeidat@students.dentyhub.edu", phone: "0791100211" },
+  { name: "Hala Masri", username: "h.masri", idNumber: "D2024012", email: "hala.masri@students.dentyhub.edu", phone: "0791100212" },
 ];
 
 const PENDING_DOCTOR = {
   name: "Bilal Shahin",
   username: "b.shahin",
   idNumber: "D2024013",
+  email: "bilal.shahin@students.dentyhub.edu",
   phone: "0791100213",
 };
 const REJECTED_DOCTOR = {
   name: "Marwa Awad",
   username: "m.awad",
   idNumber: "D2024014",
+  email: "marwa.awad@students.dentyhub.edu",
   phone: "0791100214",
 };
 
@@ -351,6 +356,7 @@ async function seedDoctors(y4s2Id: string, y5s1Id: string, adminId: string) {
     const user = await prisma.user.upsert({
       where: { username: d.username },
       update: {
+        email: d.email,
         phone: d.phone,
         name: d.name,
         doctorIdNumber: d.idNumber,
@@ -360,6 +366,7 @@ async function seedDoctors(y4s2Id: string, y5s1Id: string, adminId: string) {
       },
       create: {
         username: d.username,
+        email: d.email,
         phone: d.phone,
         password: passwordHash,
         name: d.name,
@@ -376,9 +383,14 @@ async function seedDoctors(y4s2Id: string, y5s1Id: string, adminId: string) {
   // PENDING — applicant whose DoctorRequest has not been reviewed yet
   const pending = await prisma.user.upsert({
     where: { username: PENDING_DOCTOR.username },
-    update: { doctorStatus: DoctorStatus.PENDING, doctorIdNumber: PENDING_DOCTOR.idNumber },
+    update: {
+      email: PENDING_DOCTOR.email,
+      doctorStatus: DoctorStatus.PENDING,
+      doctorIdNumber: PENDING_DOCTOR.idNumber,
+    },
     create: {
       username: PENDING_DOCTOR.username,
+      email: PENDING_DOCTOR.email,
       phone: PENDING_DOCTOR.phone,
       password: passwordHash,
       name: PENDING_DOCTOR.name,
@@ -404,9 +416,14 @@ async function seedDoctors(y4s2Id: string, y5s1Id: string, adminId: string) {
 
   const rejected = await prisma.user.upsert({
     where: { username: REJECTED_DOCTOR.username },
-    update: { doctorStatus: DoctorStatus.REJECTED, doctorIdNumber: REJECTED_DOCTOR.idNumber },
+    update: {
+      email: REJECTED_DOCTOR.email,
+      doctorStatus: DoctorStatus.REJECTED,
+      doctorIdNumber: REJECTED_DOCTOR.idNumber,
+    },
     create: {
       username: REJECTED_DOCTOR.username,
+      email: REJECTED_DOCTOR.email,
       phone: REJECTED_DOCTOR.phone,
       password: passwordHash,
       name: REJECTED_DOCTOR.name,
