@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { getAdminShellCounts, type AdminShellCounts } from "@/features/admin/services/admin-api";
 import { BrandMark } from "@/features/ui/components/brand-mark";
 import { DashboardIcon } from "@/features/ui/components/dashboard-icon";
+import { logout } from "@/lib/api/auth";
 
 type NavItem = {
   href: string;
@@ -120,6 +121,7 @@ export function AdminShell({
   children,
 }: AdminShellProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [counts, setCounts] = useState<AdminShellCounts>(emptyCounts);
   const [navSearch, setNavSearch] = useState("");
 
@@ -244,9 +246,13 @@ export function AdminShell({
               </div>
             ) : null}
 
-            <Link
-              href="/"
-              className="denty-rail-action mt-auto flex w-full items-center gap-3 rounded-[22px] border border-white/8 bg-white/8 px-3 py-3 text-left text-white transition hover:border-white/16 hover:bg-white/12"
+            <button
+              type="button"
+              onClick={() => {
+                logout();
+                router.push("/");
+              }}
+              className="denty-rail-action mt-auto flex w-full cursor-pointer items-center gap-3 rounded-[22px] border border-white/8 bg-white/8 px-3 py-3 text-left text-white transition hover:border-white/16 hover:bg-white/12"
             >
               <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[16px] bg-white/12 text-white">
                 <DashboardIcon name="logout" />
@@ -254,7 +260,7 @@ export function AdminShell({
               <span className="denty-rail-copy min-w-0 flex-1">
                 <span className="block text-[0.98rem] font-semibold text-white">Logout</span>
               </span>
-            </Link>
+            </button>
           </div>
         </aside>
 

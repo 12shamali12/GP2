@@ -315,7 +315,7 @@ async function seedSemesters() {
   return { y4s2, y5s1 };
 }
 
-async function seedSupervisors() {
+async function seedSupervisors(adminId: string) {
   log("seeding 4 supervisors");
   const passwordHash = await bcrypt.hash("Doctor1!", 10);
   const created: User[] = [];
@@ -341,6 +341,24 @@ async function seedSupervisors() {
       },
     });
     created.push(user);
+
+    // Match the real register flow (auth.service.ts:197): every approved
+    // supervisor must have a SupervisorRequest record so the admin's
+    // approvals audit trail isn't empty.
+    const existingReq = await prisma.supervisorRequest.findFirst({
+      where: { applicantId: user.id },
+    });
+    if (!existingReq) {
+      await prisma.supervisorRequest.create({
+        data: {
+          applicantId: user.id,
+          reviewerId: adminId,
+          status: SupervisorStatus.APPROVED,
+          note: "Initial faculty onboarding.",
+          decidedAt: daysFromNow(-30),
+        },
+      });
+    }
   }
   return created;
 }
@@ -378,15 +396,37 @@ async function seedDoctors(y4s2Id: string, y5s1Id: string, adminId: string) {
       },
     });
     approved.push(user);
+
+    // Match the real register flow (auth.service.ts:205): every approved
+    // doctor must have a DoctorRequest record so the admin's audit trail
+    // and re-apply flow have history to work with.
+    const existingApprovedReq = await prisma.doctorRequest.findFirst({
+      where: { applicantId: user.id },
+    });
+    if (!existingApprovedReq) {
+      await prisma.doctorRequest.create({
+        data: {
+          applicantId: user.id,
+          reviewerId: adminId,
+          status: DoctorStatus.APPROVED,
+          note: "Onboarded for the spring 2026 clinic rotation.",
+          decidedAt: daysFromNow(-21),
+        },
+      });
+    }
   }
 
-  // PENDING — applicant whose DoctorRequest has not been reviewed yet
+  // PENDING — applicant whose DoctorRequest has not been reviewed yet.
+  // Match the real register flow (auth.service.ts:151,157): role is set to
+  // DOCTOR immediately at registration; doctorStatus=PENDING blocks login.
   const pending = await prisma.user.upsert({
     where: { username: PENDING_DOCTOR.username },
     update: {
       email: PENDING_DOCTOR.email,
+      role: Role.DOCTOR,
       doctorStatus: DoctorStatus.PENDING,
       doctorIdNumber: PENDING_DOCTOR.idNumber,
+      semesterId: y4s2Id,
     },
     create: {
       username: PENDING_DOCTOR.username,
@@ -395,8 +435,9 @@ async function seedDoctors(y4s2Id: string, y5s1Id: string, adminId: string) {
       password: passwordHash,
       name: PENDING_DOCTOR.name,
       doctorIdNumber: PENDING_DOCTOR.idNumber,
-      role: Role.PATIENT, // still patient role until approved
+      role: Role.DOCTOR,
       doctorStatus: DoctorStatus.PENDING,
+      semesterId: y4s2Id,
     },
   });
 
@@ -414,12 +455,17 @@ async function seedDoctors(y4s2Id: string, y5s1Id: string, adminId: string) {
     });
   }
 
+  // REJECTED — applicant whose DoctorRequest was rejected; role stays DOCTOR
+  // so the auth.service resend-doctor-request flow (which checks role===DOCTOR
+  // at line 380) will let them re-apply.
   const rejected = await prisma.user.upsert({
     where: { username: REJECTED_DOCTOR.username },
     update: {
       email: REJECTED_DOCTOR.email,
+      role: Role.DOCTOR,
       doctorStatus: DoctorStatus.REJECTED,
       doctorIdNumber: REJECTED_DOCTOR.idNumber,
+      semesterId: y4s2Id,
     },
     create: {
       username: REJECTED_DOCTOR.username,
@@ -428,8 +474,9 @@ async function seedDoctors(y4s2Id: string, y5s1Id: string, adminId: string) {
       password: passwordHash,
       name: REJECTED_DOCTOR.name,
       doctorIdNumber: REJECTED_DOCTOR.idNumber,
-      role: Role.PATIENT,
+      role: Role.DOCTOR,
       doctorStatus: DoctorStatus.REJECTED,
+      semesterId: y4s2Id,
     },
   });
   const existingRejReq = await prisma.doctorRequest.findFirst({
@@ -1598,7 +1645,7 @@ async function main() {
 
   const admin = await getOrCreateAdmin();
   const { y4s2, y5s1 } = await seedSemesters();
-  const supervisors = await seedSupervisors();
+  const supervisors = await seedSupervisors(admin.id);
   const { approved: doctors } = await seedDoctors(y4s2.id, y5s1.id, admin.id);
   const patients = await seedPatients();
   const clinics = await seedClinics();

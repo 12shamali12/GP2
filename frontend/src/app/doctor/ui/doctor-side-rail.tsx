@@ -1,8 +1,9 @@
 "use client";
 
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { BrandMark } from "@/features/ui/components/brand-mark";
 import { DashboardIcon } from "@/features/ui/components/dashboard-icon";
+import { logout } from "@/lib/api/auth";
 
 type ComingSoonContent = {
   title: string;
@@ -110,6 +111,7 @@ export function DoctorSideRail({
   onChat,
   onComingSoon,
 }: DoctorSideRailProps) {
+  const router = useRouter();
   return (
     <aside className="frozen-stage denty-collapsible-rail overflow-y-auto rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(82,85,103,0.96),rgba(67,71,88,0.94))] px-4 py-5 text-white shadow-[0_34px_90px_rgba(4,11,26,0.34)] backdrop-blur-[28px]">
       <div className="flex min-h-full flex-col gap-3">
@@ -264,9 +266,13 @@ export function DoctorSideRail({
           </p>
         </div>
 
-        <Link
-          href="/"
-          className="denty-rail-action mt-auto flex w-full items-center gap-3 rounded-[22px] border border-white/8 bg-white/8 px-3 py-3 text-left text-white transition hover:border-white/16 hover:bg-white/12"
+        <button
+          type="button"
+          onClick={() => {
+            logout();
+            router.push("/");
+          }}
+          className="denty-rail-action mt-auto flex w-full cursor-pointer items-center gap-3 rounded-[22px] border border-white/8 bg-white/8 px-3 py-3 text-left text-white transition hover:border-white/16 hover:bg-white/12"
         >
           <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[16px] bg-white/12">
             <DashboardIcon name="logout" />
@@ -274,7 +280,7 @@ export function DoctorSideRail({
           <span className="denty-rail-copy min-w-0 flex-1">
             <span className="block text-[0.98rem] font-semibold text-white">Logout</span>
           </span>
-        </Link>
+        </button>
       </div>
     </aside>
   );
