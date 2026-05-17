@@ -8,9 +8,18 @@ import { SeedService } from "./seed.service";
 import { AppointmentsModule } from "./appointments/appointments.module";
 import { NotificationsModule } from "./notifications/notifications.module";
 import { ChatModule } from "./chat/chat.module";
+import { ProfilesModule } from "./profiles/profiles.module";
 
 @Module({
-  imports: [PrismaModule, AuthModule, SupervisorModule, AppointmentsModule, NotificationsModule, ChatModule],
+  imports: [
+    PrismaModule,
+    AuthModule,
+    SupervisorModule,
+    AppointmentsModule,
+    NotificationsModule,
+    ChatModule,
+    ProfilesModule,
+  ],
   controllers: [AppController],
   providers: [AppService, SeedService],
 })

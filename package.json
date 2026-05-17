@@ -1,0 +1,8 @@
+{
+  "name": "graduationproject",
+  "private": true,
+  "scripts": {
+    "start:dev": "node scripts/start-dev.mjs"
+  },
+  "dependencies": {}
+}

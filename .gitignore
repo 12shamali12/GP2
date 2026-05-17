@@ -6,15 +6,32 @@ pnpm-debug.log*
 # Env files
 .env
 .env.local
+.env.*.local
 
 # Build output
 dist/
 build/
 .next/
+out/
+*.tsbuildinfo
+next-env.d.ts
 
-# Prisma
-prisma/migrations/
+# User-uploaded content (do NOT commit chat attachments)
+backend/uploads/
 
-# OS
+# OS / editor
 .DS_Store
 Thumbs.db
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Local Claude / agent state
+.claude/

@@ -37,12 +37,14 @@ enum DoctorStatus {
 enum SlotStatus {
   OPEN
   BOOKED
+  PAIR_BLOCKED
   CANCELLED
 }
 
 enum AppointmentStatus {
   PENDING
   APPROVED
+  COMPLETED
   REJECTED
   CANCELLED
 }
@@ -55,33 +57,153 @@ enum PerformanceEventType {
   REJECTED
 }
 
+enum GroupJoinRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ReportReviewStatus {
+  SUBMITTED
+  NEEDS_EDIT
+  REVIEWED
+  CASE_REJECTED
+}
+
+enum PartnerRequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CANCELLED
+}
+
+enum ClinicTaskProgressStatus {
+  PENDING
+  COMPLETED
+  ASSISTED
+}
+
+enum ReportTaskRole {
+  PRIMARY
+  ASSISTANT
+}
+
+enum ExamStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+enum ClinicCaseProgressStatus {
+  OPEN
+  ASSISTED
+  COMPLETED
+}
+
+enum AppointmentRatingKind {
+  PATIENT_TO_DOCTOR
+  SUPERVISOR_TO_DOCTOR
+  DOCTOR_TO_PATIENT
+}
+
+enum ConversationKind {
+  DIRECT
+  ROOM
+}
+
+enum ConversationRoomAudience {
+  GROUP
+  ALL_USERS
+  STUDENTS_SUPERVISORS
+  SUPERVISORS_ONLY
+}
+
+enum UserProfileReportStatus {
+  PENDING
+  DISMISSED
+  ACTION_TAKEN
+}
+
 model User {
-  id                 String             @id @default(uuid())
-  email              String?            @unique
-  phone              String?            @unique
-  username           String             @unique
-  password           String
-  name               String
-  doctorIdNumber     String?            @unique
-  age                Int?
-  gender             String?
-  avatar             String?
-  role               Role               @default(PATIENT)
-  supervisorStatus   SupervisorStatus   @default(NONE)
-  doctorStatus       DoctorStatus       @default(NONE)
-  blocked            Boolean            @default(false)
-  supervisorRequests SupervisorRequest[] @relation("Applicant")
-  supervisorDecisions SupervisorRequest[] @relation("Reviewer")
-  doctorRequests     DoctorRequest[]    @relation("DoctorApplicant")
-  doctorDecisions    DoctorRequest[]    @relation("DoctorReviewer")
-  notifications      Notification[]     @relation("Recipient")
-  availabilitySlots  AvailabilitySlot[]
-  appointmentsAsDoctor  Appointment[]   @relation("AppointmentDoctor")
-  appointmentsAsPatient Appointment[]   @relation("AppointmentPatient")
-  conversations      ConversationParticipant[]
-  messagesSent       Message[]          @relation("MessagesSent")
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
+  id                    String                    @id @default(uuid())
+  email                 String?                   @unique
+  phone                 String?                   @unique
+  username              String                    @unique
+  password              String
+  name                  String
+  doctorIdNumber        String?                   @unique
+  age                   Int?
+  gender                String?
+  avatar                String?
+  bio                   String?
+  role                  Role                      @default(PATIENT)
+  supervisorStatus      SupervisorStatus          @default(NONE)
+  doctorStatus          DoctorStatus              @default(NONE)
+  blocked               Boolean                   @default(false)
+  blockedUntil          DateTime?
+  blockReason           String?
+  semester              Semester?                 @relation(fields: [semesterId], references: [id])
+  semesterId            String?
+  supervisorRequests    SupervisorRequest[]       @relation("Applicant")
+  supervisorDecisions   SupervisorRequest[]       @relation("Reviewer")
+  doctorRequests        DoctorRequest[]           @relation("DoctorApplicant")
+  doctorDecisions       DoctorRequest[]           @relation("DoctorReviewer")
+  notifications         Notification[]            @relation("Recipient")
+  availabilitySlots     AvailabilitySlot[]
+  appointmentsAsDoctor  Appointment[]             @relation("AppointmentDoctor")
+  appointmentsAsPatient Appointment[]             @relation("AppointmentPatient")
+  appointmentsAsPartner Appointment[]             @relation("AppointmentPartnerDoctor")
+  conversations         ConversationParticipant[]
+  messagesSent          Message[]                 @relation("MessagesSent")
+  supervisedDoctors     SupervisionAssignment[]   @relation("SupervisorAssignments")
+  supervisorAssignments SupervisionAssignment[]   @relation("DoctorAssignments")
+  createdTasks          SupervisorTask[]          @relation("TaskCreator")
+  assignedTasks         SupervisorTask[]          @relation("TaskDoctor")
+  groupMembership       DoctorGroupMember?
+  supervisedGroups      DoctorGroupSupervisor[]
+  createdGroups         DoctorGroup[]             @relation("AdminCreatedGroups")
+  createdPlans          RotationPlan[]            @relation("AdminCreatedPlans")
+  groupJoinRequests     GroupJoinRequest[]        @relation("GroupJoinApplicant")
+  groupJoinReviews      GroupJoinRequest[]        @relation("GroupJoinReviewer")
+  groupPosts            GroupPost[]
+  partnerRequestsSent   PartnerRequest[]          @relation("PartnerRequestSender")
+  partnerRequestsReceived PartnerRequest[]        @relation("PartnerRequestReceiver")
+  partnerPairsAsFirst   PartnerPair[]             @relation("PartnerPairFirstDoctor")
+  partnerPairsAsSecond  PartnerPair[]             @relation("PartnerPairSecondDoctor")
+  clinicSupervisions    ClinicSupervisorAssignment[] @relation("ClinicSupervisor")
+  clinicLinks           ClinicSupervisorLink[]       @relation("ClinicSupervisorLinkUser")
+  clinicTaskProgress    DoctorClinicTaskProgress[] @relation("ClinicTaskProgressDoctor")
+  examsAsStudent        ClinicExam[]              @relation("ExamStudent")
+  examsAsSupervisor     ClinicExam[]              @relation("ExamSupervisor")
+  caseReportsSubmitted  CaseReport[]              @relation("ReportDoctor")
+  caseReportsReviewed   CaseReport[]              @relation("ReportReviewer")
+  assistedCaseReports   CaseReport[]              @relation("ReportPartnerDoctor")
+  clinicCaseProgress    DoctorClinicCaseProgress[]
+  appointmentRatingsGiven AppointmentRating[]     @relation("AppointmentRatingRater")
+  appointmentRatingsReceived AppointmentRating[]  @relation("AppointmentRatingTarget")
+  profileReportsFiled    UserProfileReport[]      @relation("UserReportsFiled")
+  profileReportsReceived UserProfileReport[]      @relation("UserReportsReceived")
+  profileReportsReviewed UserProfileReport[]      @relation("UserReportsReviewed")
+  freezeActions         DoctorFreeze[]            @relation("DoctorFreezeBySupervisor")
+  freezeHistory         DoctorFreeze[]            @relation("FrozenDoctor")
+  createdAt             DateTime                  @default(now())
+  updatedAt             DateTime                  @updatedAt
+
+  @@index([semesterId])
+}
+
+model Semester {
+  id          String               @id @default(uuid())
+  label       String               @unique
+  sortOrder   Int                  @default(0)
+  endsOn      DateTime?
+  active      Boolean              @default(true)
+  students    User[]
+  clinicCases SemesterClinicCase[]
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  @@index([sortOrder, active])
 }
 
 model SupervisorRequest {
@@ -122,15 +244,22 @@ model AvailabilitySlot {
   id        String      @id @default(uuid())
   doctor    User        @relation(fields: [doctorId], references: [id])
   doctorId  String
+  clinic    Clinic?     @relation(fields: [clinicId], references: [id])
+  clinicId  String?
+  rotationAssignment ClinicRotationAssignment? @relation(fields: [rotationAssignmentId], references: [id])
+  rotationAssignmentId String?
   startTime DateTime
   endTime   DateTime
   purpose   String      @default("General")
   status    SlotStatus  @default(OPEN)
+  autoGenerated Boolean @default(false)
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
   appointment Appointment?
 
   @@index([doctorId, startTime])
+  @@index([clinicId, startTime])
+  @@index([rotationAssignmentId])
 }
 
 model Appointment {
@@ -139,11 +268,17 @@ model Appointment {
   slotId     String            @unique
   doctor     User              @relation("AppointmentDoctor", fields: [doctorId], references: [id])
   doctorId   String
+  partnerDoctor User?          @relation("AppointmentPartnerDoctor", fields: [partnerDoctorId], references: [id])
+  partnerDoctorId String?
   doctorPhone String?
   patient    User              @relation("AppointmentPatient", fields: [patientId], references: [id])
   patientId  String
+  clinicCase SemesterClinicCase? @relation(fields: [clinicCaseId], references: [id])
+  clinicCaseId String?
   status     AppointmentStatus @default(PENDING)
   note       String?
+  completedAt DateTime?
+  doctorCompletionNotes String?
   reportSubmitted   Boolean    @default(false)
   reportSubmittedAt DateTime?
   noShow            Boolean    @default(false)
@@ -151,9 +286,12 @@ model Appointment {
   cancelledByPatient Boolean   @default(false)
   createdAt  DateTime          @default(now())
   updatedAt  DateTime          @updatedAt
+  report     CaseReport?
+  ratings    AppointmentRating[]
 
   @@index([doctorId])
   @@index([patientId])
+  @@index([clinicCaseId])
 }
 
 model AppointmentEvent {
@@ -169,10 +307,20 @@ model AppointmentEvent {
 
 model Conversation {
   id        String   @id @default(uuid())
+  kind      ConversationKind @default(DIRECT)
+  code      String?  @unique
+  title     String?
+  description String?
+  audience  ConversationRoomAudience?
+  group     DoctorGroup? @relation(fields: [groupId], references: [id])
+  groupId   String?  @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   messages  Message[]
   participants ConversationParticipant[]
+
+  @@index([kind, updatedAt])
+  @@index([audience])
 }
 
 model ConversationParticipant {
@@ -195,4 +343,477 @@ model Message {
   text           String?
   imageUrl       String?
   createdAt      DateTime      @default(now())
+}
+
+model SupervisionAssignment {
+  id            String   @id @default(uuid())
+  supervisor    User     @relation("SupervisorAssignments", fields: [supervisorId], references: [id])
+  supervisorId  String
+  doctor        User     @relation("DoctorAssignments", fields: [doctorId], references: [id])
+  doctorId      String
+  semesterLabel String
+  note          String?
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  removedAt     DateTime?
+
+  @@unique([supervisorId, doctorId, semesterLabel])
+  @@index([supervisorId, active])
+  @@index([doctorId, active])
+}
+
+model DoctorFreeze {
+  id           String   @id @default(uuid())
+  doctor       User     @relation("FrozenDoctor", fields: [doctorId], references: [id])
+  doctorId     String
+  supervisor   User     @relation("DoctorFreezeBySupervisor", fields: [supervisorId], references: [id])
+  supervisorId String
+  blockedUntil DateTime
+  reason       String?
+  createdAt    DateTime @default(now())
+
+  @@index([doctorId, blockedUntil])
+  @@index([supervisorId, createdAt])
+}
+
+model DoctorGroup {
+  id            String                @id @default(uuid())
+  name          String
+  description   String?
+  semesterLabel String
+  active        Boolean               @default(true)
+  createdBy     User?                 @relation("AdminCreatedGroups", fields: [createdById], references: [id])
+  createdById   String?
+  members       DoctorGroupMember[]
+  supervisors   DoctorGroupSupervisor[]
+  posts         GroupPost[]
+  tasks         SupervisorTask[]
+  joinRequests  GroupJoinRequest[]
+  partnerRequests PartnerRequest[]
+  partnerPairs  PartnerPair[]
+  rotationAssignments ClinicRotationAssignment[]
+  chatConversation Conversation?
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+
+  @@index([semesterLabel, active])
+}
+
+model DoctorGroupMember {
+  id        String      @id @default(uuid())
+  group     DoctorGroup @relation(fields: [groupId], references: [id])
+  groupId   String
+  doctor    User        @relation(fields: [doctorId], references: [id])
+  doctorId  String      @unique
+  note      String?
+  addedAt   DateTime    @default(now())
+
+  @@unique([groupId, doctorId])
+}
+
+model DoctorGroupSupervisor {
+  id           String      @id @default(uuid())
+  group        DoctorGroup @relation(fields: [groupId], references: [id])
+  groupId      String
+  supervisor   User        @relation(fields: [supervisorId], references: [id])
+  supervisorId String
+  addedAt      DateTime    @default(now())
+
+  @@unique([groupId, supervisorId])
+}
+
+model GroupJoinRequest {
+  id            String                 @id @default(uuid())
+  group         DoctorGroup            @relation(fields: [groupId], references: [id])
+  groupId       String
+  applicant     User                   @relation("GroupJoinApplicant", fields: [applicantId], references: [id])
+  applicantId   String
+  reviewer      User?                  @relation("GroupJoinReviewer", fields: [reviewerId], references: [id])
+  reviewerId    String?
+  status        GroupJoinRequestStatus @default(PENDING)
+  note          String?
+  createdAt     DateTime               @default(now())
+  decidedAt     DateTime?
+
+  @@index([groupId, status])
+  @@index([applicantId, status])
+}
+
+model PartnerRequest {
+  id          String               @id @default(uuid())
+  group       DoctorGroup          @relation(fields: [groupId], references: [id])
+  groupId     String
+  sender      User                 @relation("PartnerRequestSender", fields: [senderId], references: [id])
+  senderId    String
+  receiver    User                 @relation("PartnerRequestReceiver", fields: [receiverId], references: [id])
+  receiverId  String
+  status      PartnerRequestStatus @default(PENDING)
+  note        String?
+  createdAt   DateTime             @default(now())
+  decidedAt   DateTime?
+
+  @@index([groupId, status])
+  @@index([senderId, status])
+  @@index([receiverId, status])
+}
+
+model PartnerPair {
+  id          String      @id @default(uuid())
+  group       DoctorGroup @relation(fields: [groupId], references: [id])
+  groupId     String
+  doctorOne   User        @relation("PartnerPairFirstDoctor", fields: [doctorOneId], references: [id])
+  doctorOneId String      @unique
+  doctorTwo   User        @relation("PartnerPairSecondDoctor", fields: [doctorTwoId], references: [id])
+  doctorTwoId String      @unique
+  note        String?
+  createdAt   DateTime    @default(now())
+
+  @@index([groupId, createdAt])
+}
+
+model Clinic {
+  id          String                      @id @default(uuid())
+  name        String                      @unique
+  description String?
+  active      Boolean                     @default(true)
+  clinicCases SemesterClinicCase[]
+  planDays    RotationPlanDay[]
+  tasks       ClinicTask[]
+  slots       AvailabilitySlot[]
+  reports     CaseReport[]
+  rotationAssignments ClinicRotationAssignment[]
+  supervisorAssignments ClinicSupervisorAssignment[]
+  supervisorLinks ClinicSupervisorLink[]
+  exams       ClinicExam[]
+  createdAt   DateTime                    @default(now())
+  updatedAt   DateTime                    @updatedAt
+}
+
+model SemesterClinicCase {
+  id            String                    @id @default(uuid())
+  semester      Semester                  @relation(fields: [semesterId], references: [id])
+  semesterId    String
+  clinic        Clinic                    @relation(fields: [clinicId], references: [id])
+  clinicId      String
+  title         String
+  description   String?
+  requiredCount Int                       @default(1)
+  active        Boolean                   @default(true)
+  appointments  Appointment[]
+  progress      DoctorClinicCaseProgress[]
+  createdAt     DateTime                  @default(now())
+  updatedAt     DateTime                  @updatedAt
+
+  @@unique([semesterId, clinicId, title])
+  @@index([clinicId, active])
+  @@index([semesterId, active])
+}
+
+model ShiftTemplate {
+  id                 String                      @id @default(uuid())
+  name               String                      @unique
+  startsAt           String
+  endsAt             String
+  appointmentCapacity Int                        @default(2)
+  active             Boolean                     @default(true)
+  plans              RotationPlan[]
+  rotationAssignments ClinicRotationAssignment[]
+  supervisorAssignments ClinicSupervisorAssignment[]
+  exams              ClinicExam[]
+  createdAt          DateTime                    @default(now())
+  updatedAt          DateTime                    @updatedAt
+}
+
+model RotationPlan {
+  id            String                      @id @default(uuid())
+  label         String
+  startsOn      DateTime
+  endsOn        DateTime
+  shift         ShiftTemplate?              @relation(fields: [shiftId], references: [id])
+  shiftId       String?
+  active        Boolean                     @default(true)
+  createdBy     User?                       @relation("AdminCreatedPlans", fields: [createdById], references: [id])
+  createdById   String?
+  days          RotationPlanDay[]
+  assignments   ClinicRotationAssignment[]
+  supervisorAssignments ClinicSupervisorAssignment[]
+  exams         ClinicExam[]
+  createdAt     DateTime                    @default(now())
+  updatedAt     DateTime                    @updatedAt
+
+  @@index([startsOn, endsOn, active])
+  @@index([shiftId])
+}
+
+model RotationPlanDay {
+  id             String        @id @default(uuid())
+  plan           RotationPlan  @relation(fields: [planId], references: [id])
+  planId         String
+  clinic         Clinic?       @relation(fields: [clinicId], references: [id])
+  clinicId       String?
+  assignmentDate DateTime
+  isVacation     Boolean       @default(false)
+  vacationReason String?
+  notes          String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@unique([planId, assignmentDate])
+  @@index([assignmentDate])
+  @@index([clinicId, assignmentDate])
+}
+
+model ClinicRotationAssignment {
+  id            String      @id @default(uuid())
+  plan          RotationPlan @relation(fields: [planId], references: [id])
+  planId        String
+  group         DoctorGroup @relation(fields: [groupId], references: [id])
+  groupId       String
+  clinic        Clinic      @relation(fields: [clinicId], references: [id])
+  clinicId      String
+  shift         ShiftTemplate @relation(fields: [shiftId], references: [id])
+  shiftId       String
+  assignmentDate DateTime
+  notes         String?
+  slots         AvailabilitySlot[]
+  reports       CaseReport[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@unique([assignmentDate, shiftId, clinicId])
+  @@unique([assignmentDate, shiftId, groupId])
+  @@index([groupId, assignmentDate])
+  @@index([clinicId, assignmentDate])
+}
+
+model ClinicSupervisorAssignment {
+  id            String      @id @default(uuid())
+  plan          RotationPlan @relation(fields: [planId], references: [id])
+  planId        String
+  clinic        Clinic      @relation(fields: [clinicId], references: [id])
+  clinicId      String
+  shift         ShiftTemplate @relation(fields: [shiftId], references: [id])
+  shiftId       String
+  assignmentDate DateTime
+  supervisor    User        @relation("ClinicSupervisor", fields: [supervisorId], references: [id])
+  supervisorId  String
+  notes         String?
+  createdAt     DateTime    @default(now())
+
+  @@unique([assignmentDate, shiftId, clinicId, supervisorId])
+  @@index([supervisorId, assignmentDate])
+  @@index([clinicId, assignmentDate])
+}
+
+model ClinicSupervisorLink {
+  id           String   @id @default(uuid())
+  clinic       Clinic   @relation(fields: [clinicId], references: [id])
+  clinicId     String
+  supervisor   User     @relation("ClinicSupervisorLinkUser", fields: [supervisorId], references: [id])
+  supervisorId String
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([clinicId, supervisorId])
+  @@index([supervisorId])
+  @@index([clinicId])
+}
+
+model ClinicTask {
+  id          String                   @id @default(uuid())
+  clinic      Clinic                   @relation(fields: [clinicId], references: [id])
+  clinicId    String
+  title       String
+  description String?
+  active      Boolean                  @default(true)
+  progress    DoctorClinicTaskProgress[]
+  reportLinks CaseReportTask[]
+  createdAt   DateTime                 @default(now())
+  updatedAt   DateTime                 @updatedAt
+
+  @@index([clinicId, active])
+}
+
+model DoctorClinicTaskProgress {
+  id          String                   @id @default(uuid())
+  doctor      User                     @relation("ClinicTaskProgressDoctor", fields: [doctorId], references: [id])
+  doctorId    String
+  clinicTask  ClinicTask               @relation(fields: [clinicTaskId], references: [id])
+  clinicTaskId String
+  status      ClinicTaskProgressStatus @default(PENDING)
+  mark        Int?
+  notes       String?
+  completedAt DateTime?
+  lastReport  CaseReport?              @relation("ReportTaskProgress", fields: [lastReportId], references: [id])
+  lastReportId String?
+  createdAt   DateTime                 @default(now())
+  updatedAt   DateTime                 @updatedAt
+
+  @@unique([doctorId, clinicTaskId])
+  @@index([clinicTaskId, status])
+}
+
+model DoctorClinicCaseProgress {
+  id            String                  @id @default(uuid())
+  doctor        User                    @relation(fields: [doctorId], references: [id])
+  doctorId      String
+  clinicCase    SemesterClinicCase      @relation(fields: [clinicCaseId], references: [id])
+  clinicCaseId  String
+  status        ClinicCaseProgressStatus @default(OPEN)
+  completedAt   DateTime?
+  lastReportId  String?
+  lastAppointmentId String?
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+
+  @@unique([doctorId, clinicCaseId])
+  @@index([clinicCaseId, status])
+}
+
+model GroupPost {
+  id         String      @id @default(uuid())
+  group      DoctorGroup @relation(fields: [groupId], references: [id])
+  groupId    String
+  author     User        @relation(fields: [authorId], references: [id])
+  authorId   String
+  title      String?
+  body       String
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  @@index([groupId, createdAt])
+}
+
+model SupervisorTask {
+  id           String      @id @default(uuid())
+  title        String
+  description  String
+  dueAt        DateTime?
+  supervisor   User        @relation("TaskCreator", fields: [supervisorId], references: [id])
+  supervisorId String
+  doctor       User?       @relation("TaskDoctor", fields: [doctorId], references: [id])
+  doctorId     String?
+  group        DoctorGroup? @relation(fields: [groupId], references: [id])
+  groupId      String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([supervisorId, createdAt])
+  @@index([doctorId, createdAt])
+  @@index([groupId, createdAt])
+}
+
+model CaseReport {
+  id                 String            @id @default(uuid())
+  appointment        Appointment       @relation(fields: [appointmentId], references: [id])
+  appointmentId      String            @unique
+  doctor             User              @relation("ReportDoctor", fields: [doctorId], references: [id])
+  doctorId           String
+  reviewer           User?             @relation("ReportReviewer", fields: [reviewerSupervisorId], references: [id])
+  reviewerSupervisorId String?
+  partnerDoctor      User?             @relation("ReportPartnerDoctor", fields: [partnerDoctorId], references: [id])
+  partnerDoctorId    String?
+  clinic             Clinic?           @relation(fields: [clinicId], references: [id])
+  clinicId           String?
+  rotationAssignment ClinicRotationAssignment? @relation(fields: [rotationAssignmentId], references: [id])
+  rotationAssignmentId String?
+  supervisorName     String?
+  patientName        String?
+  patientPhone       String?
+  title              String
+  description        String
+  formData           Json?
+  status             ReportReviewStatus @default(SUBMITTED)
+  mark               Int?
+  rating             Float?
+  feedback           String?
+  submittedAt        DateTime          @default(now())
+  reviewedAt         DateTime?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  taskLinks          CaseReportTask[]
+  taskProgressEntries DoctorClinicTaskProgress[] @relation("ReportTaskProgress")
+
+  @@index([doctorId, submittedAt])
+  @@index([reviewerSupervisorId, status])
+  @@index([clinicId, submittedAt])
+}
+
+model AppointmentRating {
+  id            String               @id @default(uuid())
+  appointment    Appointment         @relation(fields: [appointmentId], references: [id])
+  appointmentId  String
+  rater         User                 @relation("AppointmentRatingRater", fields: [raterId], references: [id])
+  raterId       String
+  target        User                 @relation("AppointmentRatingTarget", fields: [targetId], references: [id])
+  targetId      String
+  kind          AppointmentRatingKind
+  stars         Float
+  comment       String?
+  active        Boolean              @default(true)
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+
+  @@unique([appointmentId, raterId, kind])
+  @@index([targetId, active])
+  @@index([appointmentId, kind])
+}
+
+model UserProfileReport {
+  id             String                  @id @default(uuid())
+  reporter       User                    @relation("UserReportsFiled", fields: [reporterId], references: [id])
+  reporterId     String
+  reportedUser   User                    @relation("UserReportsReceived", fields: [reportedUserId], references: [id])
+  reportedUserId String
+  reviewer       User?                   @relation("UserReportsReviewed", fields: [reviewerId], references: [id])
+  reviewerId     String?
+  reason         String
+  note           String?
+  status         UserProfileReportStatus @default(PENDING)
+  resolutionNote String?
+  reviewedAt     DateTime?
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+
+  @@index([status, createdAt])
+  @@index([reportedUserId, status])
+  @@index([reporterId, createdAt])
+}
+
+model CaseReportTask {
+  id          String         @id @default(uuid())
+  report       CaseReport     @relation(fields: [reportId], references: [id])
+  reportId     String
+  clinicTask   ClinicTask     @relation(fields: [clinicTaskId], references: [id])
+  clinicTaskId String
+  role         ReportTaskRole @default(PRIMARY)
+
+  @@unique([reportId, clinicTaskId])
+}
+
+model ClinicExam {
+  id           String      @id @default(uuid())
+  clinic       Clinic      @relation(fields: [clinicId], references: [id])
+  clinicId     String
+  shift        ShiftTemplate? @relation(fields: [shiftId], references: [id])
+  shiftId      String?
+  plan         RotationPlan? @relation(fields: [planId], references: [id])
+  planId       String?
+  student      User        @relation("ExamStudent", fields: [studentId], references: [id])
+  studentId    String
+  supervisor   User        @relation("ExamSupervisor", fields: [supervisorId], references: [id])
+  supervisorId String
+  scheduledAt  DateTime
+  title        String
+  cases        String?
+  status       ExamStatus  @default(SCHEDULED)
+  mark         Int?
+  notes        String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([studentId, scheduledAt])
+  @@index([supervisorId, scheduledAt])
+  @@index([clinicId, scheduledAt])
 }

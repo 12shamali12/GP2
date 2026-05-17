@@ -36,9 +36,9 @@ export class ChatController {
   }
 
   @Get("search")
-  searchUsers(@Query("q") q: string) {
+  searchUsers(@Query("q") q: string, @Query("identifier") identifier?: string) {
     if (!q) return [];
-    return this.chatService.searchUsers(q);
+    return this.chatService.searchUsers(q, identifier);
   }
 
   @Post("start")

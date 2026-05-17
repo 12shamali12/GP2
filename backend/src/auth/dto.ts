@@ -39,6 +39,10 @@ export class RegisterDto {
   @IsOptional()
   @IsString()
   doctorIdNumber?: string;
+
+  @IsOptional()
+  @IsString()
+  semesterId?: string;
 }
 
 export class LoginDto {
@@ -85,4 +89,8 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsString()
   doctorIdNumber?: string;
+
+  @IsOptional()
+  @IsString()
+  bio?: string;
 }

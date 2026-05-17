@@ -1,0 +1,567 @@
+"use client";
+
+import Link from "next/link";
+import type { RefObject } from "react";
+
+type PatientCareDeskViewProps = {
+  uniqueUpcoming: any[];
+  availableSlots: any[];
+  history: any[];
+  unreadNotifications: number;
+  selectedType: string;
+  selectedMonth: number | "all";
+  selectedYear: number | "all";
+  selectedDay: Date | null;
+  filteredDays: Date[];
+  clinicOptions: Array<{ id: string; name: string }>;
+  caseOptions: Array<{ id: string; title: string; clinicName: string }>;
+  selectedClinicId: string;
+  selectedClinicCaseId: string;
+  bookingForm: {
+    slotId: string;
+    clinicCaseId: string;
+    clinicName: string;
+    caseTitle: string;
+    reason: string;
+    doctor: string;
+  };
+  error: string | null;
+  message: string | null;
+  reservationRef: RefObject<HTMLDivElement | null>;
+  onReserveClick: () => void;
+  onSelectedTypeChange: (value: string) => void;
+  onSelectedMonthChange: (value: number | "all") => void;
+  onSelectedYearChange: (value: number | "all") => void;
+  onSelectedDayChange: (value: Date) => void;
+  onSelectedClinicChange: (value: string) => void;
+  onSelectedClinicCaseChange: (value: string) => void;
+  onSelectSlot: (slot: any) => void;
+  onSelectAppointment: (appointment: any) => void;
+};
+
+export function PatientCareDeskView({
+  uniqueUpcoming,
+  availableSlots,
+  history,
+  unreadNotifications,
+  selectedType,
+  selectedMonth,
+  selectedYear,
+  selectedDay,
+  filteredDays,
+  clinicOptions,
+  caseOptions,
+  selectedClinicId,
+  selectedClinicCaseId,
+  bookingForm,
+  error,
+  message,
+  reservationRef,
+  onReserveClick,
+  onSelectedTypeChange,
+  onSelectedMonthChange,
+  onSelectedYearChange,
+  onSelectedDayChange,
+  onSelectedClinicChange,
+  onSelectedClinicCaseChange,
+  onSelectSlot,
+  onSelectAppointment,
+}: PatientCareDeskViewProps) {
+  const selectedClinic =
+    selectedClinicId === "all"
+      ? null
+      : clinicOptions.find((clinic) => clinic.id === selectedClinicId) || null;
+  const selectedCase =
+    selectedClinicCaseId === "all"
+      ? null
+      : caseOptions.find((clinicCase) => clinicCase.id === selectedClinicCaseId) || null;
+
+  return (
+    <div className="space-y-5">
+      <div className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
+        <div className="denty-panel-strong space-y-5 px-6 py-7 md:px-8 md:py-8">
+          <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="denty-kicker">Upcoming care</p>
+              <h2 className="mt-3 text-3xl font-semibold text-[var(--foreground)]">
+                Reservations and requests
+              </h2>
+              <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--muted-foreground)]">
+                Review your reserved appointments and open details before the visit day.
+              </p>
+            </div>
+            <button
+              onClick={onReserveClick}
+              className="denty-button-primary px-5 py-3 text-sm font-semibold"
+            >
+              Reserve appointment
+            </button>
+          </div>
+
+          <div className="space-y-3">
+            {uniqueUpcoming.length === 0 ? (
+              <div className="denty-dashboard-card-soft p-5 text-sm text-[var(--muted-foreground)]">
+                No appointments yet.
+              </div>
+            ) : null}
+
+            {uniqueUpcoming.map((appointment) => {
+              const start = appointment.slot?.startTime
+                ? new Date(appointment.slot.startTime)
+                : null;
+              const end = appointment.slot?.endTime
+                ? new Date(appointment.slot.endTime)
+                : null;
+              const doctorName = appointment.slot?.doctor?.name || "Doctor";
+              const avatar = appointment.slot?.doctor?.avatar || "";
+              const initial = doctorName.charAt(0).toUpperCase();
+
+              return (
+                <div
+                  key={appointment.id}
+                  className="denty-list-row flex w-full items-center justify-between gap-4 p-4 text-left"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="denty-avatar-shell h-12 w-12 text-lg font-bold">
+                      {avatar ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={avatar}
+                          alt={doctorName}
+                          className="h-full w-full rounded-full object-cover"
+                        />
+                      ) : (
+                        initial
+                      )}
+                    </div>
+                    <div>
+                      {appointment.slot?.doctor?.id ? (
+                        <Link
+                          href={`/profiles/${appointment.slot.doctor.id}`}
+                          className="font-semibold text-[var(--foreground)] hover:text-[rgba(7,111,133,0.96)]"
+                        >
+                          Dr. {doctorName}
+                        </Link>
+                      ) : (
+                        <p className="font-semibold text-[var(--foreground)]">
+                          Dr. {doctorName}
+                        </p>
+                      )}
+                      <p className="mt-1 text-xs text-[var(--muted-foreground)]">
+                        {start
+                          ? `${start.toLocaleDateString(undefined, {
+                              weekday: "long",
+                              month: "short",
+                              day: "numeric",
+                            })} ${start.toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}${
+                              end
+                                ? ` - ${end.toLocaleTimeString([], {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })}`
+                                : ""
+                            }`
+                          : ""}
+                      </p>
+                      <p className="mt-1 text-xs text-[var(--muted-foreground)]">
+                        Status: {appointment.status}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col items-end gap-2">
+                    <span
+                      className={`denty-status-chip ${
+                        appointment.status === "APPROVED"
+                          ? "border-[rgba(16,185,129,0.18)] bg-[rgba(236,253,245,0.96)] text-[#047857]"
+                          : appointment.status === "REJECTED"
+                            ? "border-[rgba(220,38,38,0.18)] bg-[rgba(254,242,242,0.96)] text-[#b91c1c]"
+                            : "denty-status-chip-strong"
+                      }`}
+                    >
+                      {appointment.slot?.purpose || "General"}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      {appointment.slot?.doctor?.id ? (
+                        <Link
+                          href={`/profiles/${appointment.slot.doctor.id}`}
+                          className="denty-pill hover:bg-white/36"
+                        >
+                          Profile
+                        </Link>
+                      ) : null}
+                      <button
+                        onClick={() => onSelectAppointment(appointment)}
+                        className="denty-action px-3 py-2 text-[11px]"
+                      >
+                        View details
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
+          <div className="denty-stat-card p-4">
+            <p className="denty-kicker !tracking-[0.18em]">Upcoming</p>
+            <p className="mt-3 text-3xl font-semibold text-[var(--foreground)]">
+              {uniqueUpcoming.length}
+            </p>
+            <p className="mt-2 text-sm text-[var(--muted-foreground)]">
+              Appointments in your queue
+            </p>
+          </div>
+          <div className="denty-stat-card p-4">
+            <p className="denty-kicker !tracking-[0.18em]">Availability</p>
+            <p className="mt-3 text-3xl font-semibold text-[var(--foreground)]">
+              {availableSlots.length}
+            </p>
+            <p className="mt-2 text-sm text-[var(--muted-foreground)]">
+              Slots matching your current filters
+            </p>
+          </div>
+          <div className="denty-stat-card p-4">
+            <p className="denty-kicker !tracking-[0.18em]">History</p>
+            <p className="mt-3 text-3xl font-semibold text-[var(--foreground)]">
+              {history.length}
+            </p>
+            <p className="mt-2 text-sm text-[var(--muted-foreground)]">
+              Total appointments in your record
+            </p>
+          </div>
+          <div className="denty-stat-card p-4">
+            <p className="denty-kicker !tracking-[0.18em]">Alerts</p>
+            <p className="mt-3 text-3xl font-semibold text-[var(--foreground)]">
+              {unreadNotifications}
+            </p>
+            <p className="mt-2 text-sm text-[var(--muted-foreground)]">
+              Unread notifications right now
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div ref={reservationRef} className="denty-dashboard-card space-y-5 p-6 md:p-7">
+        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="denty-kicker">Booking planner</p>
+            <h3 className="mt-3 text-3xl font-semibold text-[var(--foreground)]">
+              Reserve an appointment
+            </h3>
+            <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--muted-foreground)]">
+              Filter by date, clinic, and required case, then choose the student slot that still
+              needs that procedure in the current semester flow.
+            </p>
+          </div>
+          <span className="denty-pill">Live filtering</span>
+        </div>
+
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <div className="space-y-2">
+            <label className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
+              Visit intent
+            </label>
+            <select
+              value={selectedType}
+              onChange={(event) => onSelectedTypeChange(event.target.value)}
+              className="denty-field"
+            >
+              <option value="">All visit intents</option>
+              <option>General</option>
+              <option>Check-up</option>
+              <option>Cleaning</option>
+              <option>Pain/Urgent</option>
+              <option>Whitening</option>
+            </select>
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
+              Clinic
+            </label>
+            <select
+              value={selectedClinicId}
+              onChange={(event) => onSelectedClinicChange(event.target.value)}
+              className="denty-field"
+            >
+              <option value="all">All clinics</option>
+              {clinicOptions.map((clinic) => (
+                <option key={clinic.id} value={clinic.id}>
+                  {clinic.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
+              Case
+            </label>
+            <select
+              value={selectedClinicCaseId}
+              onChange={(event) => onSelectedClinicCaseChange(event.target.value)}
+              className="denty-field"
+            >
+              <option value="all">All cases</option>
+              {caseOptions.map((clinicCase) => (
+                <option key={clinicCase.id} value={clinicCase.id}>
+                  {clinicCase.title}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
+              Month / year
+            </label>
+            <div className="flex gap-2">
+              <select
+                value={selectedMonth}
+                onChange={(event) =>
+                  onSelectedMonthChange(
+                    event.target.value === "all" ? "all" : Number(event.target.value),
+                  )
+                }
+                className="denty-field flex-1"
+              >
+                <option value="all">All months</option>
+                {[...Array(12).keys()].map((month) => (
+                  <option key={month} value={month}>
+                    {new Date(2024, month, 1).toLocaleString(undefined, {
+                      month: "short",
+                    })}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={selectedYear}
+                onChange={(event) =>
+                  onSelectedYearChange(
+                    event.target.value === "all" ? "all" : Number(event.target.value),
+                  )
+                }
+                className="denty-field w-32"
+              >
+                <option value="all">All years</option>
+                {[2024, 2025, 2026].map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid gap-3 md:grid-cols-3">
+          <div className="rounded-[22px] border border-white/10 bg-white/22 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
+              Clinic focus
+            </p>
+            <p className="mt-2 text-base font-semibold text-[var(--foreground)]">
+              {selectedClinic?.name || "All clinics"}
+            </p>
+            <p className="mt-2 text-sm text-[var(--muted-foreground)]">
+              Narrow the planner to the clinic you want to visit first.
+            </p>
+          </div>
+          <div className="rounded-[22px] border border-white/10 bg-white/22 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
+              Case focus
+            </p>
+            <p className="mt-2 text-base font-semibold text-[var(--foreground)]">
+              {selectedCase?.title || "All available cases"}
+            </p>
+            <p className="mt-2 text-sm text-[var(--muted-foreground)]">
+              Only students who still need this case will appear in the slot list.
+            </p>
+          </div>
+          <div className="rounded-[22px] border border-white/10 bg-white/22 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
+              Pair booking
+            </p>
+            <p className="mt-2 text-base font-semibold text-[var(--foreground)]">
+              Partner-aware reservations
+            </p>
+            <p className="mt-2 text-sm text-[var(--muted-foreground)]">
+              Reserving one student automatically locks the paired student chair for the same shift.
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
+            Pick a day
+          </p>
+          <div className="grid max-h-72 grid-cols-7 gap-2 overflow-y-auto rounded-[22px] border border-[rgba(148,163,184,0.14)] bg-[rgba(244,245,247,0.88)] p-3">
+            {filteredDays.map((date) => (
+              <button
+                key={date.toISOString()}
+                onClick={() => onSelectedDayChange(date)}
+                className={`rounded-lg border px-2 py-3 text-sm ${
+                  selectedDay?.toDateString() === date.toDateString()
+                    ? "border-[rgba(11,123,138,0.18)] bg-[rgba(230,244,246,0.9)] text-[rgba(8,68,78,0.96)]"
+                    : "border-[rgba(148,163,184,0.16)] bg-white text-[var(--foreground)] hover:border-[rgba(11,123,138,0.18)]"
+                }`}
+              >
+                <span className="block text-xs">
+                  {date.toLocaleString(undefined, { month: "short" })}
+                </span>
+                <span className="text-lg font-bold">{date.getDate()}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {selectedDay ? (
+          <div className="space-y-2">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
+              Slots for {selectedDay.toDateString()} ({selectedType || "Any visit intent"})
+            </p>
+            <div className="space-y-2">
+              {availableSlots
+                .filter((slot) => {
+                  const date = new Date(slot.startTime);
+                  const sameDay = date.toDateString() === selectedDay.toDateString();
+                  const purpose = (slot.purpose || "").toLowerCase();
+                  const matchesType =
+                    !selectedType || purpose.includes(selectedType.toLowerCase());
+                  const matchesClinic =
+                    selectedClinicId === "all" || slot.clinic?.id === selectedClinicId;
+                  const matchesCase =
+                    selectedClinicCaseId === "all" ||
+                    (slot.caseOptions || []).some(
+                      (item: any) => item.id === selectedClinicCaseId,
+                    );
+                  return sameDay && matchesType && matchesClinic && matchesCase;
+                })
+                .sort(
+                  (a, b) =>
+                    new Date(a.startTime).getTime() - new Date(b.startTime).getTime(),
+                )
+                .map((slot) => (
+                  <div
+                    key={slot.id}
+                    className={`denty-list-row px-3 py-3 ${
+                      bookingForm.slotId === slot.id
+                        ? "border-[rgba(11,123,138,0.2)] bg-[rgba(230,244,246,0.92)]"
+                        : ""
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="denty-avatar-shell h-11 w-11 text-lg font-bold">
+                          {slot.doctor?.avatar ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={slot.doctor.avatar}
+                              alt={slot.doctor.name || "Doctor"}
+                              className="h-full w-full rounded-full object-cover"
+                            />
+                          ) : (
+                            (slot.doctor?.name || "D").charAt(0).toUpperCase()
+                          )}
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-3 text-sm text-[var(--foreground)]">
+                            <span className="font-semibold">
+                              {new Date(slot.startTime).toLocaleDateString(undefined, {
+                                weekday: "long",
+                                month: "short",
+                                day: "numeric",
+                              })}
+                            </span>
+                            <span className="text-[var(--muted-foreground)]">
+                              {new Date(slot.startTime).toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}{" "}
+                              -{" "}
+                              {new Date(slot.endTime).toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </span>
+                          </div>
+                          <p className="text-sm font-semibold text-[var(--foreground)]">
+                            {slot.doctor?.id ? (
+                              <Link
+                                href={`/profiles/${slot.doctor.id}`}
+                                className="hover:text-[rgba(7,111,133,0.96)]"
+                              >
+                                Dr. {slot.doctor?.name || "Unknown"}
+                              </Link>
+                            ) : (
+                              <>Dr. {slot.doctor?.name || "Unknown"}</>
+                            )}
+                          </p>
+                          <p className="text-xs text-[var(--muted-foreground)]">
+                            {slot.clinic?.name || "Clinic"} | {slot.doctor?.doctorIdNumber || "Student"}
+                          </p>
+                          <p className="text-xs text-[var(--muted-foreground)]">
+                            Eligible for {(slot.caseOptions || []).length} case
+                            {(slot.caseOptions || []).length === 1 ? "" : "s"} in this clinic
+                          </p>
+                          <div className="flex flex-wrap gap-2 pt-1">
+                            {(slot.caseOptions || []).slice(0, 4).map((item: any) => (
+                              <span
+                                key={item.id}
+                                className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${
+                                  selectedClinicCaseId !== "all" && item.id === selectedClinicCaseId
+                                    ? "border-[rgba(7,111,133,0.18)] bg-[rgba(227,244,247,0.94)] text-[rgba(7,83,96,0.94)]"
+                                    : "border-white/12 bg-white/24 text-[var(--muted-foreground)]"
+                                }`}
+                              >
+                                {item.title}
+                              </span>
+                            ))}
+                            {(slot.caseOptions || []).length > 4 ? (
+                              <span className="rounded-full border border-white/12 bg-white/24 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted-foreground)]">
+                                +{(slot.caseOptions || []).length - 4} more
+                              </span>
+                            ) : null}
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => onSelectSlot(slot)}
+                        className="denty-action denty-action-primary"
+                      >
+                        Choose
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              {availableSlots.filter((slot) => {
+                const date = new Date(slot.startTime);
+                const sameDay = date.toDateString() === selectedDay.toDateString();
+                const purpose = (slot.purpose || "").toLowerCase();
+                const matchesType =
+                  !selectedType || purpose.includes(selectedType.toLowerCase());
+                const matchesClinic =
+                  selectedClinicId === "all" || slot.clinic?.id === selectedClinicId;
+                const matchesCase =
+                  selectedClinicCaseId === "all" ||
+                  (slot.caseOptions || []).some(
+                    (item: any) => item.id === selectedClinicCaseId,
+                  );
+                return sameDay && matchesType && matchesClinic && matchesCase;
+              }).length === 0 ? (
+                <div className="denty-dashboard-card-soft p-5 text-sm leading-7 text-[var(--muted-foreground)]">
+                  No student slots match this clinic and case on the selected day. Try another day
+                  or switch to a different case requirement.
+                </div>
+              ) : null}
+              {error ? <p className="text-sm text-[#b91c1c]">{error}</p> : null}
+              {message ? <p className="text-sm text-[#047857]">{message}</p> : null}
+            </div>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}

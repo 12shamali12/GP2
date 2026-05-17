@@ -1,0 +1,23 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      fish:
+        specifier: ^0.0.0
+        version: 0.0.0
+
+packages:
+
+  fish@0.0.0:
+    resolution: {integrity: sha512-m2rv6VWfFnwWJvLptLkkvEloKN078wWIlCkcrdnl88APzowfOx/4cGCiPn/g4ZU5LKI5EP/SZSvyRUrC+VcXMw==}
+    engines: {node: ~0.6.6}
+
+snapshots:
+
+  fish@0.0.0: {}

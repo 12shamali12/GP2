@@ -4,8 +4,10 @@ import {
   BookSlotDto,
   CancelDto,
   CancelPatientDto,
+  CompleteAppointmentDto,
   CreateSlotDto,
   DecisionDto,
+  RateAppointmentDto,
   DeleteSlotDto,
   ReportSubmittedDto,
 } from "./dto";
@@ -20,8 +22,22 @@ export class AppointmentsController {
   }
 
   @Get("slots")
-  listSlots(@Query("doctorId") doctorId?: string) {
-    return this.svc.listSlots(doctorId);
+  listSlots(
+    @Query("doctorId") doctorId?: string,
+    @Query("patientIdentifier") patientIdentifier?: string,
+    @Query("clinicId") clinicId?: string,
+    @Query("clinicCaseId") clinicCaseId?: string,
+    @Query("fromDate") fromDate?: string,
+    @Query("toDate") toDate?: string,
+  ) {
+    return this.svc.listSlots({
+      doctorId,
+      patientIdentifier,
+      clinicId,
+      clinicCaseId,
+      fromDate,
+      toDate,
+    });
   }
 
   @Post("book")
@@ -47,6 +63,21 @@ export class AppointmentsController {
   @Post(":id/report-submitted")
   reportSubmitted(@Param("id") id: string, @Body() dto: ReportSubmittedDto) {
     return this.svc.reportSubmitted(id, dto);
+  }
+
+  @Post(":id/complete")
+  complete(@Param("id") id: string, @Body() dto: CompleteAppointmentDto) {
+    return this.svc.completeAppointment(id, dto);
+  }
+
+  @Post(":id/patient-feedback")
+  rateDoctor(@Param("id") id: string, @Body() dto: RateAppointmentDto) {
+    return this.svc.rateDoctor(id, dto);
+  }
+
+  @Post(":id/doctor-feedback")
+  ratePatient(@Param("id") id: string, @Body() dto: RateAppointmentDto) {
+    return this.svc.ratePatient(id, dto);
   }
 
   @Get("performance")

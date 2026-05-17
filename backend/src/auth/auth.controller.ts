@@ -11,6 +11,11 @@ export class AuthController {
     return this.authService.profile(identifier);
   }
 
+  @Get("register-options")
+  registerOptions() {
+    return this.authService.registerOptions();
+  }
+
   @Post("register")
   register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);

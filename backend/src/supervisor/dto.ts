@@ -1,10 +1,4 @@
-import { IsBoolean, IsOptional, IsString } from "class-validator";
-
-export class DecisionDto {
-  @IsBoolean()
-  approve!: boolean;
-
-  @IsOptional()
-  @IsString()
-  note?: string;
-}
+export * from "./dto/common.dto";
+export * from "./dto/groups.dto";
+export * from "./dto/planning.dto";
+export * from "./dto/workspace.dto";
