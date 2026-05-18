@@ -9,6 +9,7 @@ import { AppointmentsModule } from "./appointments/appointments.module";
 import { NotificationsModule } from "./notifications/notifications.module";
 import { ChatModule } from "./chat/chat.module";
 import { ProfilesModule } from "./profiles/profiles.module";
+import { GameModule } from "./game/game.module";
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { ProfilesModule } from "./profiles/profiles.module";
     NotificationsModule,
     ChatModule,
     ProfilesModule,
+    GameModule,
   ],
   controllers: [AppController],
   providers: [AppService, SeedService],

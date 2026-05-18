@@ -186,6 +186,7 @@ model User {
   profileReportsReviewed UserProfileReport[]      @relation("UserReportsReviewed")
   freezeActions         DoctorFreeze[]            @relation("DoctorFreezeBySupervisor")
   freezeHistory         DoctorFreeze[]            @relation("FrozenDoctor")
+  quizAttempts          QuizAttempt[]             @relation("DoctorQuizAttempts")
   createdAt             DateTime                  @default(now())
   updatedAt             DateTime                  @updatedAt
 
@@ -816,4 +817,16 @@ model ClinicExam {
   @@index([studentId, scheduledAt])
   @@index([supervisorId, scheduledAt])
   @@index([clinicId, scheduledAt])
+}
+
+model QuizAttempt {
+  id          String   @id @default(uuid())
+  doctor      User     @relation("DoctorQuizAttempts", fields: [doctorId], references: [id])
+  doctorId    String
+  score       Int
+  total       Int
+  completedAt DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  @@index([doctorId, completedAt])
 }

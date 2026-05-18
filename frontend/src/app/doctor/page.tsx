@@ -32,7 +32,12 @@ import {
   createEmptyReportFormData,
   getWeekRangeHelper,
 } from "@/app/doctor/lib/report-form";
+import { GameSurface } from "@/features/game/components/game-surface";
+import { LeaderboardView } from "@/features/leaderboard/components/leaderboard-view";
+import { getLeaderboardSnapshot } from "@/features/leaderboard/services/leaderboard-api";
+import type { LeaderboardSnapshot } from "@/features/admin/types/admin";
 import { usePublicProfile } from "@/features/profiles/hooks/use-public-profile";
+import { SettingsPanel } from "@/features/settings/components/settings-panel";
 import { ComingSoonModal } from "@/features/ui/components/coming-soon-modal";
 import type { DoctorWorkspaceData } from "@/features/supervision/types";
 import { useFeedbackToast } from "@/features/ui/hooks/use-feedback-toast";
@@ -136,6 +141,11 @@ export default function DoctorPage() {
   );
 
   const [notifications, setNotifications] = useState<any[]>([]);
+
+  const [leaderboardSnapshot, setLeaderboardSnapshot] =
+    useState<LeaderboardSnapshot | null>(null);
+  const [leaderboardLoading, setLeaderboardLoading] = useState(false);
+  const [leaderboardError, setLeaderboardError] = useState<string | null>(null);
 
   const doctorEmoji = useMemo(() => {
     const g = (user.gender || "").toLowerCase();
@@ -402,6 +412,45 @@ export default function DoctorPage() {
     }
   }, [activeSurface, conversations.length, fetchConversations]);
 
+  useEffect(() => {
+    if (activeSurface !== "leaderboard") return;
+    if (leaderboardSnapshot || leaderboardLoading) return;
+
+    let cancelled = false;
+    setLeaderboardLoading(true);
+    setLeaderboardError(null);
+
+    getLeaderboardSnapshot()
+      .then((data) => {
+        if (!cancelled) {
+          setLeaderboardSnapshot(data);
+        }
+      })
+      .catch((e: any) => {
+        if (!cancelled) {
+          setLeaderboardError(e?.message || "Failed to load leaderboard.");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLeaderboardLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeSurface, leaderboardSnapshot, leaderboardLoading]);
+
+  useFeedbackToast({
+    message: null,
+    error: leaderboardError,
+    clearMessage: () => undefined,
+    clearError: () => setLeaderboardError(null),
+    messageTitle: "Leaderboard",
+    errorTitle: "Leaderboard",
+  });
+
   const handleAttachChatImage = useCallback(() => {
     const input = document.createElement("input");
     input.type = "file";
@@ -473,6 +522,9 @@ export default function DoctorPage() {
             onApprovals={() => setActiveSurface("approvals")}
             onReport={() => setActiveSurface("report")}
             onChat={() => setActiveSurface("chat")}
+            onGame={() => setActiveSurface("game")}
+            onLeaderboard={() => setActiveSurface("leaderboard")}
+            onSettings={() => setActiveSurface("settings")}
             onComingSoon={setComingSoon}
           />
 
@@ -620,6 +672,29 @@ export default function DoctorPage() {
                 onChatTextChange={setChatText}
                 onAttachImage={handleAttachChatImage}
                 onSend={() => void sendChatMessage()}
+              />
+            </div>
+
+            <div className={activeSurface === "leaderboard" ? "" : "hidden"}>
+              <div className="denty-panel p-6 md:p-7">
+                <LeaderboardView
+                  snapshot={leaderboardSnapshot}
+                  loading={leaderboardLoading}
+                  currentUserId={user.id}
+                />
+              </div>
+            </div>
+
+            <div className={activeSurface === "game" ? "" : "hidden"}>
+              <div className="denty-panel p-6 md:p-7">
+                <GameSurface />
+              </div>
+            </div>
+
+            <div className={activeSurface === "settings" ? "" : "hidden"}>
+              <SettingsPanel
+                role="doctor"
+                onEditProfile={() => setActiveSurface("profile")}
               />
             </div>
 

@@ -51,7 +51,10 @@ type LeaderboardEntryBase = {
   assistedCount: number;
   patientRatingPoints: number;
   supervisorRatingPoints: number;
+  quizPoints: number;
 };
+
+const QUIZ_POINTS_CAP = 30;
 
 type LeaderboardBoard = {
   key: string;
@@ -145,7 +148,7 @@ export class ProfilesService {
   async getLeaderboard() {
     const now = new Date();
 
-    const [semesters, doctors, reviewedReports, activeRatings] = await Promise.all([
+    const [semesters, doctors, reviewedReports, activeRatings, quizAttempts] = await Promise.all([
       this.prisma.semester.findMany({
         where: { active: true },
         orderBy: [{ sortOrder: "asc" }, { label: "asc" }],
@@ -274,7 +277,26 @@ export class ProfilesService {
           },
         },
       }),
+      this.prisma.quizAttempt.findMany({
+        select: {
+          doctorId: true,
+          score: true,
+          total: true,
+        },
+      }),
     ]);
+
+    const quizPointsByDoctor = new Map<string, number>();
+    quizAttempts.forEach((attempt) => {
+      if (!attempt.total || attempt.total <= 0) return;
+      const ratio = attempt.score / attempt.total;
+      const points = Math.max(0, ratio) * 3;
+      const current = quizPointsByDoctor.get(attempt.doctorId) ?? 0;
+      quizPointsByDoctor.set(
+        attempt.doctorId,
+        Math.min(QUIZ_POINTS_CAP, current + points),
+      );
+    });
 
     const doctorsById = new Map<string, LeaderboardDoctor>(
       doctors.map((doctor) => [
@@ -318,6 +340,7 @@ export class ProfilesService {
           assistedCount: 0,
           patientRatingPoints: 0,
           supervisorRatingPoints: 0,
+          quizPoints: quizPointsByDoctor.get(doctor.id) ?? 0,
         };
         board.set(doctor.id, next);
         return next;
@@ -413,9 +436,11 @@ export class ProfilesService {
             entry.completedCount * 5 +
             entry.assistedCount * 2 +
             entry.patientRatingPoints +
-            entry.supervisorRatingPoints;
+            entry.supervisorRatingPoints +
+            entry.quizPoints;
           return {
             ...entry,
+            quizPoints: Number(entry.quizPoints.toFixed(2)),
             points: Number(points.toFixed(2)),
           };
         })
@@ -827,6 +852,7 @@ export class ProfilesService {
               supervisorRatingPoints: Number(
                 overallRank.supervisorRatingPoints.toFixed(2),
               ),
+              quizPoints: Number(overallRank.quizPoints.toFixed(2)),
               semesterRank: semesterRank?.rank ?? null,
               semesterPoints:
                 typeof semesterRank?.points === "number"

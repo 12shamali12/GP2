@@ -19,7 +19,10 @@ type DoctorSideRailProps = {
     | "notifications"
     | "approvals"
     | "report"
-    | "chat";
+    | "chat"
+    | "game"
+    | "leaderboard"
+    | "settings";
   unreadNotifications: number;
   chatUnreadCount: number;
   onOverview: () => void;
@@ -28,6 +31,9 @@ type DoctorSideRailProps = {
   onApprovals: () => void;
   onReport: () => void;
   onChat: () => void;
+  onGame: () => void;
+  onLeaderboard: () => void;
+  onSettings: () => void;
   onComingSoon: (content: ComingSoonContent) => void;
 };
 
@@ -109,6 +115,9 @@ export function DoctorSideRail({
   onApprovals,
   onReport,
   onChat,
+  onGame,
+  onLeaderboard,
+  onSettings,
   onComingSoon,
 }: DoctorSideRailProps) {
   const router = useRouter();
@@ -202,61 +211,28 @@ export function DoctorSideRail({
         </div>
 
         <RailAction
-          eyebrow="In progress"
+          eyebrow="Practice"
           label="Toothy Game"
           compactLabel="Game"
           icon="game"
-          muted
-          onClick={() =>
-            onComingSoon({
-              title: "Toothy Game",
-              description:
-                "The game entry is intentionally paused until the experience has real mechanics and a stronger product fit.",
-              bullets: [
-                "Meaningful progress loop",
-                "Clear relationship to patient education",
-                "Rewards that fit the platform identity",
-              ],
-            })
-          }
+          active={activeView === "game"}
+          onClick={onGame}
         />
         <RailAction
-          eyebrow="In progress"
+          eyebrow="Standings"
           label="Leaderboard"
           compactLabel="Rank"
           icon="leaderboard"
-          muted
-          onClick={() =>
-            onComingSoon({
-              title: "Leaderboard",
-              description:
-                "Doctor ranking should only ship once it reflects meaningful performance signals instead of placeholder points.",
-              bullets: [
-                "Transparent performance criteria",
-                "Context around weekly results",
-                "Better visual storytelling for progress",
-              ],
-            })
-          }
+          active={activeView === "leaderboard"}
+          onClick={onLeaderboard}
         />
         <RailAction
           eyebrow="Preferences"
           label="Settings"
           compactLabel="Prefs"
           icon="settings"
-          muted
-          onClick={() =>
-            onComingSoon({
-              title: "Settings",
-              description:
-                "Settings are staged until doctor preferences, notifications, and profile behaviors are grouped into one proper space.",
-              bullets: [
-                "Notification preferences",
-                "Profile and communication controls",
-                "More deliberate doctor customization",
-              ],
-            })
-          }
+          active={activeView === "settings"}
+          onClick={onSettings}
         />
 
         <div className="denty-rail-user rounded-[20px] border border-white/8 bg-white/7 px-3 py-3">

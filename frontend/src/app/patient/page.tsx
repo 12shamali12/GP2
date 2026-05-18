@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { usePublicProfile } from "@/features/profiles/hooks/use-public-profile";
+import { SettingsPanel } from "@/features/settings/components/settings-panel";
 import { BrandMark } from "@/features/ui/components/brand-mark";
 import { ComingSoonModal } from "@/features/ui/components/coming-soon-modal";
 import { useFeedbackToast } from "@/features/ui/hooks/use-feedback-toast";
@@ -33,7 +34,8 @@ type PatientSurface =
   | "overview"
   | "profile"
   | "notifications"
-  | "chat";
+  | "chat"
+  | "settings";
 
 export default function PatientPage() {
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
@@ -356,6 +358,13 @@ export default function PatientPage() {
         "Contact doctors, supervisors, and shared rooms from the main patient workspace instead of opening side drawers.",
       badges: ["Direct chat", "Rooms", "Attachments"],
     },
+    settings: {
+      eyebrow: "Preferences",
+      title: "Patient settings",
+      description:
+        "Theme, language, notifications, and account controls grouped into one calm preferences surface.",
+      badges: ["Appearance", "Language", "Notifications", "Account"],
+    },
   };
 
   const currentSurfaceMeta = surfaceMeta[activeSurface];
@@ -386,6 +395,7 @@ export default function PatientPage() {
             onProfile={() => setActiveSurface("profile")}
             onNotifications={() => setActiveSurface("notifications")}
             onChat={() => setActiveSurface("chat")}
+            onSettings={() => setActiveSurface("settings")}
             onComingSoon={setComingSoon}
           />
 
@@ -555,6 +565,13 @@ export default function PatientPage() {
                 onChatTextChange={setChatText}
                 onAttachImage={handleAttachChatImage}
                 onSend={() => void sendConversationMessage(selectedConversation)}
+              />
+            </div>
+
+            <div className={activeSurface === "settings" ? "" : "hidden"}>
+              <SettingsPanel
+                role="patient"
+                onEditProfile={() => setActiveSurface("profile")}
               />
             </div>
           </section>

@@ -18,7 +18,9 @@ type SupervisorSideRailProps = {
     | "profile"
     | "notifications"
     | "calendar"
-    | "chat";
+    | "chat"
+    | "leaderboard"
+    | "settings";
   unreadNotifications: number;
   chatUnreadCount: number;
   onOverview: () => void;
@@ -26,6 +28,8 @@ type SupervisorSideRailProps = {
   onNotifications: () => void;
   onCalendar: () => void;
   onChat: () => void;
+  onLeaderboard: () => void;
+  onSettings: () => void;
   onComingSoon: (content: ComingSoonContent) => void;
 };
 
@@ -104,6 +108,8 @@ export function SupervisorSideRail({
   onNotifications,
   onCalendar,
   onChat,
+  onLeaderboard,
+  onSettings,
   onComingSoon,
 }: SupervisorSideRailProps) {
   const router = useRouter();
@@ -208,42 +214,20 @@ export function SupervisorSideRail({
           }
         />
         <RailAction
-          eyebrow="In progress"
+          eyebrow="Standings"
           label="Leaderboard"
           compactLabel="Rank"
           icon="leaderboard"
-          muted
-          onClick={() =>
-            onComingSoon({
-              title: "Leaderboard",
-              description:
-                "The leaderboard should only ship once it has clear ranking rules and meaningful performance signals.",
-              bullets: [
-                "Transparent scoring model",
-                "Context behind each rank",
-                "Better visual storytelling for progress",
-              ],
-            })
-          }
+          active={activeView === "leaderboard"}
+          onClick={onLeaderboard}
         />
         <RailAction
           eyebrow="Preferences"
           label="Settings"
           compactLabel="Prefs"
           icon="settings"
-          muted
-          onClick={() =>
-            onComingSoon({
-              title: "Settings",
-              description:
-                "Settings are staged until supervisor preferences, notifications, and workflow controls are grouped into one proper space.",
-              bullets: [
-                "Notification preferences",
-                "Profile and communication controls",
-                "More deliberate workspace customization",
-              ],
-            })
-          }
+          active={activeView === "settings"}
+          onClick={onSettings}
         />
 
         <div className="denty-rail-user rounded-[20px] border border-white/8 bg-white/7 px-3 py-3">

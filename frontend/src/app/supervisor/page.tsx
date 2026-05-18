@@ -6,6 +6,10 @@ import { BrandMark } from "@/features/ui/components/brand-mark";
 import { ComingSoonModal } from "@/features/ui/components/coming-soon-modal";
 import { SupervisorWorkspacePanel } from "@/features/supervision/components/supervisor-workspace-panel";
 import type { SupervisorWorkspaceData } from "@/features/supervision/types";
+import { LeaderboardView } from "@/features/leaderboard/components/leaderboard-view";
+import { getLeaderboardSnapshot } from "@/features/leaderboard/services/leaderboard-api";
+import type { LeaderboardSnapshot } from "@/features/admin/types/admin";
+import { SettingsPanel } from "@/features/settings/components/settings-panel";
 import { useFeedbackToast } from "@/features/ui/hooks/use-feedback-toast";
 import { useSupervisorBootstrap } from "./hooks/use-supervisor-bootstrap";
 import { useSupervisorChat } from "./hooks/use-supervisor-chat";
@@ -22,7 +26,9 @@ type SupervisorSurface =
   | "profile"
   | "notifications"
   | "calendar"
-  | "chat";
+  | "chat"
+  | "leaderboard"
+  | "settings";
 
 export default function SupervisorPage() {
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
@@ -68,6 +74,11 @@ export default function SupervisorPage() {
     bullets: string[];
   } | null>(null);
 
+  const [leaderboardSnapshot, setLeaderboardSnapshot] =
+    useState<LeaderboardSnapshot | null>(null);
+  const [leaderboardLoading, setLeaderboardLoading] = useState(false);
+  const [leaderboardError, setLeaderboardError] = useState<string | null>(null);
+
   useFeedbackToast({
     message,
     error,
@@ -76,6 +87,45 @@ export default function SupervisorPage() {
     messageTitle: "Supervisor profile",
     errorTitle: "Supervisor profile",
   });
+
+  useFeedbackToast({
+    message: null,
+    error: leaderboardError,
+    clearMessage: () => undefined,
+    clearError: () => setLeaderboardError(null),
+    messageTitle: "Leaderboard",
+    errorTitle: "Leaderboard",
+  });
+
+  useEffect(() => {
+    if (activeSurface !== "leaderboard") return;
+    if (leaderboardSnapshot || leaderboardLoading) return;
+
+    let cancelled = false;
+    setLeaderboardLoading(true);
+    setLeaderboardError(null);
+
+    getLeaderboardSnapshot()
+      .then((data) => {
+        if (!cancelled) {
+          setLeaderboardSnapshot(data);
+        }
+      })
+      .catch((e: any) => {
+        if (!cancelled) {
+          setLeaderboardError(e?.message || "Failed to load leaderboard.");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLeaderboardLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeSurface, leaderboardSnapshot, leaderboardLoading]);
 
   const identifier = useMemo(
     () => user.id || user.email || user.phone || user.username || "",
@@ -249,6 +299,20 @@ export default function SupervisorPage() {
         "Search, open, and continue direct conversations and shared rooms from an always-visible supervisor desk.",
       badges: ["Direct chat", "Rooms", "Attachments"],
     },
+    leaderboard: {
+      eyebrow: "Standings",
+      title: "Academic leaderboard",
+      description:
+        "Review where each student stands across the program, then dig into any semester cohort to compare peers.",
+      badges: ["Overall ranking", "Semester cohorts", "Student progress"],
+    },
+    settings: {
+      eyebrow: "Preferences",
+      title: "Supervisor settings",
+      description:
+        "Theme, language, notifications, and account controls grouped into one calm preferences surface.",
+      badges: ["Appearance", "Language", "Notifications", "Account"],
+    },
   };
 
   const currentSurfaceMeta = surfaceMeta[activeSurface];
@@ -280,6 +344,8 @@ export default function SupervisorPage() {
             onNotifications={() => setActiveSurface("notifications")}
             onCalendar={() => setActiveSurface("calendar")}
             onChat={() => setActiveSurface("chat")}
+            onLeaderboard={() => setActiveSurface("leaderboard")}
+            onSettings={() => setActiveSurface("settings")}
             onComingSoon={setComingSoon}
           />
 
@@ -383,6 +449,15 @@ export default function SupervisorPage() {
               <SupervisorCalendarView workspace={workspacePreview} />
             </div>
 
+            <div className={activeSurface === "leaderboard" ? "" : "hidden"}>
+              <div className="denty-panel p-6 md:p-7">
+                <LeaderboardView
+                  snapshot={leaderboardSnapshot}
+                  loading={leaderboardLoading}
+                />
+              </div>
+            </div>
+
             <div className={activeSurface === "chat" ? "" : "hidden"}>
               <SupervisorChatWorkspace
                 apiUrl={API_URL}
@@ -400,6 +475,13 @@ export default function SupervisorPage() {
                 onChatTextChange={setChatText}
                 onAttachImage={handleAttachChatImage}
                 onSend={() => void sendConversationMessage(selectedConversation)}
+              />
+            </div>
+
+            <div className={activeSurface === "settings" ? "" : "hidden"}>
+              <SettingsPanel
+                role="supervisor"
+                onEditProfile={() => setActiveSurface("profile")}
               />
             </div>
           </section>

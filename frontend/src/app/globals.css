@@ -5,6 +5,7 @@
   --foreground: #0a1628;
   --muted-foreground: #64748b;
   --accent-strong: #0b7b8a;
+  color-scheme: light;
   --font-app-sans: "Aptos", "Trebuchet MS", "Segoe UI", sans-serif;
   --font-app-display: "Gill Sans", "Aptos Display", "Trebuchet MS", sans-serif;
   --font-app-mono: Consolas, "Courier New", monospace;
@@ -1443,3 +1444,96 @@ body {
     }
   }
 }
+
+html.dark {
+  color-scheme: dark;
+  --background: #0a1322;
+  --foreground: #e8eef6;
+  --muted-foreground: #94a3b8;
+  --color-snow: #122036;
+  --color-snow-soft: rgba(18, 32, 54, 0.84);
+  --color-ice: #142640;
+  --color-ice-soft: rgba(11, 123, 138, 0.18);
+  --color-line: rgba(148, 163, 184, 0.28);
+  --color-line-strong: rgba(232, 238, 246, 0.18);
+}
+
+html.dark body {
+  background:
+    radial-gradient(circle at 8% 12%, rgba(11, 123, 138, 0.18), transparent 22%),
+    radial-gradient(circle at 92% 14%, rgba(16, 185, 129, 0.12), transparent 18%),
+    linear-gradient(180deg, #0a1322 0%, #0b1830 52%, #091122 100%);
+  color: var(--foreground);
+}
+
+html.dark .denty-screen {
+  background:
+    radial-gradient(circle at 8% 12%, rgba(11, 123, 138, 0.18), transparent 22%),
+    radial-gradient(circle at 88% 10%, rgba(16, 185, 129, 0.12), transparent 18%),
+    linear-gradient(180deg, #0a1322 0%, #0c1a30 52%, #091122 100%);
+  color: var(--foreground);
+}
+
+html.dark .denty-panel,
+html.dark .denty-panel-strong,
+html.dark .denty-subpanel,
+html.dark .denty-dashboard-card,
+html.dark .denty-dashboard-card-soft,
+html.dark .denty-list-row,
+html.dark .denty-stat-card,
+html.dark .denty-modal,
+html.dark .denty-sidebar {
+  border-color: rgba(148, 163, 184, 0.22);
+  background: linear-gradient(180deg, rgba(20, 34, 58, 0.88), rgba(12, 22, 40, 0.76));
+  color: var(--foreground);
+  box-shadow:
+    0 22px 48px rgba(2, 8, 18, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+html.dark .denty-field {
+  border-color: rgba(148, 163, 184, 0.28);
+  background: rgba(12, 22, 40, 0.72);
+  color: var(--foreground);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 12px 24px rgba(2, 8, 18, 0.38);
+}
+
+html.dark .denty-field::placeholder {
+  color: rgba(148, 163, 184, 0.72);
+}
+
+html.dark .denty-button-secondary {
+  background: rgba(20, 34, 58, 0.72);
+  color: var(--foreground);
+  border-color: rgba(148, 163, 184, 0.28);
+}
+
+html.dark .denty-action {
+  background: linear-gradient(180deg, rgba(20, 34, 58, 0.82), rgba(12, 22, 40, 0.68));
+  color: var(--foreground);
+  border-color: rgba(148, 163, 184, 0.24);
+}
+
+html.dark .denty-placeholder {
+  background: rgba(12, 22, 40, 0.5);
+  border-color: rgba(148, 163, 184, 0.24);
+  color: var(--foreground);
+}
+
+html.dark .denty-status-chip {
+  background: rgba(20, 34, 58, 0.78);
+  border-color: rgba(148, 163, 184, 0.28);
+  color: rgba(220, 232, 244, 0.92);
+}
+
+html[data-reduced-motion="true"] *,
+html[data-reduced-motion="true"] *::before,
+html[data-reduced-motion="true"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+

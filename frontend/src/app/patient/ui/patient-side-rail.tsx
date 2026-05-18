@@ -13,13 +13,14 @@ type ComingSoonContent = {
 
 type PatientSideRailProps = {
   userName: string;
-  activeView: "overview" | "profile" | "notifications" | "chat";
+  activeView: "overview" | "profile" | "notifications" | "chat" | "settings";
   unreadNotifications: number;
   chatUnreadCount: number;
   onOverview: () => void;
   onProfile: () => void;
   onNotifications: () => void;
   onChat: () => void;
+  onSettings: () => void;
   onComingSoon: (content: ComingSoonContent) => void;
 };
 
@@ -97,6 +98,7 @@ export function PatientSideRail({
   onProfile,
   onNotifications,
   onChat,
+  onSettings,
   onComingSoon,
 }: PatientSideRailProps) {
   const router = useRouter();
@@ -235,19 +237,8 @@ export function PatientSideRail({
           label="Settings"
           compactLabel="Prefs"
           icon="settings"
-          muted
-          onClick={() =>
-            onComingSoon({
-              title: "Settings",
-              description:
-                "Settings will become a real preferences surface once patient notifications and communication options are grouped properly.",
-              bullets: [
-                "Notification preferences",
-                "Communication choices",
-                "Account personalization",
-              ],
-            })
-          }
+          active={activeView === "settings"}
+          onClick={onSettings}
         />
 
         <div className="denty-rail-user rounded-[20px] border border-white/8 bg-white/7 px-3 py-3">

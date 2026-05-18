@@ -1,6 +1,7 @@
 import { httpJson } from "@/lib/api/http";
 import { authHeaders } from "@/lib/api/auth";
 import { ADMIN_USERNAME } from "@/features/admin/lib/admin-config";
+import { getLeaderboardSnapshot as fetchLeaderboardSnapshot } from "@/features/leaderboard/services/leaderboard-api";
 import type {
   DoctorRequestItem,
   LeaderboardSnapshot,
@@ -174,10 +175,8 @@ export const updateStudentSemester = (userId: string, semesterId?: string | null
     semesterId: semesterId ?? undefined,
   });
 
-export const getLeaderboardSnapshot = () =>
-  cachedAdminLoader("leaderboard", () =>
-    getAdminJson<LeaderboardSnapshot>("/profiles/leaderboard"),
-  );
+export const getLeaderboardSnapshot = (): Promise<LeaderboardSnapshot> =>
+  cachedAdminLoader("leaderboard", () => fetchLeaderboardSnapshot());
 
 export const getUserProfileReports = () =>
   cachedAdminLoader("userReports", () =>

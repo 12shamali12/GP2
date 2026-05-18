@@ -8,7 +8,10 @@ export type DoctorSurface =
   | "notifications"
   | "approvals"
   | "report"
-  | "chat";
+  | "chat"
+  | "game"
+  | "leaderboard"
+  | "settings";
 
 export type DoctorSurfaceMeta = {
   eyebrow: string;
@@ -59,6 +62,27 @@ export const doctorSurfaceMeta: Record<DoctorSurface, DoctorSurfaceMeta> = {
     description:
       "Search, open, and continue direct conversations and shared rooms from one always-visible communication desk.",
     badges: ["Direct chat", "Rooms", "Attachments"],
+  },
+  leaderboard: {
+    eyebrow: "Standings",
+    title: "Academic leaderboard",
+    description:
+      "See where you rank across the whole program, then switch into your semester cohort to compare against current peers.",
+    badges: ["Cohort ranking", "Overall ranking", "Your standing"],
+  },
+  game: {
+    eyebrow: "Practice",
+    title: "Toothy knowledge quiz",
+    description:
+      "Sharpen your clinical knowledge with a ten-question quiz across anatomy, caries, periodontics, endodontics, and oral surgery. Every attempt feeds your leaderboard standing.",
+    badges: ["Anatomy", "Caries", "Perio", "Endo", "Surgery"],
+  },
+  settings: {
+    eyebrow: "Preferences",
+    title: "Doctor settings",
+    description:
+      "Theme, language, notifications, and account controls grouped into one calm preferences surface.",
+    badges: ["Appearance", "Language", "Notifications", "Account"],
   },
 };
 
