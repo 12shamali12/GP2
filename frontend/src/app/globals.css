@@ -42,6 +42,10 @@
 
 html {
   scroll-behavior: smooth;
+  /* Bumps every rem-based size up ~9% so the app at 100% zoom feels like
+   * the previous 90% zoom. Tightened in Round 1, restored here after the
+   * user confirmed Round 1 went ~10% too far. */
+  font-size: 109%;
 }
 
 body {
@@ -95,162 +99,62 @@ body {
     gap: 1.15rem;
   }
 
+  /* Side rail: always-expanded at a comfortable 16.5rem width. The previous
+   * hover-to-expand created a "label flicker" feel users hated; a fixed
+   * width is calmer for a workspace where the rail is in constant use. */
   .denty-collapsible-rail {
     position: sticky;
     top: 1rem;
     align-self: start;
-    width: 4.5rem;
+    width: 16.5rem;
     height: calc(100vh - 2rem);
     z-index: 30;
     overflow-x: hidden;
-    scrollbar-width: none;
-    transition:
-      width 280ms cubic-bezier(0.22, 1, 0.36, 1),
-      transform 280ms cubic-bezier(0.22, 1, 0.36, 1),
-      box-shadow 260ms ease,
-      background-color 260ms ease,
-      border-color 260ms ease;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
   }
 
   .denty-collapsible-rail::-webkit-scrollbar {
-    width: 0;
-    height: 0;
+    width: 6px;
   }
 
-  .denty-collapsible-rail:hover {
-    width: 17.5rem;
+  .denty-collapsible-rail::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.18);
+    border-radius: 999px;
   }
 
+  /* All rail children are visible by default — no hover gymnastics. */
   .denty-collapsible-rail .denty-rail-action {
-    justify-content: center;
-    padding-left: 0.55rem;
-    padding-right: 0.55rem;
+    justify-content: flex-start;
+    padding-left: 0.7rem;
+    padding-right: 0.7rem;
   }
 
-  .denty-collapsible-rail:hover .denty-rail-action {
-    justify-content: flex-start;
-    padding-left: 0.8rem;
-    padding-right: 0.8rem;
+  .denty-collapsible-rail .denty-rail-copy,
+  .denty-collapsible-rail .denty-rail-panel,
+  .denty-collapsible-rail .denty-rail-section-label,
+  .denty-collapsible-rail .denty-rail-search,
+  .denty-collapsible-rail .denty-rail-user {
+    opacity: 1;
+    max-width: none;
+    max-height: none;
+    overflow: visible;
+    transform: none;
   }
 
   .denty-collapsible-rail .denty-rail-copy {
-    max-width: 0;
-    opacity: 0;
-    overflow: hidden;
     white-space: nowrap;
-    transform: translateX(-6px);
-    transition:
-      max-width 260ms ease,
-      opacity 180ms ease,
-      transform 220ms ease;
-  }
-
-  .denty-collapsible-rail:hover .denty-rail-copy {
-    max-width: 14rem;
-    opacity: 1;
-    transform: translateX(0);
-  }
-
-  .denty-collapsible-rail .denty-rail-panel {
-    max-height: 0;
-    opacity: 0;
     overflow: hidden;
-    margin-top: 0;
-    padding-top: 0;
-    padding-bottom: 0;
-    border-width: 0;
-    transition:
-      max-height 260ms ease,
-      opacity 180ms ease,
-      margin-top 260ms ease,
-      padding-top 260ms ease,
-      padding-bottom 260ms ease,
-      border-width 180ms ease;
-  }
-
-  .denty-collapsible-rail:hover .denty-rail-panel {
-    max-height: 12rem;
-    opacity: 1;
-    margin-top: 1rem;
-    padding-top: 0.75rem;
-    padding-bottom: 0.75rem;
-    border-width: 1px;
-  }
-
-  .denty-collapsible-rail .denty-rail-section-label {
-    max-height: 0;
-    opacity: 0;
-    overflow: hidden;
-    padding-top: 0;
-    margin-left: 0;
-    transition:
-      max-height 260ms ease,
-      opacity 180ms ease,
-      padding-top 260ms ease,
-      margin-left 260ms ease;
-  }
-
-  .denty-collapsible-rail:hover .denty-rail-section-label {
-    max-height: 2rem;
-    opacity: 1;
-    padding-top: 0.5rem;
-    margin-left: 0.25rem;
-  }
-
-  .denty-collapsible-rail .denty-rail-search {
-    max-height: 0;
-    opacity: 0;
-    overflow: hidden;
-    margin-top: 0;
-    margin-bottom: 0;
-    transform: translateY(-6px);
-    transition:
-      max-height 260ms ease,
-      opacity 180ms ease,
-      margin-top 260ms ease,
-      margin-bottom 260ms ease,
-      transform 220ms ease;
-  }
-
-  .denty-collapsible-rail:hover .denty-rail-search {
-    max-height: 5rem;
-    opacity: 1;
-    margin-top: 0.65rem;
-    margin-bottom: 0.15rem;
-    transform: translateY(0);
+    text-overflow: ellipsis;
   }
 
   .denty-collapsible-rail .denty-rail-badge-full {
-    display: none;
-  }
-
-  .denty-collapsible-rail:hover .denty-rail-badge-full {
     display: inline-flex;
   }
 
   .denty-collapsible-rail .denty-rail-badge-mini {
-    display: inline-flex;
-  }
-
-  .denty-collapsible-rail:hover .denty-rail-badge-mini {
     display: none;
-  }
-
-  .denty-collapsible-rail .denty-rail-user {
-    max-height: 0;
-    opacity: 0;
-    overflow: hidden;
-    transform: translateY(8px);
-    transition:
-      max-height 260ms ease,
-      opacity 180ms ease,
-      transform 220ms ease;
-  }
-
-  .denty-collapsible-rail:hover .denty-rail-user {
-    max-height: 7rem;
-    opacity: 1;
-    transform: translateY(0);
   }
 }
 

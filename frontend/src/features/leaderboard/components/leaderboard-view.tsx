@@ -540,7 +540,7 @@ function GameLeaderboard({ currentUserId }: GameLeaderboardProps) {
                     {t("leaderboard.average")}
                   </p>
                   <p className="mt-2 text-xl font-semibold text-[var(--foreground)]">
-                    {entry.averageScore.toFixed(1)}
+                    {entry.averageScore !== null ? entry.averageScore.toFixed(1) : "—"}
                   </p>
                 </div>
               </div>
