@@ -20,9 +20,16 @@ import type { AuthUser } from "../auth/jwt-payload";
 export class GameController {
   constructor(private readonly gameService: GameService) {}
 
-  @Get("questions")
-  getQuestions() {
-    return { questions: this.gameService.getQuestions() };
+  @Get("today")
+  getToday(@CurrentUser() user: AuthUser | undefined) {
+    if (!user) throw new UnauthorizedException();
+    return this.gameService.getTodayState(user);
+  }
+
+  @Get("daily-questions")
+  getDailyQuestions(@CurrentUser() user: AuthUser | undefined) {
+    if (!user) throw new UnauthorizedException();
+    return this.gameService.getDailyQuestions(user);
   }
 
   @Post("quiz-attempt")
@@ -38,5 +45,11 @@ export class GameController {
   listMyAttempts(@CurrentUser() user: AuthUser | undefined) {
     if (!user) throw new UnauthorizedException();
     return this.gameService.listMyAttempts(user);
+  }
+
+  @Get("leaderboard")
+  getLeaderboard(@CurrentUser() user: AuthUser | undefined) {
+    if (!user) throw new UnauthorizedException();
+    return this.gameService.getLeaderboard();
   }
 }

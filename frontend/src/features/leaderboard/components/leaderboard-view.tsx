@@ -1,14 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type {
   LeaderboardBoard,
   LeaderboardSnapshot,
 } from "@/features/admin/types/admin";
+import {
+  getGameLeaderboard,
+  type GameLeaderboardSnapshot,
+} from "@/features/game/services/game-api";
 
 const panelClass =
   "overflow-hidden rounded-[32px] border border-white/12 bg-[linear-gradient(180deg,rgba(249,252,255,0.78),rgba(222,233,241,0.34))] p-6 shadow-[0_28px_72px_rgba(7,18,34,0.16)] backdrop-blur-[24px] md:p-7";
+
+type LeaderboardTab = "academic" | "game";
 
 type LeaderboardViewProps = {
   snapshot: LeaderboardSnapshot | null;
@@ -22,6 +28,85 @@ export function LeaderboardView({
   loading = false,
   currentUserId,
 }: LeaderboardViewProps) {
+  const [tab, setTab] = useState<LeaderboardTab>("academic");
+
+  return (
+    <div className="space-y-5">
+      <div
+        role="tablist"
+        aria-label="Leaderboard"
+        className="flex flex-wrap gap-3"
+      >
+        <TabButton
+          active={tab === "academic"}
+          onClick={() => setTab("academic")}
+          label="Academic"
+        />
+        <TabButton
+          active={tab === "game"}
+          onClick={() => setTab("game")}
+          label="Game"
+        />
+      </div>
+
+      {tab === "academic" ? (
+        <AcademicLeaderboard
+          snapshot={snapshot}
+          loading={loading}
+          currentUserId={currentUserId}
+        />
+      ) : (
+        <GameLeaderboard currentUserId={currentUserId} />
+      )}
+    </div>
+  );
+}
+
+// =============================================================================
+// Tab button
+// =============================================================================
+
+function TabButton({
+  active,
+  onClick,
+  label,
+}: {
+  active: boolean;
+  onClick: () => void;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      role="tab"
+      aria-selected={active}
+      onClick={onClick}
+      className={`inline-flex min-h-[3rem] cursor-pointer items-center justify-center rounded-[18px] border px-5 py-3 text-sm font-semibold transition ${
+        active
+          ? "border-[rgba(137,219,255,0.28)] bg-[linear-gradient(135deg,rgba(12,32,54,0.95),rgba(9,68,94,0.92))] text-white shadow-[0_24px_52px_rgba(6,17,34,0.28)]"
+          : "border-white/12 bg-white/28 text-[rgba(10,22,40,0.78)] hover:bg-white/42"
+      }`}
+    >
+      {label}
+    </button>
+  );
+}
+
+// =============================================================================
+// Academic leaderboard (existing behaviour)
+// =============================================================================
+
+type AcademicLeaderboardProps = {
+  snapshot: LeaderboardSnapshot | null;
+  loading: boolean;
+  currentUserId?: string;
+};
+
+function AcademicLeaderboard({
+  snapshot,
+  loading,
+  currentUserId,
+}: AcademicLeaderboardProps) {
   const [selectedBoardKey, setSelectedBoardKey] = useState("overall");
 
   const boards = useMemo(
@@ -284,6 +369,176 @@ export function LeaderboardView({
             ) : null}
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
+// Game leaderboard tab (lazy-loaded on first activation)
+// =============================================================================
+
+type GameLeaderboardProps = {
+  currentUserId?: string;
+};
+
+function GameLeaderboard({ currentUserId }: GameLeaderboardProps) {
+  const [snapshot, setSnapshot] = useState<GameLeaderboardSnapshot | null>(
+    null,
+  );
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await getGameLeaderboard();
+      setSnapshot(data);
+    } catch (e: unknown) {
+      const message =
+        e instanceof Error
+          ? e.message
+          : "Failed to load the game leaderboard.";
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Lazy: only fetch when the Game tab actually mounts (which is exactly
+  // when this component mounts).
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const entries = snapshot?.entries ?? [];
+
+  return (
+    <div className={panelClass}>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="denty-kicker">Daily quiz standings</p>
+          <h2 className="mt-3 text-3xl font-semibold text-[var(--foreground)]">
+            Game leaderboard
+          </h2>
+          <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--muted-foreground)]">
+            Ranked by total quiz points across all daily attempts. Keep the
+            streak going for compounding rewards.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => void load()}
+          disabled={loading}
+          className="inline-flex min-h-[2.5rem] cursor-pointer items-center justify-center rounded-[16px] border border-white/14 bg-white/30 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[rgba(10,22,40,0.7)] transition hover:bg-white/45 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {loading ? "Refreshing..." : "Refresh"}
+        </button>
+      </div>
+
+      {error ? (
+        <p className="mt-5 rounded-[20px] border border-rose-400/30 bg-rose-100/40 px-4 py-3 text-sm text-rose-900">
+          {error}
+        </p>
+      ) : null}
+
+      <div className="mt-5 max-h-[54rem] space-y-3 overflow-y-auto pr-1">
+        {loading && !snapshot ? (
+          <p className="text-sm text-[var(--muted-foreground)]">
+            Loading game leaderboard...
+          </p>
+        ) : null}
+
+        {!loading && entries.length === 0 && !error ? (
+          <div className="rounded-[24px] border border-dashed border-white/16 bg-white/14 p-5">
+            <p className="text-sm text-[var(--muted-foreground)]">
+              No doctors have played the daily quiz yet. Be the first to set the
+              pace.
+            </p>
+          </div>
+        ) : null}
+
+        {entries.map((entry) => {
+          const isCurrentUser =
+            Boolean(currentUserId) && entry.doctor.id === currentUserId;
+          return (
+            <div
+              key={entry.doctor.id}
+              className={`rounded-[24px] border p-4 shadow-[0_18px_42px_rgba(7,18,34,0.08)] backdrop-blur-[18px] ${
+                isCurrentUser
+                  ? "border-[rgba(7,111,133,0.45)] bg-[linear-gradient(180deg,rgba(176,224,238,0.55),rgba(154,206,224,0.32))] ring-2 ring-[rgba(7,111,133,0.4)]"
+                  : "border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.42),rgba(229,237,243,0.16))]"
+              }`}
+            >
+              <div className="grid gap-4 xl:grid-cols-[auto_minmax(0,1fr)_auto] xl:items-center">
+                <div className="inline-flex h-14 w-14 items-center justify-center rounded-full border border-white/12 bg-[rgba(9,20,38,0.08)] text-lg font-semibold text-[var(--foreground)]">
+                  {entry.rank}
+                </div>
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Link
+                      href={`/profiles/${entry.doctor.id}`}
+                      className="text-lg font-semibold text-[var(--foreground)] hover:text-[rgba(7,111,133,0.96)]"
+                    >
+                      {entry.doctor.name}
+                    </Link>
+                    {isCurrentUser ? (
+                      <span className="rounded-full border border-[rgba(7,111,133,0.36)] bg-[rgba(7,111,133,0.18)] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-[rgba(6,83,98,0.96)]">
+                        You
+                      </span>
+                    ) : null}
+                    {entry.streak > 0 ? (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-[rgba(234,88,12,0.3)] bg-[rgba(254,215,170,0.4)] px-3 py-1 text-[11px] font-semibold text-[rgba(124,45,18,0.95)]">
+                        <span aria-hidden>🔥</span>
+                        {entry.streak}-day
+                      </span>
+                    ) : null}
+                  </div>
+                  <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+                    @{entry.doctor.username}
+                    {entry.doctor.doctorIdNumber
+                      ? ` | Student ID ${entry.doctor.doctorIdNumber}`
+                      : ""}
+                    {entry.doctor.semester
+                      ? ` · ${entry.doctor.semester.label}`
+                      : ""}
+                  </p>
+                </div>
+                <span className="rounded-full border border-[rgba(7,111,133,0.16)] bg-[rgba(7,111,133,0.1)] px-4 py-2 text-sm font-semibold text-[rgba(6,83,98,0.96)]">
+                  {entry.totalQuizPoints.toFixed(1)} pts
+                </span>
+              </div>
+
+              <div className="mt-4 grid gap-3 md:grid-cols-3">
+                <div className="rounded-[20px] border border-white/10 bg-white/30 px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[rgba(10,22,40,0.48)]">
+                    Attempts
+                  </p>
+                  <p className="mt-2 text-xl font-semibold text-[var(--foreground)]">
+                    {entry.attempts}
+                  </p>
+                </div>
+                <div className="rounded-[20px] border border-white/10 bg-white/30 px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[rgba(10,22,40,0.48)]">
+                    Best score
+                  </p>
+                  <p className="mt-2 text-xl font-semibold text-[var(--foreground)]">
+                    {entry.bestScore}
+                  </p>
+                </div>
+                <div className="rounded-[20px] border border-white/10 bg-white/30 px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[rgba(10,22,40,0.48)]">
+                    Average
+                  </p>
+                  <p className="mt-2 text-xl font-semibold text-[var(--foreground)]">
+                    {entry.averageScore.toFixed(1)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

@@ -830,3 +830,16 @@ model QuizAttempt {
 
   @@index([doctorId, completedAt])
 }
+
+model QuizQuestion {
+  id           String   @id @default(uuid())
+  prompt       String
+  options      String[] // length 4
+  correctIndex Int
+  category     String   // one of: anatomy, caries, periodontics, endodontics, oral-surgery
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([category, active])
+}

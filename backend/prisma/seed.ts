@@ -44,6 +44,7 @@ import {
   ClinicCaseProgressStatus,
 } from "@prisma/client";
 import * as bcrypt from "bcryptjs";
+import { QUIZ_QUESTIONS_SEED } from "./quiz-questions.seed";
 
 const prisma = new PrismaClient();
 
@@ -137,6 +138,9 @@ async function resetDemoData(): Promise<void> {
   await prisma.notification.deleteMany({});
   await prisma.supervisorRequest.deleteMany({});
   await prisma.doctorRequest.deleteMany({});
+  // QuizAttempt has FK to User — wipe attempts so user.deleteMany succeeds.
+  // QuizQuestion is reference data and is preserved.
+  await prisma.quizAttempt.deleteMany({});
 
   await prisma.semesterClinicCase.deleteMany({});
   await prisma.clinicExam.deleteMany({});
@@ -1653,8 +1657,55 @@ async function seedConversations(
 // Main
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Quiz question bank — reference data for the Game module
+// ---------------------------------------------------------------------------
+
+async function seedQuizQuestions(): Promise<number> {
+  // The quiz question bank is reference data (not demo data tied to a doctor).
+  // We upsert by `prompt` because it's deterministic and unique across the bank.
+  // Re-running this is safe: if a prompt already exists we refresh its options
+  // / correctIndex / category in case the question text was lightly edited but
+  // the prompt remained the same.
+  let upserts = 0;
+  for (const q of QUIZ_QUESTIONS_SEED) {
+    const existing = await prisma.quizQuestion.findFirst({
+      where: { prompt: q.prompt },
+      select: { id: true },
+    });
+    if (existing) {
+      await prisma.quizQuestion.update({
+        where: { id: existing.id },
+        data: {
+          options: [...q.options],
+          correctIndex: q.correctIndex,
+          category: q.category,
+          active: true,
+        },
+      });
+    } else {
+      await prisma.quizQuestion.create({
+        data: {
+          prompt: q.prompt,
+          options: [...q.options],
+          correctIndex: q.correctIndex,
+          category: q.category,
+          active: true,
+        },
+      });
+    }
+    upserts += 1;
+  }
+  log(`quiz questions upserted: ${upserts}`);
+  return upserts;
+}
+
 async function main() {
   log("DentyHub demo seed starting…");
+
+  // Reference data (quiz questions) is always reconciled, regardless of the
+  // appointment-count idempotency gate below — they're not "demo" rows.
+  await seedQuizQuestions();
 
   if (process.env.SEED_RESET === "true") {
     await resetDemoData();
@@ -1753,6 +1804,7 @@ async function main() {
     conversations: await prisma.conversation.count(),
     messages: await prisma.message.count(),
     notifications: await prisma.notification.count(),
+    quizQuestions: await prisma.quizQuestion.count(),
   };
   log("==================== SEED SUMMARY ====================");
   for (const [k, v] of Object.entries(totals)) {

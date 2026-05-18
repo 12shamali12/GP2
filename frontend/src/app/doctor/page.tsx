@@ -33,6 +33,7 @@ import {
   getWeekRangeHelper,
 } from "@/app/doctor/lib/report-form";
 import { GameSurface } from "@/features/game/components/game-surface";
+import { getToday as getGameToday } from "@/features/game/services/game-api";
 import { LeaderboardView } from "@/features/leaderboard/components/leaderboard-view";
 import { getLeaderboardSnapshot } from "@/features/leaderboard/services/leaderboard-api";
 import type { LeaderboardSnapshot } from "@/features/admin/types/admin";
@@ -146,6 +147,12 @@ export default function DoctorPage() {
     useState<LeaderboardSnapshot | null>(null);
   const [leaderboardLoading, setLeaderboardLoading] = useState(false);
   const [leaderboardError, setLeaderboardError] = useState<string | null>(null);
+
+  /**
+   * Current daily-quiz streak for the rail badge. Best-effort: silently
+   * stays at 0 if the game API is unreachable.
+   */
+  const [gameStreak, setGameStreak] = useState(0);
 
   const doctorEmoji = useMemo(() => {
     const g = (user.gender || "").toLowerCase();
@@ -412,6 +419,24 @@ export default function DoctorPage() {
     }
   }, [activeSurface, conversations.length, fetchConversations]);
 
+  // Fetch the current daily-quiz streak once we know who the user is.
+  // Best-effort: failures are swallowed so an offline game backend doesn't
+  // break the doctor shell.
+  useEffect(() => {
+    if (!identifier) return;
+    let cancelled = false;
+    getGameToday()
+      .then((today) => {
+        if (!cancelled) setGameStreak(today.streak);
+      })
+      .catch(() => {
+        if (!cancelled) setGameStreak(0);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [identifier]);
+
   useEffect(() => {
     if (activeSurface !== "leaderboard") return;
     if (leaderboardSnapshot || leaderboardLoading) return;
@@ -516,6 +541,7 @@ export default function DoctorPage() {
             activeView={activeSurface}
             unreadNotifications={unreadNotifications}
             chatUnreadCount={chatUnreadCount}
+            streakCount={gameStreak}
             onOverview={() => setActiveSurface("overview")}
             onProfile={() => setActiveSurface("profile")}
             onNotifications={() => setActiveSurface("notifications")}

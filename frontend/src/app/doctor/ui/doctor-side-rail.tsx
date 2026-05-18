@@ -25,6 +25,12 @@ type DoctorSideRailProps = {
     | "settings";
   unreadNotifications: number;
   chatUnreadCount: number;
+  /**
+   * Optional current daily-quiz streak. When greater than zero, a small flame
+   * badge is rendered next to the "Toothy Game" rail entry as a quick at-a-
+   * glance reminder. The doctor page bootstraps this from `getToday()`.
+   */
+  streakCount?: number;
   onOverview: () => void;
   onProfile: () => void;
   onNotifications: () => void;
@@ -109,6 +115,7 @@ export function DoctorSideRail({
   activeView,
   unreadNotifications,
   chatUnreadCount,
+  streakCount = 0,
   onOverview,
   onProfile,
   onNotifications,
@@ -210,14 +217,25 @@ export function DoctorSideRail({
           Later
         </div>
 
-        <RailAction
-          eyebrow="Practice"
-          label="Toothy Game"
-          compactLabel="Game"
-          icon="game"
-          active={activeView === "game"}
-          onClick={onGame}
-        />
+        <div className="relative">
+          <RailAction
+            eyebrow="Practice"
+            label="Toothy Game"
+            compactLabel="Game"
+            icon="game"
+            active={activeView === "game"}
+            onClick={onGame}
+          />
+          {streakCount > 0 ? (
+            <span
+              title={`${streakCount}-day streak`}
+              className="pointer-events-none absolute right-3 top-1/2 inline-flex -translate-y-1/2 items-center gap-1 rounded-full border border-[rgba(234,88,12,0.35)] bg-[rgba(254,215,170,0.92)] px-2 py-0.5 text-[11px] font-semibold text-[rgba(124,45,18,0.95)] shadow-[0_8px_18px_rgba(124,45,18,0.18)]"
+            >
+              <span aria-hidden>🔥</span>
+              {streakCount}
+            </span>
+          ) : null}
+        </div>
         <RailAction
           eyebrow="Standings"
           label="Leaderboard"
