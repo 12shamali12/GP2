@@ -116,9 +116,9 @@ export function DoctorLegacyOperations({
             {todayAppointments.map((appointment) => (
               <div
                 key={appointment.id}
-                className="denty-list-row flex items-center justify-between gap-3 px-4 py-3"
+                className="denty-list-row flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
               >
-                <div>
+                <div className="min-w-0">
                   <p className="font-semibold text-[var(--foreground)]">
                     {t("doctor.legacy.patient_label", {
                       value:
@@ -319,7 +319,7 @@ export function DoctorLegacyOperations({
                     return (
                       <div
                         key={slot.id}
-                        className="denty-list-row flex items-center justify-between gap-3 px-4 py-3"
+                        className="denty-list-row flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
                       >
                         <div
                           onClick={() => {
@@ -327,7 +327,7 @@ export function DoctorLegacyOperations({
                               onSelectBookedSlot(slot.id);
                             }
                           }}
-                          className="cursor-pointer"
+                          className="min-w-0 cursor-pointer"
                         >
                           <p className="text-sm font-semibold text-[var(--foreground)]">
                             {new Date(slot.startTime).toLocaleTimeString([], {

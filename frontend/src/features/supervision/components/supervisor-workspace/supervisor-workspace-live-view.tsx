@@ -39,13 +39,13 @@ export function SupervisorWorkspaceLiveView({
   const t = useTranslation();
   return (
     <div className="grid gap-5 xl:grid-cols-[1.08fr_0.92fr]">
-      <div className="denty-panel-strong p-6">
+      <div className="denty-panel-strong p-4 sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="denty-kicker">
               {t("supervision.sup.live.duties_eyebrow")}
             </p>
-            <h2 className="mt-3 text-2xl font-semibold text-[var(--foreground)]">
+            <h2 className="mt-3 text-xl font-semibold text-[var(--foreground)] sm:text-2xl">
               {t("supervision.sup.live.duties_title")}
             </h2>
           </div>
@@ -57,7 +57,7 @@ export function SupervisorWorkspaceLiveView({
         </div>
         <div className="mt-5 space-y-4">
           {workspace?.clinicOverview.map((duty) => (
-            <div key={duty.id} className="denty-dashboard-card p-5">
+            <div key={duty.id} className="denty-dashboard-card p-4 sm:p-5">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="text-xl font-semibold text-[var(--foreground)]">{duty.clinic.name}</p>
@@ -107,11 +107,11 @@ export function SupervisorWorkspaceLiveView({
       </div>
 
       <div className="space-y-5">
-        <div className="denty-panel-strong p-6">
+        <div className="denty-panel-strong p-4 sm:p-6">
           <p className="denty-kicker">
             {t("supervision.sup.live.finder_eyebrow")}
           </p>
-          <h2 className="mt-3 text-2xl font-semibold text-[var(--foreground)]">
+          <h2 className="mt-3 text-xl font-semibold text-[var(--foreground)] sm:text-2xl">
             {t("supervision.sup.live.finder_title")}
           </h2>
           <div className="mt-5 space-y-3">
@@ -143,11 +143,11 @@ export function SupervisorWorkspaceLiveView({
           </div>
         </div>
 
-        <div className="denty-panel-strong p-6">
+        <div className="denty-panel-strong p-4 sm:p-6">
           <p className="denty-kicker">
             {t("supervision.sup.live.selected_eyebrow")}
           </p>
-          <h2 className="mt-3 text-2xl font-semibold text-[var(--foreground)]">
+          <h2 className="mt-3 text-xl font-semibold text-[var(--foreground)] sm:text-2xl">
             {selectedStudent?.name || t("supervision.sup.live.choose_student")}
           </h2>
           <p className="mt-3 text-sm text-[var(--muted-foreground)]">

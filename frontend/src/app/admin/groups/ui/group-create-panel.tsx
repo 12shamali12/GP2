@@ -22,7 +22,7 @@ export function GroupCreatePanel({
 }: GroupCreatePanelProps) {
   const t = useTranslation();
   return (
-    <div className="denty-panel-strong p-6">
+    <div className="denty-panel-strong p-4 sm:p-6">
       <p className="denty-kicker">{t("admin.groups.create_eyebrow")}</p>
       <h2 className="mt-3 text-2xl font-semibold text-[var(--foreground)]">
         {t("admin.groups.create_heading")}

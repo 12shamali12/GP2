@@ -441,11 +441,11 @@ export default function PatientPage() {
             }
           >
           <section className="min-w-0 space-y-4 lg:space-y-5">
-            <div className="overflow-hidden rounded-[32px] border border-white/12 bg-[linear-gradient(180deg,rgba(249,252,255,0.78),rgba(222,233,241,0.34))] px-7 py-7 shadow-[0_28px_72px_rgba(7,18,34,0.16)] backdrop-blur-[24px] md:px-9 md:py-8">
+            <div className="overflow-hidden rounded-[32px] border border-white/12 bg-[linear-gradient(180deg,rgba(249,252,255,0.78),rgba(222,233,241,0.34))] px-5 py-6 shadow-[0_28px_72px_rgba(7,18,34,0.16)] backdrop-blur-[24px] sm:px-7 sm:py-7 md:px-9 md:py-8">
               <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
-                <div className="space-y-3">
+                <div className="min-w-0 space-y-3">
                   <div className="flex items-center gap-3">
-                    <BrandMark className="h-14 w-14 frozen-float" />
+                    <BrandMark className="h-12 w-12 frozen-float sm:h-14 sm:w-14" />
                     <span className="rounded-full border border-white/20 bg-white/26 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-[rgba(10,22,40,0.64)]">
                       {t("patient.common.workspace")}
                     </span>
@@ -453,7 +453,7 @@ export default function PatientPage() {
 
                   <div>
                     <p className="denty-kicker">{currentSurfaceMeta.eyebrow}</p>
-                    <h1 className="mt-3 max-w-4xl text-4xl font-semibold text-[var(--foreground)] md:text-5xl">
+                    <h1 className="mt-3 max-w-4xl text-2xl font-semibold text-[var(--foreground)] sm:text-3xl md:text-4xl xl:text-5xl">
                       {currentSurfaceMeta.title}
                     </h1>
                     <p className="mt-3 max-w-4xl text-sm leading-7 text-[var(--muted-foreground)] md:text-base">

@@ -11,13 +11,13 @@ export function DoctorWorkspaceTasksView({ workspace }: Props) {
   const t = useTranslation();
   return (
     <div className="grid gap-5 xl:grid-cols-[0.96fr_1.04fr]">
-      <div className="denty-panel-strong p-6">
+      <div className="denty-panel-strong p-4 sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="denty-kicker">
               {t("supervision.tasks.checklist_eyebrow")}
             </p>
-            <h3 className="mt-3 text-2xl font-semibold text-[var(--foreground)]">
+            <h3 className="mt-3 text-xl font-semibold text-[var(--foreground)] sm:text-2xl">
               {t("supervision.tasks.checklist_title")}
             </h3>
           </div>
@@ -44,13 +44,13 @@ export function DoctorWorkspaceTasksView({ workspace }: Props) {
         </div>
       </div>
 
-      <div className="denty-panel-strong p-6">
+      <div className="denty-panel-strong p-4 sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="denty-kicker">
               {t("supervision.tasks.history_eyebrow")}
             </p>
-            <h3 className="mt-3 text-2xl font-semibold text-[var(--foreground)]">
+            <h3 className="mt-3 text-xl font-semibold text-[var(--foreground)] sm:text-2xl">
               {t("supervision.tasks.history_title")}
             </h3>
           </div>
@@ -58,7 +58,7 @@ export function DoctorWorkspaceTasksView({ workspace }: Props) {
         </div>
         <div className="mt-5 space-y-3">
           {workspace?.reports.map((report) => (
-            <div key={report.id} className="denty-dashboard-card p-5">
+            <div key={report.id} className="denty-dashboard-card p-4 sm:p-5">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="text-lg font-semibold text-[var(--foreground)]">{report.title}</p>

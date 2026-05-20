@@ -12,7 +12,7 @@ import { useFeedbackToast } from "@/features/ui/hooks/use-feedback-toast";
 import { useTranslation } from "@/features/i18n/language-provider";
 
 const panelClass =
-  "overflow-hidden rounded-[24px] border border-white/12 bg-[linear-gradient(180deg,rgba(249,252,255,0.78),rgba(222,233,241,0.34))] p-6 shadow-[0_28px_72px_rgba(7,18,34,0.16)] backdrop-blur-[24px] md:p-5";
+  "overflow-hidden rounded-[24px] border border-white/12 bg-[linear-gradient(180deg,rgba(249,252,255,0.78),rgba(222,233,241,0.34))] p-4 shadow-[0_28px_72px_rgba(7,18,34,0.16)] backdrop-blur-[24px] sm:p-6";
 
 type ReportFilter = "pending" | "resolved" | "all";
 
@@ -196,10 +196,10 @@ export default function AdminUserReportsPage() {
             {filteredItems.map((item) => (
               <div
                 key={item.id}
-                className="rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.42),rgba(229,237,243,0.16))] p-5 shadow-[0_18px_42px_rgba(7,18,34,0.08)] backdrop-blur-[18px]"
+                className="rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.42),rgba(229,237,243,0.16))] p-4 shadow-[0_18px_42px_rgba(7,18,34,0.08)] backdrop-blur-[18px] sm:p-5"
               >
                 <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div>
+                  <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="rounded-full border border-white/12 bg-white/28 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[rgba(10,22,40,0.62)]">
                         {item.status}
@@ -208,7 +208,7 @@ export default function AdminUserReportsPage() {
                         {new Date(item.createdAt).toLocaleString()}
                       </span>
                     </div>
-                    <h3 className="mt-3 text-xl font-semibold text-[var(--foreground)]">
+                    <h3 className="mt-3 break-words text-xl font-semibold text-[var(--foreground)]">
                       {item.reason}
                     </h3>
                   </div>
@@ -241,11 +241,11 @@ export default function AdminUserReportsPage() {
                     </p>
                     <Link
                       href={`/profiles/${item.reporter.id}`}
-                      className="mt-2 inline-block font-semibold text-[var(--foreground)] hover:text-[rgba(7,111,133,0.96)]"
+                      className="mt-2 inline-block break-words font-semibold text-[var(--foreground)] hover:text-[rgba(7,111,133,0.96)]"
                     >
                       {item.reporter.name}
                     </Link>
-                    <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+                    <p className="mt-1 break-words text-sm text-[var(--muted-foreground)]">
                       @{item.reporter.username} | {item.reporter.role}
                     </p>
                   </div>
@@ -255,11 +255,11 @@ export default function AdminUserReportsPage() {
                     </p>
                     <Link
                       href={`/profiles/${item.reportedUser.id}`}
-                      className="mt-2 inline-block font-semibold text-[var(--foreground)] hover:text-[rgba(7,111,133,0.96)]"
+                      className="mt-2 inline-block break-words font-semibold text-[var(--foreground)] hover:text-[rgba(7,111,133,0.96)]"
                     >
                       {item.reportedUser.name}
                     </Link>
-                    <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+                    <p className="mt-1 break-words text-sm text-[var(--muted-foreground)]">
                       @{item.reportedUser.username} | {item.reportedUser.role}
                     </p>
                   </div>

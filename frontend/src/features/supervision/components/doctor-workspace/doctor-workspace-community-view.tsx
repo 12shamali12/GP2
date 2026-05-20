@@ -23,13 +23,13 @@ export function DoctorWorkspaceCommunityView({
   const t = useTranslation();
   return (
     <div className="grid gap-5 xl:grid-cols-[0.92fr_1.08fr]">
-      <div className="denty-panel-strong p-6">
+      <div className="denty-panel-strong p-4 sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="denty-kicker">
               {t("supervision.community.identity_eyebrow")}
             </p>
-            <h3 className="mt-3 text-2xl font-semibold text-[var(--foreground)]">
+            <h3 className="mt-3 text-xl font-semibold text-[var(--foreground)] sm:text-2xl">
               {t("supervision.community.identity_title")}
             </h3>
           </div>
@@ -43,7 +43,7 @@ export function DoctorWorkspaceCommunityView({
         </div>
         {workspace?.groupMembership?.group ? (
           <div className="mt-5 space-y-4">
-            <div className="denty-dashboard-card p-5">
+            <div className="denty-dashboard-card p-4 sm:p-5">
               <p className="text-xl font-semibold text-[var(--foreground)]">{workspace.groupMembership.group.name}</p>
               <p className="mt-2 text-sm text-[var(--muted-foreground)]">{workspace.groupMembership.group.semesterLabel}</p>
               {workspace.groupMembership.group.description ? (
@@ -73,13 +73,13 @@ export function DoctorWorkspaceCommunityView({
 
       <div className="space-y-5">
         {workspace?.groupMembership?.group ? (
-          <div className="denty-panel-strong p-6">
+          <div className="denty-panel-strong p-4 sm:p-6">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="denty-kicker">
                   {t("supervision.community.publishing_eyebrow")}
                 </p>
-                <h3 className="mt-3 text-2xl font-semibold text-[var(--foreground)]">
+                <h3 className="mt-3 text-xl font-semibold text-[var(--foreground)] sm:text-2xl">
                   {t("supervision.community.publishing_title")}
                 </h3>
               </div>
@@ -122,13 +122,13 @@ export function DoctorWorkspaceCommunityView({
           </div>
         ) : null}
 
-        <div className="denty-panel-strong p-6">
+        <div className="denty-panel-strong p-4 sm:p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="denty-kicker">
                 {t("supervision.community.feed_eyebrow")}
               </p>
-              <h3 className="mt-3 text-2xl font-semibold text-[var(--foreground)]">
+              <h3 className="mt-3 text-xl font-semibold text-[var(--foreground)] sm:text-2xl">
                 {t("supervision.community.feed_title")}
               </h3>
             </div>
@@ -140,7 +140,7 @@ export function DoctorWorkspaceCommunityView({
           </div>
           <div className="mt-5 space-y-4">
             {workspace?.feed.map((post) => (
-              <article key={post.id} className="denty-dashboard-card p-5">
+              <article key={post.id} className="denty-dashboard-card p-4 sm:p-5">
                 <div className="flex items-start gap-3">
                   <div className="flex h-12 w-12 items-center justify-center rounded-full border border-white/12 bg-[rgba(10,22,40,0.08)] text-base font-semibold text-[var(--foreground)]">
                     {post.author.name.charAt(0).toUpperCase()}

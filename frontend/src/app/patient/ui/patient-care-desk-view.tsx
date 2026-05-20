@@ -81,11 +81,11 @@ export function PatientCareDeskView({
   return (
     <div className="space-y-5">
       <div className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
-        <div className="denty-panel-strong space-y-5 px-6 py-5 md:px-6 md:py-6">
+        <div className="denty-panel-strong space-y-5 px-4 py-5 sm:px-6 md:py-6">
           <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-            <div>
+            <div className="min-w-0">
               <p className="denty-kicker">{t("patient.care.upcoming_eyebrow")}</p>
-              <h2 className="mt-3 text-2xl font-semibold text-[var(--foreground)]">
+              <h2 className="mt-3 text-xl font-semibold text-[var(--foreground)] sm:text-2xl">
                 {t("patient.care.upcoming_title")}
               </h2>
               <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--muted-foreground)]">
@@ -122,10 +122,10 @@ export function PatientCareDeskView({
               return (
                 <div
                   key={appointment.id}
-                  className="denty-list-row flex w-full items-center justify-between gap-4 p-4 text-left"
+                  className="denty-list-row flex w-full flex-col gap-4 p-4 text-left sm:flex-row sm:items-center sm:justify-between"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="denty-avatar-shell h-12 w-12 text-lg font-bold">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div className="denty-avatar-shell h-12 w-12 shrink-0 text-lg font-bold">
                       {avatar ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
@@ -181,7 +181,7 @@ export function PatientCareDeskView({
                     </div>
                   </div>
 
-                  <div className="flex flex-col items-end gap-2">
+                  <div className="flex flex-col items-start gap-2 sm:items-end">
                     <span
                       className={`denty-status-chip ${
                         appointment.status === "APPROVED"
@@ -264,11 +264,11 @@ export function PatientCareDeskView({
         </div>
       </div>
 
-      <div ref={reservationRef} className="denty-dashboard-card space-y-5 p-5 md:p-6">
+      <div ref={reservationRef} className="denty-dashboard-card space-y-5 p-4 sm:p-5 md:p-6">
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-          <div>
+          <div className="min-w-0">
             <p className="denty-kicker">{t("patient.care.booking_eyebrow")}</p>
-            <h3 className="mt-3 text-2xl font-semibold text-[var(--foreground)]">
+            <h3 className="mt-3 text-xl font-semibold text-[var(--foreground)] sm:text-2xl">
               {t("patient.care.booking_title")}
             </h3>
             <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--muted-foreground)]">
@@ -471,9 +471,9 @@ export function PatientCareDeskView({
                         : ""
                     }`}
                   >
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <div className="denty-avatar-shell h-11 w-11 text-lg font-bold">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex min-w-0 items-start gap-3">
+                        <div className="denty-avatar-shell h-11 w-11 shrink-0 text-lg font-bold">
                           {slot.doctor?.avatar ? (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img
@@ -485,8 +485,8 @@ export function PatientCareDeskView({
                             (slot.doctor?.name || "D").charAt(0).toUpperCase()
                           )}
                         </div>
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-3 text-sm text-[var(--foreground)]">
+                        <div className="min-w-0 space-y-1">
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-[var(--foreground)]">
                             <span className="font-semibold">
                               {new Date(slot.startTime).toLocaleDateString(undefined, {
                                 weekday: "long",
@@ -565,7 +565,7 @@ export function PatientCareDeskView({
                       </div>
                       <button
                         onClick={() => onSelectSlot(slot)}
-                        className="denty-action denty-action-primary"
+                        className="denty-action denty-action-primary w-full shrink-0 sm:w-auto"
                       >
                         {t("patient.care.choose")}
                       </button>

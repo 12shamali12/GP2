@@ -20,18 +20,18 @@ export function GroupDirectoryPanel({
 }: GroupDirectoryPanelProps) {
   const t = useTranslation();
   return (
-    <div className="denty-panel-strong p-6">
+    <div className="denty-panel-strong p-4 sm:p-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
+        <div className="min-w-0">
           <p className="denty-kicker">{t("admin.groups.directory_eyebrow")}</p>
-          <h2 className="mt-3 text-2xl font-semibold text-[var(--foreground)]">
+          <h2 className="mt-3 text-xl font-semibold text-[var(--foreground)] sm:text-2xl">
             {t("admin.groups.directory_heading")}
           </h2>
         </div>
         <input
           value={query}
           onChange={(e) => onQueryChange(e.target.value)}
-          className="denty-field max-w-[360px] text-sm"
+          className="denty-field text-sm sm:max-w-[360px]"
           placeholder={t("admin.groups.directory_search")}
         />
       </div>

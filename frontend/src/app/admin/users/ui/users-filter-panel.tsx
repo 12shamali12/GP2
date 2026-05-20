@@ -20,7 +20,7 @@ export function UsersFilterPanel({
 }: UsersFilterPanelProps) {
   const t = useTranslation();
   return (
-    <div className="denty-panel-strong px-6 py-6 md:px-6 md:py-6">
+    <div className="denty-panel-strong p-4 sm:p-6">
       <div className="grid gap-3 md:grid-cols-3">
         <div className="md:col-span-2">
           <label className="denty-kicker !tracking-[0.18em]">

@@ -26,11 +26,11 @@ export function PatientNotificationsView({
   const t = useTranslation();
 
   return (
-    <div className="denty-dashboard-card overflow-hidden p-5 md:p-6">
+    <div className="denty-dashboard-card overflow-hidden p-4 sm:p-5 md:p-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
+        <div className="min-w-0">
           <p className="denty-kicker">{t("patient.notif.eyebrow")}</p>
-          <h2 className="mt-3 text-2xl font-semibold text-[var(--foreground)]">
+          <h2 className="mt-3 text-xl font-semibold text-[var(--foreground)] sm:text-2xl">
             {t("patient.notif.title")}
           </h2>
           <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--muted-foreground)]">
@@ -76,10 +76,10 @@ export function PatientNotificationsView({
               key={notification.id}
               className="denty-dashboard-card-soft flex flex-col gap-3 p-5"
             >
-              <div className="flex items-start justify-between gap-4">
-                <button onClick={() => onNotificationClick(notification)} className="flex-1 text-left">
+              <div className="flex items-start justify-between gap-3 sm:gap-4">
+                <button onClick={() => onNotificationClick(notification)} className="min-w-0 flex-1 text-left">
                   <p
-                    className={`text-sm leading-7 text-[var(--foreground)] ${
+                    className={`break-words text-sm leading-7 text-[var(--foreground)] ${
                       read ? "" : "font-semibold"
                     }`}
                   >

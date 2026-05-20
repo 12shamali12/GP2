@@ -44,31 +44,31 @@ export function GroupDetailModal({
   if (!selectedGroup) return null;
 
   return (
-    <div className="fixed inset-0 z-[120] bg-[rgba(5,12,24,0.42)] px-4 py-6 backdrop-blur-[10px]">
+    <div className="fixed inset-0 z-[120] bg-[rgba(5,12,24,0.42)] px-3 py-4 backdrop-blur-[10px] sm:px-4 sm:py-6">
       <div className="mx-auto flex h-full max-w-6xl items-start justify-center">
-        <div className="denty-panel-strong max-h-full w-full overflow-y-auto rounded-[34px] p-6 md:p-6">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
+        <div className="denty-panel-strong max-h-full w-full overflow-y-auto rounded-[24px] p-4 sm:rounded-[34px] sm:p-6">
+          <div className="flex flex-wrap items-start justify-between gap-3 sm:gap-4">
+            <div className="min-w-0">
               <p className="denty-kicker">{t("admin.groups.detail_eyebrow")}</p>
-              <h2 className="mt-3 text-3xl font-semibold text-[var(--foreground)]">
+              <h2 className="mt-3 break-words text-2xl font-semibold text-[var(--foreground)] sm:text-3xl">
                 {selectedGroup.name}
               </h2>
-              <p className="mt-2 text-sm text-[var(--muted-foreground)]">
+              <p className="mt-2 break-words text-sm text-[var(--muted-foreground)]">
                 {selectedGroup.semesterLabel}
               </p>
             </div>
             <button
               onClick={onClose}
-              className="denty-button-secondary px-4 py-3 text-sm font-semibold"
+              className="denty-button-secondary shrink-0 px-4 py-3 text-sm font-semibold"
             >
               {t("admin.common.close")}
             </button>
           </div>
 
           <div className="mt-6 grid gap-5 xl:grid-cols-[0.8fr_1.2fr]">
-            <div className="denty-dashboard-card p-5">
-              <div className="flex items-center justify-between gap-3">
-                <div>
+            <div className="denty-dashboard-card p-4 sm:p-5">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
                   <p className="denty-kicker">{t("admin.groups.group_settings")}</p>
                   <h3 className="mt-2 text-xl font-semibold text-[var(--foreground)]">
                     {t("admin.groups.edit_details")}
@@ -79,7 +79,7 @@ export function GroupDetailModal({
                   onClick={() =>
                     onDelete({ id: selectedGroup.id, label: selectedGroup.name })
                   }
-                  className="rounded-full border border-rose-300/40 bg-rose-50/90 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-rose-700"
+                  className="min-h-[2.5rem] shrink-0 rounded-full border border-rose-300/40 bg-rose-50/90 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-rose-700"
                 >
                   {t("admin.groups.delete_button")}
                 </button>
@@ -129,15 +129,15 @@ export function GroupDetailModal({
               </div>
             </div>
 
-            <div className="denty-dashboard-card p-5">
+            <div className="denty-dashboard-card p-4 sm:p-5">
               <div className="flex items-center justify-between gap-3">
-                <div>
+                <div className="min-w-0">
                   <p className="denty-kicker">{t("admin.groups.assigned_plans")}</p>
                   <h3 className="mt-2 text-xl font-semibold text-[var(--foreground)]">
                     {t("admin.groups.planning_for_group")}
                   </h3>
                 </div>
-                <span className="denty-pill">
+                <span className="denty-pill shrink-0">
                   {t("admin.groups.plans_count", {
                     count:
                       (selectedGroup.currentPlan ? 1 : 0) +
@@ -154,9 +154,9 @@ export function GroupDetailModal({
             </div>
           </div>
 
-          <div className="mt-6 denty-panel-strong p-5 md:p-6">
+          <div className="mt-6 denty-panel-strong p-4 sm:p-6">
             <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
+              <div className="min-w-0">
                 <p className="denty-kicker">{t("admin.groups.mod_desk_eyebrow")}</p>
                 <h3 className="mt-2 text-xl font-semibold text-[var(--foreground)]">
                   {t("admin.groups.mod_desk_heading")}
@@ -193,24 +193,24 @@ export function GroupDetailModal({
 
           <div className="mt-6 grid gap-5 xl:grid-cols-[0.92fr_1.08fr]">
             <div className="space-y-5">
-              <div className="denty-dashboard-card p-5">
+              <div className="denty-dashboard-card p-4 sm:p-5">
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-xl font-semibold text-[var(--foreground)]">
                     {t("admin.groups.students")}
                   </p>
-                  <span className="denty-pill">
+                  <span className="denty-pill shrink-0">
                     {t("admin.groups.assigned_count", {
                       count: selectedGroup.members.length,
                     })}
                   </span>
                 </div>
-                <div className="mt-4 flex gap-2">
+                <div className="mt-4 flex flex-col gap-2 sm:flex-row">
                   <select
                     value={doctorSelections[selectedGroup.id] || ""}
                     onChange={(e) =>
                       onDoctorSelectionChange(selectedGroup.id, e.target.value)
                     }
-                    className="denty-field text-sm"
+                    className="denty-field min-w-0 text-sm"
                   >
                     <option value="">{t("admin.groups.select_student")}</option>
                     {doctors.map((doctor) => (
@@ -224,7 +224,7 @@ export function GroupDetailModal({
                   </select>
                   <button
                     onClick={() => onAddDoctorToGroup(selectedGroup.id)}
-                    className="denty-button-secondary px-4 py-3 text-sm font-semibold"
+                    className="denty-button-secondary shrink-0 px-4 py-3 text-sm font-semibold"
                   >
                     {t("admin.groups.add")}
                   </button>
@@ -242,21 +242,21 @@ export function GroupDetailModal({
                         className="denty-dashboard-card-soft p-4"
                       >
                         <div className="flex items-center justify-between gap-3">
-                          <div>
+                          <div className="min-w-0">
                             <Link
                               href={`/profiles/${member.doctor.id}`}
-                              className="text-lg font-semibold text-[var(--foreground)] hover:text-[rgba(7,111,133,0.96)]"
+                              className="break-words text-lg font-semibold text-[var(--foreground)] hover:text-[rgba(7,111,133,0.96)]"
                             >
                               {member.doctor.name}
                             </Link>
-                            <p className="text-sm text-[var(--muted-foreground)]">
+                            <p className="break-words text-sm text-[var(--muted-foreground)]">
                               @{member.doctor.username}
                               {member.doctor.doctorIdNumber
                                 ? ` - ${member.doctor.doctorIdNumber}`
                                 : ""}
                             </p>
                           </div>
-                          <span className="denty-pill">
+                          <span className="denty-pill shrink-0">
                             {t("admin.groups.assigned")}
                           </span>
                         </div>
@@ -265,7 +265,7 @@ export function GroupDetailModal({
                 </div>
               </div>
 
-              <div className="denty-dashboard-card p-5">
+              <div className="denty-dashboard-card p-4 sm:p-5">
                 <p className="text-xl font-semibold text-[var(--foreground)]">
                   {t("admin.groups.active_partner_pairs")}
                 </p>
@@ -281,8 +281,8 @@ export function GroupDetailModal({
                     .map((pair) => (
                       <div key={pair.id} className="denty-dashboard-card-soft p-4">
                         <div className="flex items-center justify-between gap-3">
-                          <div>
-                            <p className="text-lg font-semibold text-[var(--foreground)]">
+                          <div className="min-w-0">
+                            <p className="break-words text-lg font-semibold text-[var(--foreground)]">
                               <Link
                                 href={`/profiles/${pair.doctorOne.id}`}
                                 className="hover:text-[rgba(7,111,133,0.96)]"
@@ -297,11 +297,11 @@ export function GroupDetailModal({
                                 {pair.doctorTwo.name}
                               </Link>
                             </p>
-                            <p className="mt-2 text-sm text-[var(--muted-foreground)]">
+                            <p className="mt-2 break-words text-sm text-[var(--muted-foreground)]">
                               @{pair.doctorOne.username} - @{pair.doctorTwo.username}
                             </p>
                           </div>
-                          <span className="denty-pill">
+                          <span className="denty-pill shrink-0">
                             {t("admin.groups.confirmed")}
                           </span>
                         </div>
@@ -317,9 +317,9 @@ export function GroupDetailModal({
             </div>
 
             <div className="space-y-5">
-              <div className="denty-dashboard-card p-5">
+              <div className="denty-dashboard-card p-4 sm:p-5">
                 <div className="flex items-center justify-between gap-3">
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-xl font-semibold text-[var(--foreground)]">
                       {t("admin.groups.snapshot")}
                     </p>
@@ -327,7 +327,7 @@ export function GroupDetailModal({
                       {t("admin.groups.snapshot_note")}
                     </p>
                   </div>
-                  <span className="denty-pill">
+                  <span className="denty-pill shrink-0">
                     {t("admin.groups.students_count", {
                       count: selectedGroup.members.length,
                     })}
@@ -367,12 +367,12 @@ export function GroupDetailModal({
                 </div>
               </div>
 
-              <div className="denty-dashboard-card p-5">
+              <div className="denty-dashboard-card p-4 sm:p-5">
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-xl font-semibold text-[var(--foreground)]">
                     {t("admin.groups.recent_feed")}
                   </p>
-                  <span className="denty-pill">
+                  <span className="denty-pill shrink-0">
                     {t("admin.groups.posts_count", {
                       count: selectedGroup.posts.length,
                     })}

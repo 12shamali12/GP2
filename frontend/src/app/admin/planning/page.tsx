@@ -14,7 +14,7 @@ import {
 import { useFeedbackToast } from "@/features/ui/hooks/use-feedback-toast";
 import { useTranslation } from "@/features/i18n/language-provider";
 const panelClass =
-  "overflow-hidden rounded-[24px] border border-white/12 bg-[linear-gradient(180deg,rgba(249,252,255,0.76),rgba(225,234,241,0.34))] p-6 shadow-[0_28px_72px_rgba(7,18,34,0.14)] backdrop-blur-[24px] md:p-5";
+  "overflow-hidden rounded-[24px] border border-white/12 bg-[linear-gradient(180deg,rgba(249,252,255,0.76),rgba(225,234,241,0.34))] p-4 shadow-[0_28px_72px_rgba(7,18,34,0.14)] backdrop-blur-[24px] sm:p-6";
 const planningTabBaseClass =
   "inline-flex min-h-[3.2rem] items-center justify-center rounded-[20px] border px-5 py-3 text-sm font-semibold uppercase tracking-[0.16em] shadow-[0_18px_38px_rgba(7,18,34,0.1)] backdrop-blur-[18px] transition";
 const planningTabActiveClass =
@@ -370,7 +370,7 @@ export default function AdminPlanningPage() {
 
           <div className={panelClass}>
             <div className="flex flex-wrap items-end justify-between gap-4">
-              <div>
+              <div className="min-w-0">
                 <p className="denty-kicker">{t("admin.plan.planning_wall")}</p>
                 <h2 className="mt-3 text-xl font-semibold text-[var(--foreground)]">
                   {t("admin.plan.ten_day_board")}
@@ -385,7 +385,7 @@ export default function AdminPlanningPage() {
                   setPlanDraftMode("edit");
                   setSelectedPlanId(e.target.value);
                 }}
-                className="denty-field min-w-[18rem] cursor-pointer text-sm"
+                className="denty-field w-full cursor-pointer text-sm sm:w-auto sm:min-w-[18rem]"
               >
                 {sortedPlans.length === 0 ? (
                   <option value="">{t("admin.plan.no_plans_yet")}</option>
@@ -447,13 +447,13 @@ export default function AdminPlanningPage() {
                       key={day.assignmentDate}
                       className="overflow-hidden rounded-[22px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.42),rgba(229,237,243,0.16))] shadow-[0_18px_42px_rgba(7,18,34,0.08)] backdrop-blur-[18px]"
                     >
-                      <div className="grid gap-4 px-5 py-4 xl:grid-cols-[auto_minmax(0,0.8fr)_minmax(0,1.2fr)] xl:items-center">
-                        <div className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/12 bg-[rgba(9,20,38,0.08)] text-base font-semibold text-[var(--foreground)]">
+                      <div className="grid gap-4 px-4 py-4 sm:px-5 xl:grid-cols-[auto_minmax(0,0.8fr)_minmax(0,1.2fr)] xl:items-center">
+                        <div className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-white/12 bg-[rgba(9,20,38,0.08)] text-base font-semibold text-[var(--foreground)]">
                           {index + 1}
                         </div>
 
-                        <div>
-                          <p className="text-xl font-semibold text-[var(--foreground)]">
+                        <div className="min-w-0">
+                          <p className="break-words text-xl font-semibold text-[var(--foreground)]">
                             {formatDateLabel(day.assignmentDate, {
                               weekday: "long",
                               day: "numeric",

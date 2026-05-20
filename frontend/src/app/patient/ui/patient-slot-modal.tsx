@@ -32,24 +32,24 @@ export function PatientSlotModal({
     null;
 
   return (
-    <div className="fixed inset-0 z-30 flex items-center justify-center bg-[rgba(19,37,58,0.22)] p-4 backdrop-blur-md">
-      <div className="denty-modal w-full max-w-2xl space-y-5 rounded-[22px] p-6">
-        <div className="flex items-center justify-between">
-          <div>
+    <div className="fixed inset-0 z-30 flex items-center justify-center bg-[rgba(19,37,58,0.22)] p-3 backdrop-blur-md sm:p-4">
+      <div className="denty-modal max-h-[90vh] w-[calc(100vw-1.5rem)] max-w-2xl space-y-5 overflow-y-auto rounded-[22px] p-4 sm:p-6">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
             <p className="denty-kicker">{t("patient.slot.summary")}</p>
-            <h3 className="mt-2 text-xl font-semibold text-[var(--foreground)]">
+            <h3 className="mt-2 text-lg font-semibold text-[var(--foreground)] sm:text-xl">
               {selectedCase?.title ||
                 slot.purpose ||
                 t("patient.slot.appointment_fallback")}
             </h3>
           </div>
-          <button onClick={onClose} className="denty-action px-3 py-2 text-[11px]">
+          <button onClick={onClose} className="denty-action shrink-0 px-3 py-2 text-[11px]">
             {t("patient.common.close")}
           </button>
         </div>
 
         <div className="grid gap-4 md:grid-cols-[0.9fr_1.1fr]">
-          <div className="denty-dashboard-card-soft space-y-4 p-5">
+          <div className="denty-dashboard-card-soft space-y-4 p-4 sm:p-5">
             <div className="flex items-center gap-3">
               {slot.doctor?.id ? (
                 <Link
@@ -158,15 +158,15 @@ export function PatientSlotModal({
             </div>
           </div>
 
-          <div className="denty-dashboard-card-soft space-y-4 p-5">
-            <div className="flex items-center justify-between gap-3">
-              <div>
+          <div className="denty-dashboard-card-soft space-y-4 p-4 sm:p-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="min-w-0">
                 <p className="denty-kicker">{t("patient.slot.case_selection")}</p>
-                <h4 className="mt-2 text-xl font-semibold text-[var(--foreground)]">
+                <h4 className="mt-2 text-lg font-semibold text-[var(--foreground)] sm:text-xl">
                   {selectedCase?.title || t("patient.slot.choose_case")}
                 </h4>
               </div>
-              <span className="denty-pill">
+              <span className="denty-pill shrink-0">
                 {t("patient.slot.open_cases", {
                   count: (slot.caseOptions || []).length,
                   plural: (slot.caseOptions || []).length === 1 ? "" : "s",

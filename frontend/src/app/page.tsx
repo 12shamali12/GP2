@@ -3,6 +3,7 @@
 import {
   AuthShowcaseBackground,
 } from "@/features/ui/components/auth-showcase";
+import { BrandMark } from "@/features/ui/components/brand-mark";
 import { useTranslation } from "@/features/i18n/language-provider";
 import { useAuthPortal } from "./hooks/use-auth-portal";
 import { AuthLanguageSwitch } from "./ui/auth-language-switch";
@@ -60,19 +61,35 @@ export default function Home() {
           onLangChange={auth.setLang}
         />
 
-        <div className="pointer-events-none relative z-10 flex min-h-screen flex-col px-4 py-4 sm:px-6 sm:py-6 lg:px-6 xl:px-10">
+        <div className="pointer-events-none relative z-10 flex min-h-screen flex-col px-4 py-16 sm:px-6 sm:py-6 lg:px-6 xl:px-10">
           <div className="grid flex-1 gap-5 py-6 xl:grid-cols-[minmax(0,0.96fr)_minmax(45rem,1.04fr)] xl:items-end xl:gap-12">
-            <AuthStage
-              lang={auth.lang}
-              mode={auth.mode}
-              title={t("auth.title")}
-              subtitle={t("auth.subtitle")}
-              registerSubtitle={t("auth.register_subtitle")}
-              location={t("auth.location")}
-              activeSlide={auth.activeSlide}
-              showcaseIndex={auth.showcaseIndex}
-              slidesLength={auth.slides.length}
-            />
+            <div className="hidden xl:block">
+              <AuthStage
+                lang={auth.lang}
+                mode={auth.mode}
+                title={t("auth.title")}
+                subtitle={t("auth.subtitle")}
+                registerSubtitle={t("auth.register_subtitle")}
+                location={t("auth.location")}
+                activeSlide={auth.activeSlide}
+                showcaseIndex={auth.showcaseIndex}
+                slidesLength={auth.slides.length}
+              />
+            </div>
+
+            <div className="pointer-events-auto flex items-center gap-3 xl:hidden">
+              <div className="rounded-2xl border border-white/16 bg-white/10 p-2.5 shadow-[0_18px_40px_rgba(7,18,44,0.18)] backdrop-blur-xl">
+                <BrandMark tone="light" className="h-8 w-8" />
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-white/70">
+                  {t("auth.location")}
+                </p>
+                <h1 className="text-lg font-semibold tracking-[-0.03em] text-white">
+                  DentyHub
+                </h1>
+              </div>
+            </div>
 
             <AuthPortalCard
               mode={auth.mode}

@@ -16,10 +16,10 @@ import type {
 } from "@/features/admin/types/admin";
 
 const panelClass =
-  "overflow-hidden rounded-[24px] border border-white/12 bg-[linear-gradient(180deg,rgba(249,252,255,0.76),rgba(225,234,241,0.34))] p-6 shadow-[0_28px_72px_rgba(7,18,34,0.14)] backdrop-blur-[24px] md:p-5";
+  "overflow-hidden rounded-[24px] border border-white/12 bg-[linear-gradient(180deg,rgba(249,252,255,0.76),rgba(225,234,241,0.34))] p-4 shadow-[0_28px_72px_rgba(7,18,34,0.14)] backdrop-blur-[24px] sm:p-6";
 
 const softCardClass =
-  "rounded-[20px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.52),rgba(232,240,246,0.22))] p-5 shadow-[0_20px_50px_rgba(7,18,34,0.1)] backdrop-blur-[22px]";
+  "rounded-[20px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.52),rgba(232,240,246,0.22))] p-4 shadow-[0_20px_50px_rgba(7,18,34,0.1)] backdrop-blur-[22px] sm:p-5";
 
 type AdminLaneCard = {
   href: string;
@@ -228,13 +228,13 @@ export default function AdminPage() {
             className={`${panelClass} block transition hover:-translate-y-1 hover:border-white/18`}
           >
             <div className="flex items-start justify-between gap-3">
-              <div>
+              <div className="min-w-0">
                 <p className="denty-kicker">{card.eyebrow}</p>
                 <h2 className="mt-3 text-xl font-semibold text-[var(--foreground)]">
                   {card.title}
                 </h2>
               </div>
-              <span className="rounded-full border border-white/14 bg-[rgba(9,20,38,0.12)] px-4 py-2 text-xs font-semibold text-[var(--foreground)] backdrop-blur-[12px]">
+              <span className="shrink-0 rounded-full border border-white/14 bg-[rgba(9,20,38,0.12)] px-4 py-2 text-xs font-semibold text-[var(--foreground)] backdrop-blur-[12px]">
                 {card.metric}
               </span>
             </div>

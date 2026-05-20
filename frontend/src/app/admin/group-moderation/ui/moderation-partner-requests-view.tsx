@@ -17,9 +17,9 @@ export function ModerationPartnerRequestsView({
 }: ModerationPartnerRequestsViewProps) {
   const t = useTranslation();
   return (
-    <div className="denty-panel-strong max-h-[48rem] overflow-hidden p-6">
+    <div className="denty-panel-strong max-h-[48rem] overflow-hidden p-4 sm:p-6">
       <div className="flex items-center justify-between gap-3">
-        <div>
+        <div className="min-w-0">
           <h2 className="text-xl font-semibold text-[var(--foreground)]">
             {t("admin.mod.partner_title")}
           </h2>
@@ -44,18 +44,18 @@ export function ModerationPartnerRequestsView({
                   {section.items.map((request) => (
                     <div key={request.id} className="denty-dashboard-card p-4">
                       <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="text-lg font-semibold text-[var(--foreground)]">
+                        <div className="min-w-0">
+                          <p className="break-words text-lg font-semibold text-[var(--foreground)]">
                             {t("admin.mod.partner_to", {
                               sender: request.sender.name,
                               receiver: request.receiver.name,
                             })}
                           </p>
-                          <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+                          <p className="mt-1 break-words text-sm text-[var(--muted-foreground)]">
                             {request.group.name} - {request.group.semesterLabel}
                           </p>
                         </div>
-                        <span className="denty-pill">{t("admin.mod.pairing")}</span>
+                        <span className="denty-pill shrink-0">{t("admin.mod.pairing")}</span>
                       </div>
                       <div className="mt-3 grid gap-3 sm:grid-cols-2">
                         <div className="rounded-[20px] border border-white/10 bg-white/24 p-3">

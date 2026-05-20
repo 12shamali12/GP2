@@ -56,13 +56,13 @@ export function DoctorWorkspaceDeskView({
   return (
     <div className="grid gap-5 xl:grid-cols-[0.92fr_1.08fr]">
       <div className="space-y-5">
-        <div className="denty-panel-strong p-6">
+        <div className="denty-panel-strong p-4 sm:p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="denty-kicker">
                 {t("supervision.desk.partner_eyebrow")}
               </p>
-              <h3 className="mt-3 text-2xl font-semibold text-[var(--foreground)]">
+              <h3 className="mt-3 text-xl font-semibold text-[var(--foreground)] sm:text-2xl">
                 {t("supervision.desk.partner_title")}
               </h3>
             </div>
@@ -155,13 +155,13 @@ export function DoctorWorkspaceDeskView({
           </div>
         </div>
 
-        <div className="denty-panel-strong p-6">
+        <div className="denty-panel-strong p-4 sm:p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="denty-kicker">
                 {t("supervision.desk.report_eyebrow")}
               </p>
-              <h3 className="mt-3 text-2xl font-semibold text-[var(--foreground)]">
+              <h3 className="mt-3 text-xl font-semibold text-[var(--foreground)] sm:text-2xl">
                 {t("supervision.desk.report_title")}
               </h3>
             </div>
@@ -187,11 +187,11 @@ export function DoctorWorkspaceDeskView({
       </div>
 
       <div className="space-y-5">
-        <div className="denty-panel-strong p-6">
+        <div className="denty-panel-strong p-4 sm:p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="denty-kicker">{t("supervision.desk.today_eyebrow")}</p>
-              <h3 className="mt-3 text-2xl font-semibold text-[var(--foreground)]">
+              <h3 className="mt-3 text-xl font-semibold text-[var(--foreground)] sm:text-2xl">
                 {t("supervision.desk.today_title")}
               </h3>
             </div>
@@ -203,7 +203,7 @@ export function DoctorWorkspaceDeskView({
           </div>
           <div className="mt-5 space-y-3">
             {todayAssignments.map((assignment) => (
-              <div key={assignment.id} className="denty-dashboard-card p-5">
+              <div key={assignment.id} className="denty-dashboard-card p-4 sm:p-5">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <p className="text-xl font-semibold text-[var(--foreground)]">{assignment.clinic.name}</p>
@@ -234,9 +234,9 @@ export function DoctorWorkspaceDeskView({
         </div>
 
         {!workspace?.groupMembership?.group ? (
-          <div className="denty-panel-strong p-6">
+          <div className="denty-panel-strong p-4 sm:p-6">
             <p className="denty-kicker">{t("supervision.desk.join_eyebrow")}</p>
-            <h3 className="mt-3 text-2xl font-semibold text-[var(--foreground)]">
+            <h3 className="mt-3 text-xl font-semibold text-[var(--foreground)] sm:text-2xl">
               {t("supervision.desk.join_title")}
             </h3>
             <div className="mt-5 space-y-3">

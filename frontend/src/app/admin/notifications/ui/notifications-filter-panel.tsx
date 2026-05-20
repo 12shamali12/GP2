@@ -22,9 +22,9 @@ export function NotificationsFilterPanel({
 }: NotificationsFilterPanelProps) {
   const t = useTranslation();
   return (
-    <div className="denty-panel-strong p-6">
+    <div className="denty-panel-strong p-4 sm:p-6">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-        <div>
+        <div className="min-w-0">
           <p className="denty-kicker">{t("admin.notif.inbox")}</p>
           <h2 className="mt-3 text-2xl font-semibold text-[var(--foreground)]">
             {t("admin.notif.review_heading")}

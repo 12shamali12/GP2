@@ -98,13 +98,13 @@ export function DoctorProfilePanel({
 
   return (
     <div className="overflow-hidden rounded-[34px] border border-white/12 bg-[linear-gradient(180deg,rgba(249,252,255,0.78),rgba(222,233,241,0.34))] shadow-[0_32px_84px_rgba(7,18,34,0.18)] backdrop-blur-[26px]">
-      <div className="border-b border-white/12 px-5 py-5 md:px-7 md:py-6">
+      <div className="border-b border-white/12 px-4 py-5 sm:px-5 md:px-7 md:py-6">
         <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-          <div className="flex items-center gap-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-5">
             <button
               type="button"
               onClick={onAvatarPick}
-              className="group relative flex h-28 w-28 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-[22px] border border-white/20 bg-[linear-gradient(180deg,rgba(8,18,34,0.78),rgba(11,24,42,0.58))] text-3xl font-bold text-white shadow-[0_18px_34px_rgba(4,11,26,0.22)] transition hover:scale-[1.02] hover:border-white/28"
+              className="group relative flex h-24 w-24 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-[22px] border border-white/20 bg-[linear-gradient(180deg,rgba(8,18,34,0.78),rgba(11,24,42,0.58))] text-3xl font-bold text-white shadow-[0_18px_34px_rgba(4,11,26,0.22)] transition hover:scale-[1.02] hover:border-white/28 sm:h-28 sm:w-28"
               title={t("doctor.profile.photo_title")}
             >
               {avatarData || user.avatar ? (
@@ -134,7 +134,7 @@ export function DoctorProfilePanel({
 
               <div>
                 <div className="flex flex-wrap items-center gap-3">
-                  <h1 className="text-3xl font-semibold text-[var(--foreground)] md:text-3xl">
+                  <h1 className="text-2xl font-semibold text-[var(--foreground)] sm:text-3xl">
                     {editName || user.name || t("doctor.common.doctor")}
                   </h1>
                   <button
@@ -162,8 +162,8 @@ export function DoctorProfilePanel({
       </div>
 
       {headerEditing ? (
-        <div className="border-b border-white/12 bg-white/18 px-5 py-5 md:px-7">
-          <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto_auto] md:items-center">
+        <div className="border-b border-white/12 bg-white/18 px-4 py-5 sm:px-5 md:px-7">
+          <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center">
             <input
               value={headerNameInput}
               onChange={(e) => onHeaderNameInputChange(e.target.value)}
@@ -188,7 +188,7 @@ export function DoctorProfilePanel({
         </div>
       ) : null}
 
-      <div className="grid gap-4 px-5 py-5 md:px-7 md:py-6 xl:grid-cols-[1.08fr_0.92fr]">
+      <div className="grid gap-4 px-4 py-5 sm:px-5 md:px-7 md:py-6 xl:grid-cols-[1.08fr_0.92fr]">
         <div className="space-y-5">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="denty-dashboard-card-soft p-5">
@@ -541,10 +541,10 @@ export function DoctorProfilePanel({
       </div>
 
       {showSave ? (
-        <div className="border-t border-white/12 px-5 py-5 md:px-7">
+        <div className="border-t border-white/12 px-4 py-5 sm:px-5 md:px-7">
           <button
             onClick={onSave}
-            className="denty-button-primary px-6 py-3 text-sm font-semibold"
+            className="denty-button-primary w-full px-6 py-3 text-sm font-semibold sm:w-auto"
           >
             {t("doctor.profile.save_changes")}
           </button>

@@ -17,9 +17,9 @@ export function ModerationJoinRequestsView({
 }: ModerationJoinRequestsViewProps) {
   const t = useTranslation();
   return (
-    <div className="denty-panel-strong max-h-[48rem] overflow-hidden p-6">
+    <div className="denty-panel-strong max-h-[48rem] overflow-hidden p-4 sm:p-6">
       <div className="flex items-center justify-between gap-3">
-        <div>
+        <div className="min-w-0">
           <h2 className="text-xl font-semibold text-[var(--foreground)]">
             {t("admin.mod.join_title")}
           </h2>
@@ -44,15 +44,15 @@ export function ModerationJoinRequestsView({
                   {section.items.map((request) => (
                     <div key={request.id} className="denty-dashboard-card p-4">
                       <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="text-lg font-semibold text-[var(--foreground)]">
+                        <div className="min-w-0">
+                          <p className="break-words text-lg font-semibold text-[var(--foreground)]">
                             {request.applicant.name}
                           </p>
-                          <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+                          <p className="mt-1 break-words text-sm text-[var(--muted-foreground)]">
                             @{request.applicant.username}
                           </p>
                         </div>
-                        <span className="denty-pill">{request.group.name}</span>
+                        <span className="denty-pill shrink-0 max-w-[45%] truncate">{request.group.name}</span>
                       </div>
                       <p className="mt-3 text-sm text-[var(--muted-foreground)]">
                         {request.group.semesterLabel}

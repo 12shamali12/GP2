@@ -18,7 +18,13 @@ type AdminChatConversationPanelProps = {
   onMessageTextChange: (value: string) => void;
   onImageFileChange: (file: File | null) => void;
   onSendMessage: () => void;
+  /** Returns to the inbox on the mobile one-at-a-time layout. */
+  onBackToInbox?: () => void;
 };
+
+/** Shared panel height: capped to the viewport on mobile, fixed on desktop. */
+const panelHeightClass =
+  "min-h-[34rem] max-h-[calc(100vh-8rem)] lg:min-h-[48rem] lg:max-h-[48rem]";
 
 export function AdminChatConversationPanel({
   apiUrl,
@@ -31,11 +37,23 @@ export function AdminChatConversationPanel({
   onMessageTextChange,
   onImageFileChange,
   onSendMessage,
+  onBackToInbox,
 }: AdminChatConversationPanelProps) {
   const t = useTranslation();
   if (!selectedConversation) {
     return (
-      <div className="denty-panel-strong flex min-h-[48rem] max-h-[48rem] overflow-hidden p-6">
+      <div
+        className={`denty-panel-strong flex ${panelHeightClass} flex-col overflow-hidden p-4 sm:p-6`}
+      >
+        {onBackToInbox ? (
+          <button
+            type="button"
+            onClick={onBackToInbox}
+            className="denty-button-secondary mb-4 inline-flex min-h-[2.75rem] items-center justify-center self-start px-4 py-2 text-sm font-semibold lg:hidden"
+          >
+            {t("admin.chat.inbox")}
+          </button>
+        ) : null}
         <div className="denty-placeholder flex h-full w-full items-center justify-center p-5">
           <div>
             <p className="denty-kicker">{t("nav.chat")}</p>
@@ -68,18 +86,29 @@ export function AdminChatConversationPanel({
       "";
 
   return (
-    <div className="denty-panel-strong flex min-h-[48rem] max-h-[48rem] flex-col overflow-hidden p-6">
-      <div className="flex items-center justify-between gap-4 border-b border-white/12 pb-4">
+    <div
+      className={`denty-panel-strong flex ${panelHeightClass} flex-col overflow-hidden p-4 sm:p-6`}
+    >
+      {onBackToInbox ? (
+        <button
+          type="button"
+          onClick={onBackToInbox}
+          className="denty-button-secondary mb-4 inline-flex min-h-[2.75rem] items-center justify-center self-start px-4 py-2 text-sm font-semibold lg:hidden"
+        >
+          {t("admin.chat.inbox")}
+        </button>
+      ) : null}
+      <div className="flex items-center justify-between gap-3 border-b border-white/12 pb-4 sm:gap-4">
         {isRoom ? (
-          <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full border border-white/14 bg-[rgba(7,111,133,0.14)] text-lg font-semibold text-[var(--foreground)]">
+          <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/14 bg-[rgba(7,111,133,0.14)] text-lg font-semibold text-[var(--foreground)] sm:h-14 sm:w-14">
               #
             </div>
-            <div>
-              <p className="text-xl font-semibold text-[var(--foreground)]">
+            <div className="min-w-0">
+              <p className="truncate text-lg font-semibold text-[var(--foreground)] sm:text-xl">
                 {title}
               </p>
-              <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+              <p className="mt-1 truncate text-sm text-[var(--muted-foreground)]">
                 {subtitle}
               </p>
             </div>
@@ -87,38 +116,38 @@ export function AdminChatConversationPanel({
         ) : selectedConversation.otherUser?.id ? (
           <Link
             href={`/profiles/${selectedConversation.otherUser.id}`}
-            className="flex items-center gap-4"
+            className="flex min-w-0 items-center gap-3 sm:gap-4"
           >
             {selectedConversation.otherUser?.avatar ? (
               <img
                 src={selectedConversation.otherUser.avatar}
                 alt={selectedConversation.otherUser?.name || "user"}
-                className="h-14 w-14 rounded-full object-cover"
+                className="h-11 w-11 shrink-0 rounded-full object-cover sm:h-14 sm:w-14"
               />
             ) : (
-              <div className="flex h-14 w-14 items-center justify-center rounded-full border border-white/14 bg-[rgba(7,111,133,0.14)] text-lg font-semibold text-[var(--foreground)]">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/14 bg-[rgba(7,111,133,0.14)] text-lg font-semibold text-[var(--foreground)] sm:h-14 sm:w-14">
                 {(selectedConversation.otherUser?.name || "U")[0]}
               </div>
             )}
-            <div>
-              <p className="text-xl font-semibold text-[var(--foreground)] hover:text-[rgba(7,111,133,0.96)]">
+            <div className="min-w-0">
+              <p className="truncate text-lg font-semibold text-[var(--foreground)] hover:text-[rgba(7,111,133,0.96)] sm:text-xl">
                 {title}
               </p>
-              <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+              <p className="mt-1 truncate text-sm text-[var(--muted-foreground)]">
                 {subtitle}
               </p>
             </div>
           </Link>
         ) : (
-          <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full border border-white/14 bg-[rgba(7,111,133,0.14)] text-lg font-semibold text-[var(--foreground)]">
+          <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/14 bg-[rgba(7,111,133,0.14)] text-lg font-semibold text-[var(--foreground)] sm:h-14 sm:w-14">
               {(selectedConversation.otherUser?.name || "U")[0]}
             </div>
-            <div>
-              <p className="text-xl font-semibold text-[var(--foreground)]">
+            <div className="min-w-0">
+              <p className="truncate text-lg font-semibold text-[var(--foreground)] sm:text-xl">
                 {title}
               </p>
-              <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+              <p className="mt-1 truncate text-sm text-[var(--muted-foreground)]">
                 {subtitle}
               </p>
             </div>
@@ -127,12 +156,12 @@ export function AdminChatConversationPanel({
         {!isRoom && selectedConversation.otherUser?.id ? (
           <Link
             href={`/profiles/${selectedConversation.otherUser.id}`}
-            className="denty-pill hover:bg-white/36"
+            className="denty-pill shrink-0 hover:bg-white/36"
           >
             {t("admin.chat.profile")}
           </Link>
         ) : (
-          <span className="denty-pill">
+          <span className="denty-pill shrink-0">
             {isRoom ? t("admin.chat.room") : t("admin.chat.direct")}
           </span>
         )}
@@ -149,7 +178,7 @@ export function AdminChatConversationPanel({
               className={`flex ${mine ? "justify-end" : "justify-start"}`}
             >
               <div
-                className={`max-w-[72%] rounded-[24px] border px-4 py-3 shadow-[0_18px_38px_rgba(7,18,34,0.12)] ${
+                className={`max-w-[85%] break-words rounded-[24px] border px-4 py-3 shadow-[0_18px_38px_rgba(7,18,34,0.12)] sm:max-w-[72%] ${
                   mine
                     ? "border-[rgba(7,111,133,0.18)] bg-[linear-gradient(135deg,rgba(7,111,133,0.96),rgba(11,130,148,0.9))] text-white"
                     : "border-white/10 bg-white/26 text-[var(--foreground)]"
@@ -215,15 +244,17 @@ export function AdminChatConversationPanel({
               : t("admin.chat.write_message")
           }
         />
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <label className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-white/12 bg-white/26 px-4 py-3 text-sm font-semibold text-[var(--foreground)]">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+          <label className="inline-flex max-w-full cursor-pointer items-center gap-2 rounded-full border border-white/12 bg-white/26 px-4 py-3 text-sm font-semibold text-[var(--foreground)]">
             <input
               type="file"
               accept="image/*"
               className="hidden"
               onChange={(e) => onImageFileChange(e.target.files?.[0] || null)}
             />
-            {imageFile ? imageFile.name : t("admin.chat.attach_image")}
+            <span className="truncate">
+              {imageFile ? imageFile.name : t("admin.chat.attach_image")}
+            </span>
           </label>
           <button
             type="button"

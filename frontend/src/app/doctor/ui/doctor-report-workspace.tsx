@@ -125,11 +125,11 @@ export function DoctorReportWorkspace({
 
   return (
     <div className="space-y-5">
-      <div className="denty-dashboard-card overflow-hidden p-5 md:p-6">
+      <div className="denty-dashboard-card overflow-hidden p-4 sm:p-5 md:p-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
+          <div className="min-w-0">
             <p className="denty-kicker">{t("doctor.report.eyebrow")}</p>
-            <h2 className="mt-3 text-2xl font-semibold text-[var(--foreground)]">
+            <h2 className="mt-3 text-xl font-semibold text-[var(--foreground)] sm:text-2xl">
               {t("doctor.report.title")}
             </h2>
             <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--muted-foreground)]">
@@ -153,7 +153,7 @@ export function DoctorReportWorkspace({
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
-        <div className="denty-dashboard-card overflow-hidden p-5">
+        <div className="denty-dashboard-card overflow-hidden p-4 sm:p-5">
           <div className="space-y-3">
             {bookedAppointments.length === 0 ? (
               <p className="text-sm text-[var(--muted-foreground)]">
@@ -252,17 +252,17 @@ export function DoctorReportWorkspace({
           </div>
         </div>
 
-        <div className="denty-dashboard-card overflow-hidden p-5">
+        <div className="denty-dashboard-card overflow-hidden p-4 sm:p-5">
           {selectedReport ? (
             <div className="space-y-5">
-              <div className="flex items-center justify-between gap-3">
-                <div>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="min-w-0">
                   <p className="denty-kicker">{t("doctor.report.form_eyebrow")}</p>
-                  <h3 className="mt-2 text-xl font-semibold text-[var(--foreground)]">
+                  <h3 className="mt-2 text-lg font-semibold text-[var(--foreground)] sm:text-xl">
                     {t("doctor.report.form_title")}
                   </h3>
                 </div>
-                <button onClick={onCloseReportForm} className="denty-action denty-action-secondary">
+                <button onClick={onCloseReportForm} className="denty-action denty-action-secondary shrink-0">
                   {t("doctor.report.clear_form")}
                 </button>
               </div>
@@ -536,9 +536,9 @@ export function DoctorReportWorkspace({
                   {reportFormData.treatmentVisits.map((visit, index) => (
                     <div
                       key={visit.visitLabel}
-                      className="grid gap-3 rounded-[20px] border border-white/10 bg-white/26 px-4 py-3 md:grid-cols-[0.22fr_0.28fr_1fr]"
+                      className="grid gap-3 rounded-[20px] border border-white/10 bg-white/26 px-4 py-3 sm:grid-cols-2 lg:grid-cols-[0.22fr_0.28fr_1fr]"
                     >
-                      <div className="text-sm font-semibold text-[var(--foreground)]">
+                      <div className="text-sm font-semibold text-[var(--foreground)] sm:col-span-2 lg:col-span-1">
                         {visit.visitLabel}
                       </div>
                       <input
@@ -619,7 +619,7 @@ export function DoctorReportWorkspace({
                   <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
                     {t("doctor.report.rate_patient")}
                   </p>
-                  <div className="mt-3 grid gap-3 md:grid-cols-[0.35fr_1fr]">
+                  <div className="mt-3 grid gap-3 sm:grid-cols-[0.4fr_1fr]">
                     <select
                       value={patientFeedbackForm.stars}
                       onChange={(event) => onPatientRatingChange(event.target.value)}

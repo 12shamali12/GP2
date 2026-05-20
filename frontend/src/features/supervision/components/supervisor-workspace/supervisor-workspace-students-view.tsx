@@ -37,9 +37,9 @@ export function SupervisorWorkspaceStudentsView({
   const t = useTranslation();
   return (
     <div className="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
-      <div className="denty-panel-strong p-6">
+      <div className="denty-panel-strong p-4 sm:p-6">
         <p className="denty-kicker">{t("supervision.sup.students.tasks_eyebrow")}</p>
-        <h2 className="mt-3 text-2xl font-semibold text-[var(--foreground)]">
+        <h2 className="mt-3 text-xl font-semibold text-[var(--foreground)] sm:text-2xl">
           {t("supervision.sup.students.tasks_title")}
         </h2>
         <div className="mt-5 grid gap-3">
@@ -99,16 +99,16 @@ export function SupervisorWorkspaceStudentsView({
         </div>
       </div>
 
-      <div className="denty-panel-strong p-6">
+      <div className="denty-panel-strong p-4 sm:p-6">
         <p className="denty-kicker">
           {t("supervision.sup.students.directory_eyebrow")}
         </p>
-        <h2 className="mt-3 text-2xl font-semibold text-[var(--foreground)]">
+        <h2 className="mt-3 text-xl font-semibold text-[var(--foreground)] sm:text-2xl">
           {t("supervision.sup.students.directory_title")}
         </h2>
         <div className="mt-5 space-y-4">
           {workspace?.groupDirectory.map((group) => (
-            <div key={group.id} className="denty-dashboard-card p-5">
+            <div key={group.id} className="denty-dashboard-card p-4 sm:p-5">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="text-xl font-semibold text-[var(--foreground)]">{group.name}</p>

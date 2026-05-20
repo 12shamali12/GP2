@@ -47,15 +47,15 @@ export function AdminChatInboxPanel({
           : t("admin.chat.start_chatting"));
 
   return (
-    <div className="denty-panel-strong flex min-h-[48rem] max-h-[48rem] flex-col overflow-hidden p-6">
+    <div className="denty-panel-strong flex min-h-[34rem] max-h-[calc(100vh-8rem)] flex-col overflow-hidden p-4 sm:p-6 lg:min-h-[48rem] lg:max-h-[48rem]">
       <div className="flex items-start justify-between gap-3">
-        <div>
+        <div className="min-w-0">
           <p className="denty-kicker">{t("admin.chat.inbox")}</p>
-          <h2 className="mt-3 text-xl font-semibold text-[var(--foreground)]">
+          <h2 className="mt-3 text-lg font-semibold text-[var(--foreground)] sm:text-xl">
             {t("admin.chat.conversations")}
           </h2>
         </div>
-        <span className="denty-pill">
+        <span className="denty-pill shrink-0">
           {t("admin.chat.unread_count", { count: unreadConversations })}
         </span>
       </div>
@@ -75,19 +75,19 @@ export function AdminChatInboxPanel({
               key={user.id}
               type="button"
               onClick={() => onStartConversation(user)}
-              className="flex w-full cursor-pointer items-center justify-between rounded-[18px] border border-white/10 bg-white/30 px-4 py-3 text-left transition hover:bg-white/42"
+              className="flex w-full cursor-pointer items-center justify-between gap-3 rounded-[18px] border border-white/10 bg-white/30 px-4 py-3 text-left transition hover:bg-white/42"
             >
-              <div>
-                <p className="text-sm font-semibold text-[var(--foreground)]">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-[var(--foreground)]">
                   {user.name}
                 </p>
-                <p className="mt-1 text-xs text-[var(--muted-foreground)]">
+                <p className="mt-1 truncate text-xs text-[var(--muted-foreground)]">
                   @{user.username}
                   {user.role ? ` | ${user.role}` : ""}
                   {user.doctorIdNumber ? ` | ${user.doctorIdNumber}` : ""}
                 </p>
               </div>
-              <span className="denty-pill">{t("admin.chat.start")}</span>
+              <span className="denty-pill shrink-0">{t("admin.chat.start")}</span>
             </button>
           ))}
         </div>
@@ -115,15 +115,15 @@ export function AdminChatInboxPanel({
                 }`}
               >
                 <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-base font-semibold text-[var(--foreground)]">
+                  <div className="min-w-0">
+                    <p className="truncate text-base font-semibold text-[var(--foreground)]">
                       {getConversationTitle(conversation)}
                     </p>
-                    <p className="mt-2 text-sm text-[var(--muted-foreground)]">
+                    <p className="mt-2 line-clamp-2 break-words text-sm text-[var(--muted-foreground)]">
                       {getConversationMeta(conversation)}
                     </p>
                   </div>
-                  <div className="flex flex-col items-end gap-2">
+                  <div className="flex shrink-0 flex-col items-end gap-2">
                     {conversation.kind === "ROOM" ? (
                       <span className="rounded-full border border-white/12 bg-white/24 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[rgba(10,22,40,0.56)]">
                         {t("admin.chat.room")}

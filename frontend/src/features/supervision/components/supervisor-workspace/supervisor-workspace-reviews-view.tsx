@@ -140,13 +140,13 @@ export function SupervisorWorkspaceReviewsView({
   const t = useTranslation();
   return (
     <div className="grid gap-5 xl:grid-cols-[1.08fr_0.92fr]">
-      <div className="denty-panel-strong p-6">
+      <div className="denty-panel-strong p-4 sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="denty-kicker">
               {t("supervision.sup.reviews.reports_eyebrow")}
             </p>
-            <h2 className="mt-3 text-2xl font-semibold text-[var(--foreground)]">
+            <h2 className="mt-3 text-xl font-semibold text-[var(--foreground)] sm:text-2xl">
               {t("supervision.sup.reviews.reports_title")}
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--muted-foreground)]">
@@ -279,73 +279,77 @@ export function SupervisorWorkspaceReviewsView({
                   </div>
                 ) : null}
 
-                <div className="grid gap-3 md:grid-cols-[0.22fr_0.24fr_0.28fr_1fr_auto]">
-                  <input
-                    value={draft.mark}
-                    onChange={(e) =>
-                      setReviewForms((prev) => ({
-                        ...prev,
-                        [report.id]: { ...draft, mark: e.target.value },
-                      }))
-                    }
-                    className="denty-field text-sm"
-                    placeholder={t("supervision.sup.reviews.mark_placeholder")}
-                  />
-                  <select
-                    value={draft.rating}
-                    onChange={(e) =>
-                      setReviewForms((prev) => ({
-                        ...prev,
-                        [report.id]: { ...draft, rating: e.target.value },
-                      }))
-                    }
-                    className="denty-field cursor-pointer text-sm"
-                  >
-                    {STAR_OPTIONS.map((value) => (
-                      <option key={value} value={value}>
-                        {value.toFixed(1)} / 5
+                <div className="space-y-3">
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <input
+                      value={draft.mark}
+                      onChange={(e) =>
+                        setReviewForms((prev) => ({
+                          ...prev,
+                          [report.id]: { ...draft, mark: e.target.value },
+                        }))
+                      }
+                      className="denty-field text-sm"
+                      placeholder={t("supervision.sup.reviews.mark_placeholder")}
+                    />
+                    <select
+                      value={draft.rating}
+                      onChange={(e) =>
+                        setReviewForms((prev) => ({
+                          ...prev,
+                          [report.id]: { ...draft, rating: e.target.value },
+                        }))
+                      }
+                      className="denty-field cursor-pointer text-sm"
+                    >
+                      {STAR_OPTIONS.map((value) => (
+                        <option key={value} value={value}>
+                          {value.toFixed(1)} / 5
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      value={draft.outcome}
+                      onChange={(e) =>
+                        setReviewForms((prev) => ({
+                          ...prev,
+                          [
+                            report.id
+                          ]: { ...draft, outcome: e.target.value as ReviewDraft["outcome"] },
+                        }))
+                      }
+                      className="denty-field cursor-pointer text-sm"
+                    >
+                      <option value="REVIEWED">
+                        {t("supervision.sup.reviews.outcome_approve")}
                       </option>
-                    ))}
-                  </select>
-                  <select
-                    value={draft.outcome}
-                    onChange={(e) =>
-                      setReviewForms((prev) => ({
-                        ...prev,
-                        [
-                          report.id
-                        ]: { ...draft, outcome: e.target.value as ReviewDraft["outcome"] },
-                      }))
-                    }
-                    className="denty-field cursor-pointer text-sm"
-                  >
-                    <option value="REVIEWED">
-                      {t("supervision.sup.reviews.outcome_approve")}
-                    </option>
-                    <option value="NEEDS_EDIT">
-                      {t("supervision.sup.reviews.outcome_needs_edit")}
-                    </option>
-                    <option value="CASE_REJECTED">
-                      {t("supervision.sup.reviews.outcome_reject")}
-                    </option>
-                  </select>
-                  <textarea
-                    value={draft.feedback}
-                    onChange={(e) =>
-                      setReviewForms((prev) => ({
-                        ...prev,
-                        [report.id]: { ...draft, feedback: e.target.value },
-                      }))
-                    }
-                    className="denty-field min-h-[96px] text-sm"
-                    placeholder={t("supervision.sup.reviews.feedback_placeholder")}
-                  />
-                  <button
-                    onClick={() => submitReview(report.id)}
-                    className="denty-button-secondary px-4 py-3 text-sm font-semibold"
-                  >
-                    {t("supervision.sup.reviews.save_review")}
-                  </button>
+                      <option value="NEEDS_EDIT">
+                        {t("supervision.sup.reviews.outcome_needs_edit")}
+                      </option>
+                      <option value="CASE_REJECTED">
+                        {t("supervision.sup.reviews.outcome_reject")}
+                      </option>
+                    </select>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+                    <textarea
+                      value={draft.feedback}
+                      onChange={(e) =>
+                        setReviewForms((prev) => ({
+                          ...prev,
+                          [report.id]: { ...draft, feedback: e.target.value },
+                        }))
+                      }
+                      className="denty-field min-h-[96px] text-sm"
+                      placeholder={t("supervision.sup.reviews.feedback_placeholder")}
+                    />
+                    <button
+                      onClick={() => submitReview(report.id)}
+                      className="denty-button-secondary w-full px-4 py-3 text-sm font-semibold sm:w-auto"
+                    >
+                      {t("supervision.sup.reviews.save_review")}
+                    </button>
+                  </div>
                 </div>
               </div>
             );
@@ -353,13 +357,13 @@ export function SupervisorWorkspaceReviewsView({
         </div>
       </div>
 
-      <div className="denty-panel-strong p-6">
+      <div className="denty-panel-strong p-4 sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="denty-kicker">
               {t("supervision.sup.reviews.exams_eyebrow")}
             </p>
-            <h2 className="mt-3 text-2xl font-semibold text-[var(--foreground)]">
+            <h2 className="mt-3 text-xl font-semibold text-[var(--foreground)] sm:text-2xl">
               {t("supervision.sup.reviews.exams_title")}
             </h2>
           </div>
@@ -452,7 +456,7 @@ export function SupervisorWorkspaceReviewsView({
                   </div>
                   <span className="denty-pill">{exam.status}</span>
                 </div>
-                <div className="mt-4 grid gap-3 md:grid-cols-[0.35fr_1fr_auto]">
+                <div className="mt-4 grid gap-3 sm:grid-cols-[0.4fr_1fr_auto] sm:items-center">
                   <input
                     value={draft.mark}
                     onChange={(e) =>
@@ -477,7 +481,7 @@ export function SupervisorWorkspaceReviewsView({
                   />
                   <button
                     onClick={() => submitExamGrade(exam.id)}
-                    className="denty-button-secondary px-4 py-3 text-sm font-semibold"
+                    className="denty-button-secondary w-full px-4 py-3 text-sm font-semibold sm:w-auto"
                   >
                     {t("supervision.sup.reviews.grade")}
                   </button>

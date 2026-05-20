@@ -286,7 +286,7 @@ export function SettingsPanel({ role, onEditProfile }: SettingsPanelProps) {
 
   return (
     <div className="space-y-5">
-      <section className="denty-panel-strong p-6 md:p-6">
+      <section className="denty-panel-strong p-4 sm:p-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div className="space-y-2">
             <p className="denty-kicker">{t(roleCopyKeys.eyebrow)}</p>
@@ -313,7 +313,7 @@ export function SettingsPanel({ role, onEditProfile }: SettingsPanelProps) {
         </div>
       </section>
 
-      <section className="denty-panel p-6 md:p-6">
+      <section className="denty-panel p-4 sm:p-6">
         <header className="space-y-2">
           <p className="denty-kicker">{t("settings.appearance")}</p>
           <h3 className="text-xl font-semibold text-[var(--foreground)] md:text-xl">
@@ -373,7 +373,7 @@ export function SettingsPanel({ role, onEditProfile }: SettingsPanelProps) {
         </div>
       </section>
 
-      <section className="denty-panel p-6 md:p-6">
+      <section className="denty-panel p-4 sm:p-6">
         <header className="space-y-2">
           <p className="denty-kicker">{t("settings.language")}</p>
           <h3 className="text-xl font-semibold text-[var(--foreground)] md:text-xl">
@@ -417,7 +417,7 @@ export function SettingsPanel({ role, onEditProfile }: SettingsPanelProps) {
         ) : null}
       </section>
 
-      <section className="denty-panel p-6 md:p-6">
+      <section className="denty-panel p-4 sm:p-6">
         <header className="space-y-2">
           <p className="denty-kicker">{t("settings.notifications")}</p>
           <h3 className="text-xl font-semibold text-[var(--foreground)] md:text-xl">
@@ -455,7 +455,7 @@ export function SettingsPanel({ role, onEditProfile }: SettingsPanelProps) {
         </ul>
       </section>
 
-      <section className="denty-panel p-6 md:p-6">
+      <section className="denty-panel p-4 sm:p-6">
         <header className="space-y-2">
           <p className="denty-kicker">{t("settings.account")}</p>
           <h3 className="text-xl font-semibold text-[var(--foreground)] md:text-xl">

@@ -49,9 +49,9 @@ export default function AdminGroupModerationPage() {
       title={t("admin.mod.title")}
       description={t("admin.mod.description")}
     >
-      <div className="denty-panel-strong p-6">
+      <div className="denty-panel-strong p-4 sm:p-6">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-          <div>
+          <div className="min-w-0">
             <p className="denty-kicker">{t("admin.mod.tabs_eyebrow")}</p>
             <h2 className="mt-3 text-xl font-semibold text-[var(--foreground)]">
               {t("admin.mod.tabs_heading")}
@@ -65,7 +65,7 @@ export default function AdminGroupModerationPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t("admin.mod.search_placeholder")}
-            className="denty-field max-w-[360px] text-sm"
+            className="denty-field text-sm xl:max-w-[360px]"
           />
         </div>
 

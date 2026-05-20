@@ -161,8 +161,8 @@ export default function PublicProfilePage() {
             <div className={mainPanel}>
               <div className="border-b border-white/12 px-5 py-5 md:px-7 md:py-6">
                 <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-                  <div className="flex items-center gap-5">
-                    <div className="flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-[22px] border border-white/18 bg-[linear-gradient(180deg,rgba(8,18,34,0.78),rgba(11,24,42,0.58))] text-3xl font-bold text-white shadow-[0_18px_34px_rgba(4,11,26,0.22)]">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-5">
+                    <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-[22px] border border-white/18 bg-[linear-gradient(180deg,rgba(8,18,34,0.78),rgba(11,24,42,0.58))] text-3xl font-bold text-white shadow-[0_18px_34px_rgba(4,11,26,0.22)] sm:h-28 sm:w-28">
                       {profile.profile.avatar ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
@@ -185,10 +185,10 @@ export default function PublicProfilePage() {
                         </span>
                       </div>
                       <div>
-                        <h1 className="text-3xl font-semibold text-[var(--foreground)] md:text-3xl">
+                        <h1 className="text-2xl font-semibold text-[var(--foreground)] wrap-break-word sm:text-3xl">
                           {profile.profile.name}
                         </h1>
-                        <p className="mt-3 text-sm leading-7 text-[var(--muted-foreground)]">
+                        <p className="mt-3 text-sm leading-7 text-[var(--muted-foreground)] wrap-break-word">
                           @{profile.profile.username}
                           {profile.profile.doctorIdNumber
                             ? ` | ${t("profile.student_id", {
@@ -561,8 +561,8 @@ export default function PublicProfilePage() {
             </div>
 
             {reportOpen ? (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(4,10,18,0.62)] px-4 backdrop-blur-[10px]">
-                <div className="w-full max-w-xl rounded-[22px] border border-white/14 bg-[linear-gradient(180deg,rgba(249,252,255,0.94),rgba(228,236,242,0.88))] p-6 shadow-[0_32px_80px_rgba(7,18,34,0.24)]">
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(4,10,18,0.62)] px-4 py-6 backdrop-blur-[10px]">
+                <div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-[22px] border border-white/14 bg-[linear-gradient(180deg,rgba(249,252,255,0.94),rgba(228,236,242,0.88))] p-5 shadow-[0_32px_80px_rgba(7,18,34,0.24)] sm:p-6">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="denty-kicker">{t("profile.report.safety")}</p>

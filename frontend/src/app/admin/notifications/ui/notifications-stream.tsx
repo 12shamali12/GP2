@@ -16,12 +16,12 @@ export function NotificationsStream({
 }: NotificationsStreamProps) {
   const t = useTranslation();
   return (
-    <div className="denty-panel-strong max-h-[50rem] overflow-hidden p-6">
+    <div className="denty-panel-strong max-h-[50rem] overflow-hidden p-4 sm:p-6">
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-xl font-semibold text-[var(--foreground)]">
           {t("admin.notif.stream")}
         </h2>
-        <span className="denty-pill">
+        <span className="denty-pill shrink-0">
           {t("admin.notif.shown_count", { count: filteredItems.length })}
         </span>
       </div>
@@ -35,22 +35,22 @@ export function NotificationsStream({
         {filteredItems.map((item) => (
           <div
             key={item.id}
-            className={`rounded-[20px] border p-5 shadow-[0_20px_44px_rgba(7,18,34,0.1)] ${
+            className={`rounded-[20px] border p-4 shadow-[0_20px_44px_rgba(7,18,34,0.1)] sm:p-5 ${
               item.read
                 ? "border-white/12 bg-white/26"
                 : "border-[rgba(137,219,255,0.22)] bg-[linear-gradient(180deg,rgba(255,255,255,0.42),rgba(230,240,247,0.32))]"
             }`}
           >
             <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <p className="text-lg font-semibold text-[var(--foreground)]">
+              <div className="min-w-0">
+                <p className="break-words text-lg font-semibold text-[var(--foreground)]">
                   {item.title}
                 </p>
-                <p className="mt-2 max-w-3xl text-sm leading-7 text-[var(--muted-foreground)]">
+                <p className="mt-2 max-w-3xl break-words text-sm leading-7 text-[var(--muted-foreground)]">
                   {item.body}
                 </p>
               </div>
-              <span className="denty-pill">
+              <span className="denty-pill shrink-0">
                 {item.read
                   ? t("admin.notif.read")
                   : t("admin.notif.unread")}

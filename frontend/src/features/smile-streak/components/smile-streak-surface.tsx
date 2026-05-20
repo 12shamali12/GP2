@@ -59,7 +59,7 @@ const EXPECTED_ORDER: MouthQuadrant[] = [
 ];
 
 const panelInnerClass =
-  "overflow-hidden rounded-[24px] border border-white/12 bg-[linear-gradient(180deg,rgba(249,252,255,0.78),rgba(222,233,241,0.34))] p-6 shadow-[0_28px_72px_rgba(7,18,34,0.16)] backdrop-blur-[24px] md:p-5";
+  "overflow-hidden rounded-[24px] border border-white/12 bg-[linear-gradient(180deg,rgba(249,252,255,0.78),rgba(222,233,241,0.34))] p-4 shadow-[0_28px_72px_rgba(7,18,34,0.16)] backdrop-blur-[24px] sm:p-6 md:p-5";
 
 function formatCountdown(ms: number): string {
   const total = Math.max(0, Math.floor(ms / 1000));
@@ -208,13 +208,13 @@ export function SmileStreakSurface() {
         ) : null}
 
         {stepNumber > 0 ? (
-          <div className="mt-5 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[rgba(10,22,40,0.55)]">
+          <div className="mt-5 flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[rgba(10,22,40,0.55)]">
             <span>{t("smile.step_label", { n: stepNumber })}</span>
-            <div className="ml-2 flex gap-1.5">
+            <div className="flex gap-1.5 sm:ml-2">
               {[1, 2, 3].map((n) => (
                 <span
                   key={n}
-                  className={`h-1.5 w-8 rounded-full transition-all ${
+                  className={`h-1.5 w-7 rounded-full transition-all sm:w-8 ${
                     n <= stepNumber
                       ? "bg-[linear-gradient(135deg,rgba(12,32,54,0.95),rgba(9,68,94,0.92))]"
                       : "bg-white/35"
@@ -358,11 +358,11 @@ function HabitsStep({
         </span>
       </div>
 
-      <div className="flex justify-end">
+      <div className="flex justify-stretch sm:justify-end">
         <button
           type="button"
           onClick={onSubmit}
-          className="inline-flex min-h-[3rem] cursor-pointer items-center justify-center rounded-[18px] border border-[rgba(137,219,255,0.28)] bg-[linear-gradient(135deg,rgba(12,32,54,0.95),rgba(9,68,94,0.92))] px-6 py-3 text-sm font-semibold text-white shadow-[0_24px_52px_rgba(6,17,34,0.28)] transition hover:brightness-110"
+          className="inline-flex min-h-[3rem] w-full cursor-pointer items-center justify-center rounded-[18px] border border-[rgba(137,219,255,0.28)] bg-[linear-gradient(135deg,rgba(12,32,54,0.95),rgba(9,68,94,0.92))] px-6 py-3 text-sm font-semibold text-white shadow-[0_24px_52px_rgba(6,17,34,0.28)] transition hover:brightness-110 sm:w-auto"
         >
           {t("smile.habits.next")}
         </button>
@@ -391,9 +391,9 @@ function SummaryView({
 
   return (
     <div className="mt-6 space-y-5 denty-card-in">
-      <div className="relative overflow-hidden rounded-[26px] border border-[rgba(7,111,133,0.18)] bg-[linear-gradient(180deg,rgba(176,224,238,0.55),rgba(154,206,224,0.32))] p-6 text-center shadow-[0_24px_56px_rgba(7,18,34,0.12)]">
+      <div className="relative overflow-hidden rounded-[26px] border border-[rgba(7,111,133,0.18)] bg-[linear-gradient(180deg,rgba(176,224,238,0.55),rgba(154,206,224,0.32))] p-5 text-center shadow-[0_24px_56px_rgba(7,18,34,0.12)] sm:p-6">
         <p className="denty-kicker">{t("smile.summary.title")}</p>
-        <p className="mt-3 text-6xl font-bold leading-none tabular-nums text-[var(--foreground)]">
+        <p className="mt-3 text-5xl font-bold leading-none tabular-nums text-[var(--foreground)] sm:text-6xl">
           {score}
         </p>
         <p className="mt-2 text-sm font-semibold text-[rgba(6,83,98,0.95)]">
@@ -472,7 +472,7 @@ function AlreadyDoneView({
 
   return (
     <div className="mt-6 space-y-5 denty-card-in">
-      <div className="rounded-[26px] border border-white/16 bg-[linear-gradient(180deg,rgba(248,250,252,0.66),rgba(226,232,240,0.32))] p-7 text-center shadow-[0_20px_48px_rgba(7,18,34,0.08)]">
+      <div className="rounded-[26px] border border-white/16 bg-[linear-gradient(180deg,rgba(248,250,252,0.66),rgba(226,232,240,0.32))] p-5 text-center shadow-[0_20px_48px_rgba(7,18,34,0.08)] sm:p-7">
         <div className="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-full bg-white/55 text-[rgba(10,22,40,0.7)] shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]">
           <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" aria-hidden="true">
             <path

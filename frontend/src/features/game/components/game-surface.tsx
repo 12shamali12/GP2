@@ -28,7 +28,7 @@ import { useToast } from "@/features/ui/components/toast-provider";
 /* -------------------------------------------------------------------------- */
 
 const panelInnerClass =
-  "overflow-hidden rounded-[24px] border border-white/12 bg-[linear-gradient(180deg,rgba(249,252,255,0.78),rgba(222,233,241,0.34))] p-6 shadow-[0_28px_72px_rgba(7,18,34,0.16)] backdrop-blur-[24px] md:p-5";
+  "overflow-hidden rounded-[24px] border border-white/12 bg-[linear-gradient(180deg,rgba(249,252,255,0.78),rgba(222,233,241,0.34))] p-4 shadow-[0_28px_72px_rgba(7,18,34,0.16)] backdrop-blur-[24px] sm:p-6 md:p-5";
 
 /** Total seconds allowed per question. The backend enforces the cap too. */
 const QUESTION_SECONDS = 30;
@@ -826,7 +826,7 @@ function LobbyView({
   return (
     <div className="mt-6 space-y-6 denty-card-in">
       {/* Centerpiece: streak + best score */}
-      <div className="rounded-[26px] border border-white/14 bg-[linear-gradient(180deg,rgba(255,255,255,0.55),rgba(222,233,241,0.25))] p-6 text-center shadow-[0_24px_56px_rgba(7,18,34,0.1)]">
+      <div className="rounded-[26px] border border-white/14 bg-[linear-gradient(180deg,rgba(255,255,255,0.55),rgba(222,233,241,0.25))] p-4 text-center shadow-[0_24px_56px_rgba(7,18,34,0.1)] sm:p-6">
         <p className="denty-kicker">{t("game.todays_challenge")}</p>
         <p className="mt-2 text-base font-semibold text-[var(--foreground)]">
           {t("game.challenge_summary")}
@@ -853,7 +853,7 @@ function LobbyView({
       </div>
 
       {/* Category preview chips */}
-      <div className="rounded-[22px] border border-white/12 bg-white/22 p-5">
+      <div className="rounded-[22px] border border-white/12 bg-white/22 p-4 sm:p-5">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[rgba(10,22,40,0.6)]">
           {t("game.category_preview")}
         </p>
@@ -935,14 +935,14 @@ function PlayingView({
       key={phase.currentIndex}
       className="mt-6 space-y-5 denty-card-in"
     >
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
           <CountdownRing
             secondsLeft={phase.secondsLeft}
             totalSeconds={QUESTION_SECONDS}
             questionNumber={phase.currentIndex + 1}
           />
-          <div>
+          <div className="min-w-0">
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[rgba(10,22,40,0.5)]">
               {t("game.question_of", {
                 n: phase.currentIndex + 1,
@@ -955,7 +955,7 @@ function PlayingView({
           </div>
         </div>
         <span
-          className={`inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] ${style.chip}`}
+          className={`inline-flex shrink-0 items-center rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] ${style.chip}`}
         >
           {t(style.key)}
         </span>
@@ -971,9 +971,9 @@ function PlayingView({
 
       {/* Question card with category-coloured left border */}
       <div
-        className={`rounded-[20px] border border-white/14 ${style.border} border-l-[6px] bg-[linear-gradient(180deg,rgba(255,255,255,0.6),rgba(222,233,241,0.22))] p-5 shadow-[0_18px_42px_rgba(7,18,34,0.1)]`}
+        className={`rounded-[20px] border border-white/14 ${style.border} border-l-[6px] bg-[linear-gradient(180deg,rgba(255,255,255,0.6),rgba(222,233,241,0.22))] p-4 shadow-[0_18px_42px_rgba(7,18,34,0.1)] sm:p-5`}
       >
-        <p className="text-xl font-semibold leading-8 text-[var(--foreground)]">
+        <p className="text-base font-semibold leading-7 text-[var(--foreground)] sm:text-xl sm:leading-8">
           {question.prompt}
         </p>
       </div>
@@ -990,7 +990,7 @@ function PlayingView({
               type="button"
               disabled={locked}
               onClick={() => onPick(index)}
-              className={`group flex h-14 w-full items-center gap-3 rounded-[18px] border px-4 text-left text-sm font-medium transition-all duration-200 ${
+              className={`group flex min-h-14 w-full items-center gap-3 rounded-[18px] border px-3 py-2 text-left text-sm font-medium transition-all duration-200 sm:px-4 ${
                 isSelected
                   ? "border-[rgba(7,111,133,0.6)] bg-[linear-gradient(180deg,rgba(176,224,238,0.7),rgba(154,206,224,0.4))] text-[rgba(6,83,98,0.96)] shadow-[0_18px_42px_rgba(7,18,34,0.18)]"
                   : "border-white/14 bg-white/30 text-[rgba(10,22,40,0.84)] hover:-translate-y-[2px] hover:bg-white/48 hover:shadow-[0_16px_36px_rgba(7,18,34,0.14)]"
@@ -1007,7 +1007,7 @@ function PlayingView({
               >
                 {String.fromCharCode(65 + index)}
               </span>
-              <span className="flex-1">{option}</span>
+              <span className="min-w-0 flex-1 wrap-break-word">{option}</span>
             </button>
           );
         })}
@@ -1034,19 +1034,19 @@ function ResultsView({
 
   return (
     <div className="mt-6 space-y-5 denty-card-in">
-      <div className="relative overflow-hidden rounded-[28px] border border-[rgba(7,111,133,0.18)] bg-[linear-gradient(180deg,rgba(176,224,238,0.55),rgba(154,206,224,0.32))] p-8 text-center shadow-[0_24px_56px_rgba(7,18,34,0.12)]">
+      <div className="relative overflow-hidden rounded-[28px] border border-[rgba(7,111,133,0.18)] bg-[linear-gradient(180deg,rgba(176,224,238,0.55),rgba(154,206,224,0.32))] p-5 text-center shadow-[0_24px_56px_rgba(7,18,34,0.12)] sm:p-8">
         <StarBurst />
         <p className="denty-kicker relative">{t("game.result")}</p>
         <p className="relative mt-4 font-bold leading-none text-[var(--foreground)]">
-          <span className="text-7xl tabular-nums">{result.score}</span>
-          <span className="mx-1 text-3xl text-[rgba(10,22,40,0.4)]">/</span>
-          <span className="text-4xl tabular-nums text-[rgba(10,22,40,0.65)]">
+          <span className="text-5xl tabular-nums sm:text-7xl">{result.score}</span>
+          <span className="mx-1 text-2xl text-[rgba(10,22,40,0.4)] sm:text-3xl">/</span>
+          <span className="text-3xl tabular-nums text-[rgba(10,22,40,0.65)] sm:text-4xl">
             {result.total}
           </span>
         </p>
-        <p className="relative mt-4 text-base font-semibold text-[rgba(6,83,98,0.95)]">
+        <p className="relative mt-4 text-sm font-semibold text-[rgba(6,83,98,0.95)] sm:text-base">
           {t("game.points_earned_animated")}{" "}
-          <span className="text-xl text-[var(--foreground)] tabular-nums">
+          <span className="text-lg text-[var(--foreground)] tabular-nums sm:text-xl">
             +{points.toFixed(1)}
           </span>{" "}
           {t("game.points_unit")}
@@ -1056,11 +1056,11 @@ function ResultsView({
         </div>
       </div>
 
-      <div className="flex flex-wrap justify-end gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-end">
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex min-h-[3rem] cursor-pointer items-center justify-center rounded-[18px] border border-white/16 bg-white/35 px-6 py-3 text-sm font-semibold text-[rgba(10,22,40,0.8)] transition hover:bg-white/55"
+          className="inline-flex min-h-[3rem] w-full cursor-pointer items-center justify-center rounded-[18px] border border-white/16 bg-white/35 px-6 py-3 text-sm font-semibold text-[rgba(10,22,40,0.8)] transition hover:bg-white/55 sm:w-auto"
         >
           {t("game.back_to_lobby")}
         </button>
@@ -1068,7 +1068,7 @@ function ResultsView({
           <button
             type="button"
             onClick={onViewLeaderboard}
-            className="inline-flex min-h-[3rem] cursor-pointer items-center justify-center rounded-[18px] border border-[rgba(137,219,255,0.28)] bg-[linear-gradient(135deg,rgba(12,32,54,0.95),rgba(9,68,94,0.92))] px-6 py-3 text-sm font-semibold text-white shadow-[0_24px_52px_rgba(6,17,34,0.28)] transition hover:brightness-110"
+            className="inline-flex min-h-[3rem] w-full cursor-pointer items-center justify-center rounded-[18px] border border-[rgba(137,219,255,0.28)] bg-[linear-gradient(135deg,rgba(12,32,54,0.95),rgba(9,68,94,0.92))] px-6 py-3 text-sm font-semibold text-white shadow-[0_24px_52px_rgba(6,17,34,0.28)] transition hover:brightness-110 sm:w-auto"
           >
             {t("game.view_leaderboard")}
           </button>
@@ -1098,7 +1098,7 @@ function AlreadyPlayedView({
   return (
     <div className="mt-6 space-y-5 denty-card-in">
       {/* Calm "come back tomorrow" centerpiece */}
-      <div className="rounded-[26px] border border-white/16 bg-[linear-gradient(180deg,rgba(248,250,252,0.66),rgba(226,232,240,0.32))] p-7 text-center shadow-[0_20px_48px_rgba(7,18,34,0.08)]">
+      <div className="rounded-[26px] border border-white/16 bg-[linear-gradient(180deg,rgba(248,250,252,0.66),rgba(226,232,240,0.32))] p-5 text-center shadow-[0_20px_48px_rgba(7,18,34,0.08)] sm:p-7">
         <div className="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-full bg-white/55 text-[rgba(10,22,40,0.7)] shadow-[inset_0_1px_0_rgba(255,255,255,0.6)]">
           <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" aria-hidden="true">
             <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="1.6" />

@@ -41,10 +41,10 @@ export function DoctorDashboardSummary({
 
   return (
     <>
-      <div className="grid gap-4 xl:grid-cols-[1.16fr_0.72fr_0.72fr_0.72fr]">
-        <div className="denty-panel-strong p-5 md:p-6">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-[1.16fr_0.72fr_0.72fr_0.72fr]">
+        <div className="denty-panel-strong p-5 sm:col-span-2 md:p-6 xl:col-span-1">
           <p className="denty-kicker">{t("doctor.common.workspace")}</p>
-          <h1 className="mt-3 text-2xl font-semibold text-[var(--foreground)] md:text-2xl">
+          <h1 className="mt-3 text-xl font-semibold text-[var(--foreground)] sm:text-2xl">
             {t("doctor.summary.welcome", {
               name: userName || t("doctor.common.doctor"),
             })}

@@ -27,19 +27,19 @@ export function SupervisorCalendarView({
   );
 
   return (
-    <div className="grid gap-5 xl:grid-cols-[minmax(0,1.1fr)_minmax(340px,0.9fr)]">
-      <div className="denty-dashboard-card overflow-hidden p-5 md:p-6">
+    <div className="grid gap-5 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+      <div className="denty-dashboard-card overflow-hidden p-4 sm:p-5 md:p-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
+          <div className="min-w-0">
             <p className="denty-kicker">{t("supervisor.calendar.eyebrow")}</p>
-            <h2 className="mt-3 text-2xl font-semibold text-[var(--foreground)]">
+            <h2 className="mt-3 text-xl font-semibold text-[var(--foreground)] sm:text-2xl">
               {t("supervisor.calendar.title")}
             </h2>
             <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--muted-foreground)]">
               {t("supervisor.calendar.description")}
             </p>
           </div>
-          <span className="denty-pill">
+          <span className="denty-pill shrink-0">
             {t("supervisor.calendar.duties_count", { count: duties.length })}
           </span>
         </div>
@@ -58,13 +58,13 @@ export function SupervisorCalendarView({
           ) : null}
 
           {duties.map((duty) => (
-            <article key={duty.id} className="denty-dashboard-card-soft space-y-4 p-5">
+            <article key={duty.id} className="denty-dashboard-card-soft space-y-4 p-4 sm:p-5">
               <div className="flex flex-wrap items-start justify-between gap-4">
-                <div>
+                <div className="min-w-0">
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--muted-foreground)]">
                     {formatDate(duty.assignmentDate)}
                   </p>
-                  <h3 className="mt-2 text-xl font-semibold text-[var(--foreground)]">
+                  <h3 className="mt-2 text-lg font-semibold text-[var(--foreground)] sm:text-xl">
                     {duty.clinic.name}
                   </h3>
                   <p className="mt-2 text-sm text-[var(--muted-foreground)]">
@@ -94,8 +94,8 @@ export function SupervisorCalendarView({
               <div className="grid gap-3 md:grid-cols-2">
                 {duty.groupAssignments.map((assignment) => (
                   <div key={assignment.id} className="rounded-[1.35rem] border border-[rgba(148,163,184,0.12)] bg-white/45 px-4 py-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="min-w-0">
                         <p className="font-semibold text-[var(--foreground)]">
                           {assignment.group.name}
                         </p>
@@ -125,15 +125,15 @@ export function SupervisorCalendarView({
       </div>
 
       <div className="space-y-5">
-        <div className="denty-dashboard-card overflow-hidden p-6">
+        <div className="denty-dashboard-card overflow-hidden p-4 sm:p-5 md:p-6">
           <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
+            <div className="min-w-0">
               <p className="denty-kicker">{t("supervisor.calendar.assessments")}</p>
-              <h2 className="mt-3 text-xl font-semibold text-[var(--foreground)]">
+              <h2 className="mt-3 text-lg font-semibold text-[var(--foreground)] sm:text-xl">
                 {t("supervisor.calendar.upcoming_exams")}
               </h2>
             </div>
-            <span className="denty-pill">
+            <span className="denty-pill shrink-0">
               {t("supervisor.calendar.scheduled_count", { count: exams.length })}
             </span>
           </div>
@@ -165,12 +165,12 @@ export function SupervisorCalendarView({
           </div>
         </div>
 
-        <div className="denty-dashboard-card overflow-hidden p-6">
+        <div className="denty-dashboard-card overflow-hidden p-4 sm:p-5 md:p-6">
           <p className="denty-kicker">{t("supervisor.calendar.coverage")}</p>
-          <h2 className="mt-3 text-xl font-semibold text-[var(--foreground)]">
+          <h2 className="mt-3 text-lg font-semibold text-[var(--foreground)] sm:text-xl">
             {t("supervisor.calendar.clinic_snapshot")}
           </h2>
-          <div className="mt-5 grid gap-3 md:grid-cols-2">
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
             <div className="denty-dashboard-card-soft p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
                 {t("supervisor.calendar.clinics")}

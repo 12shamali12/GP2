@@ -17,9 +17,9 @@ export function ModerationPairsView({
 }: ModerationPairsViewProps) {
   const t = useTranslation();
   return (
-    <div className="denty-panel-strong max-h-[48rem] overflow-hidden p-6">
+    <div className="denty-panel-strong max-h-[48rem] overflow-hidden p-4 sm:p-6">
       <div className="flex items-center justify-between gap-3">
-        <div>
+        <div className="min-w-0">
           <h2 className="text-xl font-semibold text-[var(--foreground)]">
             {t("admin.mod.pairs_title")}
           </h2>
@@ -42,17 +42,17 @@ export function ModerationPairsView({
                 </p>
                 <div className="mt-3 space-y-4">
                   {section.items.map((group) => (
-                    <div key={group.id} className="denty-dashboard-card p-5">
+                    <div key={group.id} className="denty-dashboard-card p-4 sm:p-5">
                       <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <p className="text-xl font-semibold text-[var(--foreground)]">
+                        <div className="min-w-0">
+                          <p className="break-words text-xl font-semibold text-[var(--foreground)]">
                             {group.name}
                           </p>
-                          <p className="mt-2 text-sm text-[var(--muted-foreground)]">
+                          <p className="mt-2 break-words text-sm text-[var(--muted-foreground)]">
                             {group.semesterLabel}
                           </p>
                         </div>
-                        <span className="denty-pill">
+                        <span className="denty-pill shrink-0">
                           {t("admin.mod.pairs_in_count", {
                             count: group.partnerPairs?.length || 0,
                           })}
@@ -65,14 +65,14 @@ export function ModerationPairsView({
                             className="denty-dashboard-card-soft p-4"
                           >
                             <div className="flex items-center justify-between gap-3">
-                              <div>
-                                <p className="text-base font-semibold text-[var(--foreground)]">
+                              <div className="min-w-0">
+                                <p className="break-words text-base font-semibold text-[var(--foreground)]">
                                   {t("admin.mod.pair_and", {
                                     first: pair.doctorOne.name,
                                     second: pair.doctorTwo.name,
                                   })}
                                 </p>
-                                <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+                                <p className="mt-1 break-words text-sm text-[var(--muted-foreground)]">
                                   {pair.doctorOne.doctorIdNumber ||
                                     pair.doctorOne.username}{" "}
                                   /{" "}
@@ -83,7 +83,7 @@ export function ModerationPairsView({
                               <button
                                 type="button"
                                 onClick={() => onRemovePair(pair.id)}
-                                className="rounded-full border border-rose-600/24 bg-rose-50 px-4 py-2 text-xs font-semibold text-rose-700"
+                                className="min-h-[2.5rem] shrink-0 rounded-full border border-rose-600/24 bg-rose-50 px-4 py-2 text-xs font-semibold text-rose-700"
                               >
                                 {t("admin.mod.unpair")}
                               </button>

@@ -11,11 +11,11 @@ export function DoctorWorkspacePlanView({ workspace }: Props) {
   const t = useTranslation();
   return (
     <div className="grid gap-5 xl:grid-cols-[1.06fr_0.94fr]">
-      <div className="denty-panel-strong p-6">
+      <div className="denty-panel-strong p-4 sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="denty-kicker">{t("supervision.plan.plan_eyebrow")}</p>
-            <h3 className="mt-3 text-2xl font-semibold text-[var(--foreground)]">
+            <h3 className="mt-3 text-xl font-semibold text-[var(--foreground)] sm:text-2xl">
               {t("supervision.plan.plan_title")}
             </h3>
           </div>
@@ -27,7 +27,7 @@ export function DoctorWorkspacePlanView({ workspace }: Props) {
         </div>
         <div className="mt-5 space-y-3">
           {workspace?.schedule.map((assignment) => (
-            <div key={assignment.id} className="denty-dashboard-card p-5">
+            <div key={assignment.id} className="denty-dashboard-card p-4 sm:p-5">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="text-xl font-semibold text-[var(--foreground)]">{assignment.clinic.name}</p>
@@ -63,11 +63,11 @@ export function DoctorWorkspacePlanView({ workspace }: Props) {
         </div>
       </div>
 
-      <div className="denty-panel-strong p-6">
+      <div className="denty-panel-strong p-4 sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="denty-kicker">{t("supervision.plan.exams_eyebrow")}</p>
-            <h3 className="mt-3 text-2xl font-semibold text-[var(--foreground)]">
+            <h3 className="mt-3 text-xl font-semibold text-[var(--foreground)] sm:text-2xl">
               {t("supervision.plan.exams_title")}
             </h3>
           </div>
