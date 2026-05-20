@@ -26,12 +26,14 @@ export function NotificationsStream({
         </span>
       </div>
       {loading ? (
-        <p className="mt-5 text-sm text-[var(--muted-foreground)]">
-          {t("admin.notif.loading")}
-        </p>
+        <div className="mt-5 space-y-3">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <div key={index} className="denty-skeleton denty-skeleton-card" />
+          ))}
+        </div>
       ) : null}
 
-      <div className="mt-5 max-h-[40rem] space-y-3 overflow-y-auto pr-2">
+      <div className="denty-enter-stagger mt-5 max-h-[40rem] space-y-3 overflow-y-auto pr-2">
         {filteredItems.map((item) => (
           <div
             key={item.id}

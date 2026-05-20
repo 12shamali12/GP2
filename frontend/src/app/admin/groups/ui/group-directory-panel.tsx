@@ -36,11 +36,13 @@ export function GroupDirectoryPanel({
         />
       </div>
       {loading ? (
-        <p className="mt-5 text-sm text-[var(--muted-foreground)]">
-          {t("admin.groups.loading")}
-        </p>
-      ) : (
         <div className="mt-5 grid gap-4 lg:grid-cols-2">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div key={index} className="denty-skeleton denty-skeleton-card" />
+          ))}
+        </div>
+      ) : (
+        <div className="denty-enter-stagger mt-5 grid gap-4 lg:grid-cols-2">
           {filteredGroups.map((group) => (
             <button
               key={group.id}

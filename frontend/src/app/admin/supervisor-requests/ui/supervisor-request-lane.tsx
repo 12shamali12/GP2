@@ -78,7 +78,7 @@ export function SupervisorRequestLane({
                     {t("admin.common.open_count", { count: section.items.length })}
                   </span>
                 </div>
-                <div className="mt-3 space-y-3">
+                <div className="denty-enter-stagger mt-3 space-y-3">
                   {section.items.map((request) => (
                     <div
                       key={request.id}
@@ -145,14 +145,20 @@ export function SupervisorRequestLane({
               </section>
             ))}
           </div>
-        ) : !loading ? (
+        ) : loading ? (
+          <div className="space-y-3">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div key={index} className="denty-skeleton denty-skeleton-card" />
+            ))}
+          </div>
+        ) : (
           <div className="denty-placeholder p-5">
             <p className="denty-kicker">{t("admin.common.quiet_desk")}</p>
             <p className="mt-2 text-sm text-[var(--muted-foreground)]">
               {t("admin.sup_req.none_pending")}
             </p>
           </div>
-        ) : null}
+        )}
       </div>
     </div>
   );

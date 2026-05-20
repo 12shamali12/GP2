@@ -182,7 +182,7 @@ function AcademicLeaderboard({
             {boardMeta}
           </div>
 
-          <div className="mt-5 space-y-3">
+          <div className="denty-enter-stagger mt-5 space-y-3">
             {topThree.map((entry) => {
               const isCurrentUser =
                 Boolean(currentUserId) && entry.doctor.id === currentUserId;
@@ -284,12 +284,15 @@ function AcademicLeaderboard({
             </div>
           </div>
 
-          <div className="mt-5 max-h-[54rem] space-y-3 overflow-y-auto pr-1">
-            {loading ? (
-              <p className="text-sm text-[var(--muted-foreground)]">
-                {t("leaderboard.loading")}
-              </p>
-            ) : null}
+          <div className="denty-enter-stagger mt-5 max-h-[54rem] space-y-3 overflow-y-auto pr-1">
+            {loading
+              ? Array.from({ length: 5 }).map((_, index) => (
+                  <div
+                    key={index}
+                    className="denty-skeleton denty-skeleton-card"
+                  />
+                ))
+              : null}
 
             {selectedBoard?.entries.map((entry) => {
               const isCurrentUser =
@@ -452,12 +455,12 @@ function GameLeaderboard({ currentUserId }: GameLeaderboardProps) {
         </p>
       ) : null}
 
-      <div className="mt-5 max-h-[54rem] space-y-3 overflow-y-auto pr-1">
-        {loading && !snapshot ? (
-          <p className="text-sm text-[var(--muted-foreground)]">
-            {t("leaderboard.loading_game")}
-          </p>
-        ) : null}
+      <div className="denty-enter-stagger mt-5 max-h-[54rem] space-y-3 overflow-y-auto pr-1">
+        {loading && !snapshot
+          ? Array.from({ length: 5 }).map((_, index) => (
+              <div key={index} className="denty-skeleton denty-skeleton-card" />
+            ))
+          : null}
 
         {!loading && entries.length === 0 && !error ? (
           <div className="rounded-[24px] border border-dashed border-white/16 bg-white/14 p-5">

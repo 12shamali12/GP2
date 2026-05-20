@@ -308,9 +308,13 @@ export function SupervisorWorkspacePanel({ apiUrl, identifier, onWorkspaceChange
       <SupervisorWorkspaceHero view={view} workspace={workspace} tabClass={tabClass} onChange={setView} />
 
       {loading ? (
-        <p className="text-sm text-[var(--muted-foreground)]">
-          {t("supervision.sup.loading_workspace")}
-        </p>
+        <div className="space-y-3">
+          <div className="denty-skeleton denty-skeleton-card" />
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="denty-skeleton denty-skeleton-card" />
+            <div className="denty-skeleton denty-skeleton-card" />
+          </div>
+        </div>
       ) : null}
 
       {view === "live" ? (

@@ -16,8 +16,8 @@ export function ComingSoonModal({
   onClose,
 }: ComingSoonModalProps) {
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-[rgba(19,37,58,0.22)] p-4 backdrop-blur-md">
-      <div className="denty-modal w-full max-w-4xl overflow-hidden">
+    <div className="denty-backdrop-enter fixed inset-0 z-40 flex items-center justify-center bg-[rgba(19,37,58,0.22)] p-4 backdrop-blur-md">
+      <div className="denty-modal denty-modal-enter w-full max-w-4xl overflow-hidden">
         <div className="grid gap-0 md:grid-cols-[0.95fr_1.05fr]">
           <div className="frozen-stage border-b border-[rgba(148,163,184,0.14)] bg-[linear-gradient(180deg,rgba(230,244,246,0.9),rgba(255,255,255,0.96))] p-6 md:border-b-0 md:border-r md:p-6">
             <div className="space-y-5">

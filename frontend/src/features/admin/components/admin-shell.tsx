@@ -319,7 +319,8 @@ export function AdminShell({
                   >
                     <span
                       aria-hidden
-                      className={`pointer-events-none absolute left-0 top-2 bottom-2 w-1 rounded-r-full transition-opacity duration-200 ${
+                      data-active={active}
+                      className={`denty-rail-accent pointer-events-none absolute left-0 top-2 bottom-2 w-1 rounded-r-full transition-opacity duration-200 ${
                         active ? "opacity-100" : "opacity-0"
                       }`}
                       style={{ backgroundColor: ADMIN_ACCENT.bar }}
@@ -331,7 +332,7 @@ export function AdminShell({
                     >
                         <DashboardIcon name={item.icon} />
                         {count !== null && count > 0 ? (
-                          <span className="denty-rail-badge-mini absolute -right-1 -top-1 inline-flex min-h-[1.25rem] min-w-[1.25rem] items-center justify-center rounded-full border border-rose-300/40 bg-[rgba(190,24,93,0.9)] px-1 text-[10px] font-semibold text-white shadow-[0_10px_18px_rgba(76,5,25,0.3)]">
+                          <span className="denty-rail-badge-mini denty-pop absolute -right-1 -top-1 inline-flex min-h-[1.25rem] min-w-[1.25rem] items-center justify-center rounded-full border border-rose-300/40 bg-[rgba(190,24,93,0.9)] px-1 text-[10px] font-semibold text-white shadow-[0_10px_18px_rgba(76,5,25,0.3)]">
                             {count > 9 ? "9+" : count}
                           </span>
                         ) : null}
@@ -435,7 +436,9 @@ export function AdminShell({
               </div>
             </div>
 
-            {children}
+            <div key={pathname} className="denty-enter space-y-4 lg:space-y-5">
+              {children}
+            </div>
           </section>
         </RoleShellLayout>
       </div>

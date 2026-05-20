@@ -420,7 +420,7 @@ export default function SupervisorPage() {
               </div>
             </div>
 
-            <div className={activeSurface === "overview" ? "" : "hidden"}>
+            <div className={activeSurface === "overview" ? "denty-enter" : "hidden"}>
               <SupervisorWorkspacePanel
                 apiUrl={API_URL}
                 identifier={identifier}
@@ -428,7 +428,7 @@ export default function SupervisorPage() {
               />
             </div>
 
-            <div className={activeSurface === "profile" ? "" : "hidden"}>
+            <div className={activeSurface === "profile" ? "denty-enter" : "hidden"}>
               <SupervisorProfilePanel
                 user={user}
                 editName={editName}
@@ -468,7 +468,7 @@ export default function SupervisorPage() {
               />
             </div>
 
-            <div className={activeSurface === "notifications" ? "" : "hidden"}>
+            <div className={activeSurface === "notifications" ? "denty-enter" : "hidden"}>
               <SupervisorNotificationsView
                 notifications={notifications}
                 unreadNotifications={unreadNotifications}
@@ -481,11 +481,11 @@ export default function SupervisorPage() {
               />
             </div>
 
-            <div className={activeSurface === "calendar" ? "" : "hidden"}>
+            <div className={activeSurface === "calendar" ? "denty-enter" : "hidden"}>
               <SupervisorCalendarView workspace={workspacePreview} />
             </div>
 
-            <div className={activeSurface === "leaderboard" ? "" : "hidden"}>
+            <div className={activeSurface === "leaderboard" ? "denty-enter" : "hidden"}>
               <div className="denty-panel p-6 md:p-7">
                 <LeaderboardView
                   snapshot={leaderboardSnapshot}
@@ -494,7 +494,7 @@ export default function SupervisorPage() {
               </div>
             </div>
 
-            <div className={activeSurface === "chat" ? "" : "hidden"}>
+            <div className={activeSurface === "chat" ? "denty-enter" : "hidden"}>
               <SupervisorChatWorkspace
                 apiUrl={API_URL}
                 userId={user.id}
@@ -514,7 +514,7 @@ export default function SupervisorPage() {
               />
             </div>
 
-            <div className={activeSurface === "settings" ? "" : "hidden"}>
+            <div className={activeSurface === "settings" ? "denty-enter" : "hidden"}>
               <SettingsPanel
                 role="supervisor"
                 onEditProfile={() => setActiveSurface("profile")}

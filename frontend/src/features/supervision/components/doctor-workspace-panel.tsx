@@ -208,9 +208,13 @@ export function DoctorWorkspacePanel({ apiUrl, identifier, onWorkspaceChange }: 
       />
 
       {loading ? (
-        <p className="text-sm text-[var(--muted-foreground)]">
-          {t("supervision.doctor.loading_workspace")}
-        </p>
+        <div className="space-y-3">
+          <div className="denty-skeleton denty-skeleton-card" />
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="denty-skeleton denty-skeleton-card" />
+            <div className="denty-skeleton denty-skeleton-card" />
+          </div>
+        </div>
       ) : null}
 
       {view === "desk" ? (

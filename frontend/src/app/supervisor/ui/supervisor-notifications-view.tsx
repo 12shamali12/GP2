@@ -50,7 +50,7 @@ export function SupervisorNotificationsView({
         </button>
       </div>
 
-      <div className="mt-6 space-y-3">
+      <div className="denty-enter-stagger mt-6 space-y-3">
         {notifications.length === 0 ? (
           <div className="denty-dashboard-card-soft p-5 text-sm text-[var(--muted-foreground)]">
             {t("supervisor.notif.empty")}

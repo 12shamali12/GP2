@@ -2074,6 +2074,175 @@ html[data-reduced-motion="true"] *::after {
   pointer-events: none;
 }
 
+/* ======================================================================
+ * MOTION LIBRARY — reusable entrance / reveal / loading utilities.
+ * ----------------------------------------------------------------------
+ * One coherent set of classes used across the app. Every animation is
+ * driven by the shared --ease curve + --dur* ramp so motion feels of a
+ * piece with the rest of the design system. All keyframes here are
+ * neutralised in BOTH reduced-motion blocks below (OS preference + the
+ * in-app Settings toggle) so elements always land in their final,
+ * visible state when motion is off.
+ * ====================================================================== */
+
+@keyframes denty-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes denty-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes denty-modal-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes denty-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes denty-shimmer {
+  from {
+    background-position: 180% 0;
+  }
+  to {
+    background-position: -180% 0;
+  }
+}
+
+@keyframes denty-rail-accent-in {
+  from {
+    opacity: 0;
+    transform: scaleY(0.2);
+  }
+  to {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
+
+/* Surface / section mount — fade + slight rise. */
+.denty-enter {
+  animation: denty-enter var(--dur-slow) var(--ease) both;
+}
+
+/* Staggered child reveal — cascade up to ~10 children at 60ms steps. */
+.denty-enter-stagger > * {
+  animation: denty-enter var(--dur-slow) var(--ease) both;
+}
+.denty-enter-stagger > *:nth-child(1) {
+  animation-delay: 0ms;
+}
+.denty-enter-stagger > *:nth-child(2) {
+  animation-delay: 60ms;
+}
+.denty-enter-stagger > *:nth-child(3) {
+  animation-delay: 120ms;
+}
+.denty-enter-stagger > *:nth-child(4) {
+  animation-delay: 180ms;
+}
+.denty-enter-stagger > *:nth-child(5) {
+  animation-delay: 240ms;
+}
+.denty-enter-stagger > *:nth-child(6) {
+  animation-delay: 300ms;
+}
+.denty-enter-stagger > *:nth-child(7) {
+  animation-delay: 360ms;
+}
+.denty-enter-stagger > *:nth-child(8) {
+  animation-delay: 420ms;
+}
+.denty-enter-stagger > *:nth-child(9) {
+  animation-delay: 480ms;
+}
+.denty-enter-stagger > *:nth-child(n + 10) {
+  animation-delay: 540ms;
+}
+
+/* Pop — for badges, pills, score reveals. */
+.denty-pop {
+  animation: denty-pop var(--dur) var(--ease) both;
+}
+
+/* Modal panel + backdrop entrances. */
+.denty-modal-enter {
+  animation: denty-modal-enter var(--dur-slow) var(--ease) both;
+}
+.denty-backdrop-enter {
+  animation: denty-backdrop-in var(--dur) var(--ease) both;
+}
+
+/* Shimmer loading block — ivory/teal sweep over a soft base. */
+.denty-skeleton {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background:
+    linear-gradient(
+      100deg,
+      rgba(226, 236, 240, 0.55) 30%,
+      rgba(11, 123, 138, 0.14) 48%,
+      rgba(226, 236, 240, 0.55) 66%
+    );
+  background-size: 220% 100%;
+  animation: denty-shimmer 1.5s linear infinite;
+}
+.denty-skeleton-text {
+  height: 0.85rem;
+  border-radius: 999px;
+}
+.denty-skeleton-card {
+  height: 6.5rem;
+  border-radius: var(--radius-lg);
+}
+
+html.dark .denty-skeleton {
+  background:
+    linear-gradient(
+      100deg,
+      rgba(20, 36, 60, 0.6) 30%,
+      rgba(45, 212, 191, 0.16) 48%,
+      rgba(20, 36, 60, 0.6) 66%
+    );
+  background-size: 220% 100%;
+}
+
+/* Nav-rail active accent bar — grows from center as the item activates. */
+.denty-rail-accent {
+  transform-origin: center;
+}
+.denty-rail-accent[data-active="true"] {
+  animation: denty-rail-accent-in var(--dur) var(--ease) both;
+}
+
 /* ----------------------------------------------------------------------- *
  * Motion safety — OS-level "reduce motion" preference.
  * The in-app Settings toggle uses html[data-reduced-motion="true"] (handled
@@ -2081,8 +2250,9 @@ html[data-reduced-motion="true"] *::after {
  * set the preference at the OS level WITHOUT touching the app toggle, so
  * every decorative / looping animation in the design system is neutralised:
  * the looping background blobs (frozenDrift), floating cards (frozenFloat),
- * the live status-dot pulse, the auth-media slow zoom, and all the
- * game / smile-streak flourishes.
+ * the live status-dot pulse, the auth-media slow zoom, all the
+ * game / smile-streak flourishes, AND every utility in the motion library
+ * above (entrances, stagger, pop, modal, skeleton shimmer, rail accent).
  * ----------------------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
   .denty-flame-pulse,
@@ -2105,12 +2275,49 @@ html[data-reduced-motion="true"] *::after {
   .denty-panel-strong,
   .denty-night-panel,
   .denty-modal,
-  .denty-toast {
+  .denty-toast,
+  .denty-enter,
+  .denty-enter-stagger > *,
+  .denty-pop,
+  .denty-modal-enter,
+  .denty-backdrop-enter,
+  .denty-skeleton,
+  .denty-rail-accent[data-active="true"] {
     animation: none !important;
+  }
+
+  /* Entrance utilities use fill-mode: both, so killing the animation would
+   * freeze them at the 0% keyframe (invisible). Force the final state. */
+  .denty-enter,
+  .denty-enter-stagger > *,
+  .denty-pop,
+  .denty-modal-enter,
+  .denty-backdrop-enter,
+  .denty-rail-accent[data-active="true"] {
+    opacity: 1 !important;
+    transform: none !important;
   }
 
   html {
     scroll-behavior: auto;
   }
+}
+
+/* In-app Settings reduce-motion toggle — the blanket * rule above only
+ * caps duration (0.001ms), which still flickers entrance utilities. Pin
+ * them to their final visible state explicitly. */
+html[data-reduced-motion="true"] .denty-enter,
+html[data-reduced-motion="true"] .denty-enter-stagger > *,
+html[data-reduced-motion="true"] .denty-pop,
+html[data-reduced-motion="true"] .denty-modal-enter,
+html[data-reduced-motion="true"] .denty-backdrop-enter,
+html[data-reduced-motion="true"] .denty-rail-accent[data-active="true"] {
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+html[data-reduced-motion="true"] .denty-skeleton {
+  animation: none !important;
 }
 

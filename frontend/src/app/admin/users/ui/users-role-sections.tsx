@@ -73,7 +73,7 @@ export function UsersRoleSections({
                     <p className="denty-kicker !tracking-[0.18em]">
                       {section.letter}
                     </p>
-                    <div className="mt-3 grid gap-3 xl:grid-cols-2">
+                    <div className="denty-enter-stagger mt-3 grid gap-3 xl:grid-cols-2">
                       {section.items.map((user) => (
                         <div
                           key={user.id}

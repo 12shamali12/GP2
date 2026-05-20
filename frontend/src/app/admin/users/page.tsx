@@ -54,16 +54,24 @@ export default function AdminUsersPage() {
         onRoleFilterChange={setRoleFilter}
       />
 
-      <UsersRoleSections
-        groupedUsers={groupedUsers}
-        expandedRoles={expandedRoles}
-        onToggleRole={toggleRole}
-        onBlockUser={blockUser}
-        onOpenDeleteModal={openDeleteModal}
-        onReapproveSupervisor={reapproveSupervisor}
-        onReapproveDoctor={reapproveDoctor}
-        hasActiveTimedFreeze={hasActiveTimedFreeze}
-      />
+      {loading && groupedUsers.length === 0 ? (
+        <div className="mt-6 grid gap-3 xl:grid-cols-2">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <div key={index} className="denty-skeleton denty-skeleton-card" />
+          ))}
+        </div>
+      ) : (
+        <UsersRoleSections
+          groupedUsers={groupedUsers}
+          expandedRoles={expandedRoles}
+          onToggleRole={toggleRole}
+          onBlockUser={blockUser}
+          onOpenDeleteModal={openDeleteModal}
+          onReapproveSupervisor={reapproveSupervisor}
+          onReapproveDoctor={reapproveDoctor}
+          hasActiveTimedFreeze={hasActiveTimedFreeze}
+        />
+      )}
 
       <UserDeleteDialog
         deleteTarget={deleteTarget}

@@ -475,7 +475,7 @@ export default function PatientPage() {
               </div>
             </div>
 
-            <div className={activeSurface === "overview" ? "" : "hidden"}>
+            <div className={activeSurface === "overview" ? "denty-enter" : "hidden"}>
               <PatientCareDeskView
                 uniqueUpcoming={uniqueUpcoming}
                 availableSlots={availableSlots}
@@ -527,7 +527,7 @@ export default function PatientPage() {
               />
             </div>
 
-            <div className={activeSurface === "profile" ? "" : "hidden"}>
+            <div className={activeSurface === "profile" ? "denty-enter" : "hidden"}>
               <PatientProfilePanel
                 user={user}
                 avatarData={avatarData}
@@ -571,7 +571,7 @@ export default function PatientPage() {
               />
             </div>
 
-            <div className={activeSurface === "notifications" ? "" : "hidden"}>
+            <div className={activeSurface === "notifications" ? "denty-enter" : "hidden"}>
               <PatientNotificationsView
                 notifications={patientNotifications}
                 unreadNotifications={unreadPatientNotifications}
@@ -589,7 +589,7 @@ export default function PatientPage() {
               />
             </div>
 
-            <div className={activeSurface === "chat" ? "" : "hidden"}>
+            <div className={activeSurface === "chat" ? "denty-enter" : "hidden"}>
               <PatientChatWorkspace
                 apiUrl={API_URL}
                 userId={user.id}
@@ -609,13 +609,13 @@ export default function PatientPage() {
               />
             </div>
 
-            <div className={activeSurface === "game" ? "" : "hidden"}>
+            <div className={activeSurface === "game" ? "denty-enter" : "hidden"}>
               <div className="denty-panel p-6 md:p-7">
                 <SmileStreakSurface />
               </div>
             </div>
 
-            <div className={activeSurface === "settings" ? "" : "hidden"}>
+            <div className={activeSurface === "settings" ? "denty-enter" : "hidden"}>
               <SettingsPanel
                 role="patient"
                 onEditProfile={() => setActiveSurface("profile")}

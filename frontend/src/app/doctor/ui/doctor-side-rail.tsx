@@ -159,7 +159,8 @@ function RailAction({
           transition reads cleanly. */}
       <span
         aria-hidden
-        className={`pointer-events-none absolute left-0 top-2 bottom-2 w-1 rounded-r-full transition-opacity duration-200 ${
+        data-active={active}
+        className={`denty-rail-accent pointer-events-none absolute left-0 top-2 bottom-2 w-1 rounded-r-full transition-opacity duration-200 ${
           active ? "opacity-100" : "opacity-0"
         }`}
         style={{ backgroundColor: accent }}
@@ -173,7 +174,7 @@ function RailAction({
         <DashboardIcon name={icon} />
         {badgeCount > 0 ? (
           <span
-            className={`denty-rail-badge-mini absolute -right-1 -top-1 inline-flex min-h-[1.25rem] min-w-[1.25rem] items-center justify-center rounded-full border px-1 text-[10px] font-semibold shadow-[0_10px_18px_rgba(76,5,25,0.3)] ${
+            className={`denty-rail-badge-mini denty-pop absolute -right-1 -top-1 inline-flex min-h-[1.25rem] min-w-[1.25rem] items-center justify-center rounded-full border px-1 text-[10px] font-semibold shadow-[0_10px_18px_rgba(76,5,25,0.3)] ${
               badgeVariant === "streak"
                 ? "border-amber-200/50 bg-[rgba(245,158,11,0.92)] text-white"
                 : "border-rose-300/40 bg-[rgba(190,24,93,0.9)] text-white"

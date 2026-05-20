@@ -18,8 +18,8 @@ export function DoctorConfirmExitModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/50 p-4 backdrop-blur">
-      <div className="max-h-[90vh] w-[calc(100vw-1.5rem)] max-w-md overflow-y-auto rounded-2xl border border-slate-600 bg-slate-900/90 p-5 text-slate-50 shadow-2xl sm:p-6">
+    <div className="denty-backdrop-enter fixed inset-0 z-30 flex items-center justify-center bg-black/50 p-4 backdrop-blur">
+      <div className="denty-modal-enter max-h-[90vh] w-[calc(100vw-1.5rem)] max-w-md overflow-y-auto rounded-2xl border border-slate-600 bg-slate-900/90 p-5 text-slate-50 shadow-2xl sm:p-6">
         <h3 className="mb-2 text-lg font-bold sm:text-xl">{t("doctor.exit.title")}</h3>
 
         <p className="mb-4 text-sm text-slate-100/90">

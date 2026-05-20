@@ -569,7 +569,7 @@ export default function DoctorPage() {
           <section className="min-w-0 space-y-4 lg:space-y-5">
             <DoctorPageHeader meta={currentSurfaceMeta} />
 
-            <div className={activeSurface === "overview" ? "space-y-6" : "hidden"}>
+            <div className={activeSurface === "overview" ? "denty-enter space-y-6" : "hidden"}>
               <DoctorOverviewSurface
                 apiUrl={API_URL}
                 identifier={identifier}
@@ -620,7 +620,7 @@ export default function DoctorPage() {
               />
             </div>
 
-            <div className={activeSurface === "profile" ? "" : "hidden"}>
+            <div className={activeSurface === "profile" ? "denty-enter" : "hidden"}>
               <DoctorProfileSurface
                 user={user}
                 avatarData={avatarData}
@@ -671,7 +671,7 @@ export default function DoctorPage() {
               />
             </div>
 
-            <div className={activeSurface === "approvals" ? "" : "hidden"}>
+            <div className={activeSurface === "approvals" ? "denty-enter" : "hidden"}>
               <DoctorApprovalsView
                 pendingAppointments={pendingAppointments}
                 loadingAction={loadingAction}
@@ -680,7 +680,7 @@ export default function DoctorPage() {
               />
             </div>
 
-            <div className={activeSurface === "notifications" ? "" : "hidden"}>
+            <div className={activeSurface === "notifications" ? "denty-enter" : "hidden"}>
               <DoctorNotificationsView
                 notifications={notifications}
                 unreadNotifications={unreadNotifications}
@@ -693,7 +693,7 @@ export default function DoctorPage() {
               />
             </div>
 
-            <div className={activeSurface === "chat" ? "" : "hidden"}>
+            <div className={activeSurface === "chat" ? "denty-enter" : "hidden"}>
               <DoctorChatWorkspace
                 apiUrl={API_URL}
                 userId={user.id}
@@ -713,7 +713,7 @@ export default function DoctorPage() {
               />
             </div>
 
-            <div className={activeSurface === "leaderboard" ? "" : "hidden"}>
+            <div className={activeSurface === "leaderboard" ? "denty-enter" : "hidden"}>
               <div className="denty-panel p-6 md:p-7">
                 <LeaderboardView
                   snapshot={leaderboardSnapshot}
@@ -723,7 +723,7 @@ export default function DoctorPage() {
               </div>
             </div>
 
-            <div className={activeSurface === "game" ? "" : "hidden"}>
+            <div className={activeSurface === "game" ? "denty-enter" : "hidden"}>
               <div className="denty-panel p-6 md:p-7">
                 <GameSurface
                   onViewLeaderboard={() => setActiveSurface("leaderboard")}
@@ -731,14 +731,14 @@ export default function DoctorPage() {
               </div>
             </div>
 
-            <div className={activeSurface === "settings" ? "" : "hidden"}>
+            <div className={activeSurface === "settings" ? "denty-enter" : "hidden"}>
               <SettingsPanel
                 role="doctor"
                 onEditProfile={() => setActiveSurface("profile")}
               />
             </div>
 
-            <div className={activeSurface === "report" ? "" : "hidden"}>
+            <div className={activeSurface === "report" ? "denty-enter" : "hidden"}>
               <DoctorReportSurface
                 userName={user.name || ""}
                 noShowCount={noShowCount}

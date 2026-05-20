@@ -44,9 +44,9 @@ export function GroupDetailModal({
   if (!selectedGroup) return null;
 
   return (
-    <div className="fixed inset-0 z-[120] bg-[rgba(5,12,24,0.42)] px-3 py-4 backdrop-blur-[10px] sm:px-4 sm:py-6">
+    <div className="denty-backdrop-enter fixed inset-0 z-[120] bg-[rgba(5,12,24,0.42)] px-3 py-4 backdrop-blur-[10px] sm:px-4 sm:py-6">
       <div className="mx-auto flex h-full max-w-6xl items-start justify-center">
-        <div className="denty-panel-strong max-h-full w-full overflow-y-auto rounded-[24px] p-4 sm:rounded-[34px] sm:p-6">
+        <div className="denty-panel-strong denty-modal-enter max-h-full w-full overflow-y-auto rounded-[24px] p-4 sm:rounded-[34px] sm:p-6">
           <div className="flex flex-wrap items-start justify-between gap-3 sm:gap-4">
             <div className="min-w-0">
               <p className="denty-kicker">{t("admin.groups.detail_eyebrow")}</p>

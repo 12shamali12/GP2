@@ -25,8 +25,8 @@ export function UserDeleteDialog({
   if (!deleteTarget) return null;
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-[rgba(7,18,34,0.42)] p-3 backdrop-blur-[12px] sm:p-4">
-      <div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-[24px] border border-white/12 bg-[linear-gradient(180deg,rgba(249,252,255,0.84),rgba(225,234,241,0.42))] p-4 shadow-[0_34px_90px_rgba(4,11,26,0.28)] backdrop-blur-[28px] sm:p-6">
+    <div className="denty-backdrop-enter fixed inset-0 z-40 flex items-center justify-center bg-[rgba(7,18,34,0.42)] p-3 backdrop-blur-[12px] sm:p-4">
+      <div className="denty-modal-enter max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-[24px] border border-white/12 bg-[linear-gradient(180deg,rgba(249,252,255,0.84),rgba(225,234,241,0.42))] p-4 shadow-[0_34px_90px_rgba(4,11,26,0.28)] backdrop-blur-[28px] sm:p-6">
         <div className="flex items-start justify-between gap-3 sm:gap-4">
           <div className="min-w-0">
             <p className="denty-kicker">{t("admin.users.delete_eyebrow")}</p>

@@ -3,6 +3,13 @@
 import Link from "next/link";
 import type { RefObject } from "react";
 import { useTranslation } from "@/features/i18n/language-provider";
+import { useCountUp } from "@/features/ui/hooks/use-count-up";
+
+/** Renders an integer stat that counts up from 0 on mount / value change. */
+function StatCount({ value }: { value: number }) {
+  const animated = useCountUp(value, 700);
+  return <>{Math.round(animated)}</>;
+}
 
 type PatientCareDeskViewProps = {
   uniqueUpcoming: any[];
@@ -222,7 +229,7 @@ export function PatientCareDeskView({
               {t("patient.care.stat_upcoming")}
             </p>
             <p className="mt-3 text-2xl font-semibold text-[var(--foreground)]">
-              {uniqueUpcoming.length}
+              <StatCount value={uniqueUpcoming.length} />
             </p>
             <p className="mt-2 text-sm text-[var(--muted-foreground)]">
               {t("patient.care.stat_upcoming_note")}
@@ -233,7 +240,7 @@ export function PatientCareDeskView({
               {t("patient.care.stat_availability")}
             </p>
             <p className="mt-3 text-2xl font-semibold text-[var(--foreground)]">
-              {availableSlots.length}
+              <StatCount value={availableSlots.length} />
             </p>
             <p className="mt-2 text-sm text-[var(--muted-foreground)]">
               {t("patient.care.stat_availability_note")}
@@ -244,7 +251,7 @@ export function PatientCareDeskView({
               {t("patient.care.stat_history")}
             </p>
             <p className="mt-3 text-2xl font-semibold text-[var(--foreground)]">
-              {history.length}
+              <StatCount value={history.length} />
             </p>
             <p className="mt-2 text-sm text-[var(--muted-foreground)]">
               {t("patient.care.stat_history_note")}

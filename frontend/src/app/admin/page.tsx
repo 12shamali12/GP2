@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AdminShell } from "@/features/admin/components/admin-shell";
 import { useTranslation } from "@/features/i18n/language-provider";
+import { useCountUp } from "@/features/ui/hooks/use-count-up";
 import {
   getDoctorRequests,
   getSupervisorRequests,
@@ -28,6 +29,12 @@ type AdminLaneCard = {
   description: string;
   metric: string;
 };
+
+/** Renders an integer stat that counts up from 0 on mount / value change. */
+function StatCount({ value }: { value: number }) {
+  const animated = useCountUp(value, 700);
+  return <>{Math.round(animated)}</>;
+}
 
 export default function AdminPage() {
   const t = useTranslation();
@@ -137,7 +144,9 @@ export default function AdminPage() {
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/62">
                 {t("admin.queue.total_pending")}
               </p>
-              <p className="mt-3 text-2xl font-semibold">{pendingTotal}</p>
+              <p className="mt-3 text-2xl font-semibold">
+                <StatCount value={pendingTotal} />
+              </p>
             </div>
           </div>
 
@@ -194,25 +203,25 @@ export default function AdminPage() {
               <div className={softCardClass}>
                 <p className="denty-kicker !tracking-[0.18em]">{t("admin.queue.doctors")}</p>
                 <p className="mt-3 text-xl font-semibold text-[var(--foreground)]">
-                  {doctorCount}
+                  <StatCount value={doctorCount} />
                 </p>
               </div>
               <div className={softCardClass}>
                 <p className="denty-kicker !tracking-[0.18em]">{t("admin.queue.supervisors")}</p>
                 <p className="mt-3 text-xl font-semibold text-[var(--foreground)]">
-                  {supervisorCount}
+                  <StatCount value={supervisorCount} />
                 </p>
               </div>
               <div className={softCardClass}>
                 <p className="denty-kicker !tracking-[0.18em]">{t("admin.queue.patients")}</p>
                 <p className="mt-3 text-xl font-semibold text-[var(--foreground)]">
-                  {patientCount}
+                  <StatCount value={patientCount} />
                 </p>
               </div>
               <div className={softCardClass}>
                 <p className="denty-kicker !tracking-[0.18em]">{t("admin.queue.all_accounts")}</p>
                 <p className="mt-3 text-xl font-semibold text-[var(--foreground)]">
-                  {visibleUsers.length}
+                  <StatCount value={visibleUsers.length} />
                 </p>
               </div>
             </div>
@@ -220,7 +229,7 @@ export default function AdminPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
+      <div className="denty-enter-stagger grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
         {cards.map((card) => (
           <Link
             key={card.href}
