@@ -168,7 +168,7 @@ function RailIdentityCard({
   const displayName = userName?.trim() || fallbackName;
   const initials = initialsOf(displayName);
   return (
-    <div className="rounded-[20px] border border-white/10 bg-white/6 px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+    <div className="denty-rail-identity rounded-[22px] border border-white/10 bg-[linear-gradient(180deg,rgba(82,85,103,0.96),rgba(67,71,88,0.94))] px-3 py-3 text-white backdrop-blur-[28px]">
       <div className="flex items-center gap-3">
         <span
           aria-hidden
@@ -221,8 +221,7 @@ export function SupervisorSideRail({
   const t = useTranslation();
   const accent = SUPERVISOR_ACCENT;
   return (
-    <aside className="frozen-stage denty-collapsible-rail overflow-y-auto rounded-[22px] border border-white/10 bg-[linear-gradient(180deg,rgba(82,85,103,0.96),rgba(67,71,88,0.94))] px-4 py-5 text-white backdrop-blur-[28px]">
-      <div className="flex min-h-full flex-col gap-3">
+    <div className="denty-rail-column">
         <RailIdentityCard
           userName={userName}
           fallbackName={t("auth.role.supervisor")}
@@ -231,6 +230,8 @@ export function SupervisorSideRail({
           accent={accent}
         />
 
+      <aside className="frozen-stage denty-collapsible-rail rounded-[22px] border border-white/10 bg-[linear-gradient(180deg,rgba(82,85,103,0.96),rgba(67,71,88,0.94))] px-4 py-5 text-white backdrop-blur-[28px]">
+      <div className="flex min-h-full flex-col gap-3">
         <div className="mx-2 my-2 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
         <div className="denty-rail-section-label mb-1 px-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-white/56">
           {t("nav.section.workspaces")}
@@ -352,6 +353,7 @@ export function SupervisorSideRail({
           </span>
         </button>
       </div>
-    </aside>
+      </aside>
+    </div>
   );
 }

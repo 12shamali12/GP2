@@ -5,7 +5,7 @@ import { useTranslation } from "@/features/i18n/language-provider";
 import { usePublicProfile } from "@/features/profiles/hooks/use-public-profile";
 import { SettingsPanel } from "@/features/settings/components/settings-panel";
 import { SmileStreakSurface } from "@/features/smile-streak/components/smile-streak-surface";
-import { BrandMark } from "@/features/ui/components/brand-mark";
+import { PageHeader } from "@/features/ui/components/page-header";
 import { ComingSoonModal } from "@/features/ui/components/coming-soon-modal";
 import { RoleShellLayout } from "@/features/ui/components/role-shell-layout";
 import { useFeedbackToast } from "@/features/ui/hooks/use-feedback-toast";
@@ -441,39 +441,11 @@ export default function PatientPage() {
             }
           >
           <section className="min-w-0 space-y-4 lg:space-y-5">
-            <div className="overflow-hidden rounded-[32px] border border-white/12 bg-[linear-gradient(180deg,rgba(249,252,255,0.78),rgba(222,233,241,0.34))] px-5 py-6 shadow-[0_28px_72px_rgba(7,18,34,0.16)] backdrop-blur-[24px] sm:px-7 sm:py-7 md:px-9 md:py-8">
-              <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
-                <div className="min-w-0 space-y-3">
-                  <div className="flex items-center gap-3">
-                    <BrandMark className="h-12 w-12 frozen-float sm:h-14 sm:w-14" />
-                    <span className="rounded-full border border-white/20 bg-white/26 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-[rgba(10,22,40,0.64)]">
-                      {t("patient.common.workspace")}
-                    </span>
-                  </div>
-
-                  <div>
-                    <p className="denty-kicker">{currentSurfaceMeta.eyebrow}</p>
-                    <h1 className="mt-3 max-w-4xl text-2xl font-semibold text-[var(--foreground)] sm:text-3xl md:text-4xl xl:text-5xl">
-                      {currentSurfaceMeta.title}
-                    </h1>
-                    <p className="mt-3 max-w-4xl text-sm leading-7 text-[var(--muted-foreground)] md:text-base">
-                      {currentSurfaceMeta.description}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap gap-2 xl:justify-end">
-                  {currentSurfaceMeta.badges.map((badge) => (
-                    <span
-                      key={badge}
-                      className="rounded-full border border-white/20 bg-white/26 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-[rgba(10,22,40,0.62)]"
-                    >
-                      {badge}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
+            <PageHeader
+              title={currentSurfaceMeta.title}
+              description={currentSurfaceMeta.description}
+              badge={t("patient.common.workspace")}
+            />
 
             <div className={activeSurface === "overview" ? "denty-enter" : "hidden"}>
               <PatientCareDeskView

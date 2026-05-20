@@ -143,9 +143,13 @@ body {
 @media (min-width: 1024px) {
   .denty-dashboard-layout {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
     align-items: start;
     gap: 1.15rem;
+    /* The side rail is position:fixed so it never stretches the page.
+     * Reserve its lane here (rail width + edge inset + gap). The rail sits
+     * on the right by default; admin overrides to the left below. */
+    padding-right: calc(5rem + 1.5rem);
   }
 
   /* Side rail: always-expanded at a comfortable 16.5rem width. The previous
@@ -156,13 +160,136 @@ body {
    * edge that catches light and gives the dark gradient a sense of depth.
    * Combined with the existing border + outer drop-shadow, the rail reads
    * as a raised glass panel rather than a flat painted strip. */
-  .denty-collapsible-rail {
-    position: sticky;
+  /* The whole left lane — identity card + nav rail stacked — is a single
+   * fixed column, so a tall rail never stretches the page into a blank
+   * scroll gap. .denty-dashboard-layout reserves its width via padding. */
+  /* Collapsed by default — only icons show. Hovering the lane expands it to
+   * full width with labels. The content keeps the *collapsed* width reserved
+   * (padding-left below), so the expanded rail overlays rather than shoves.
+   * Icons stay flex-start in both states, so nothing jumps on hover. */
+  .denty-rail-column {
+    position: fixed;
     top: 1rem;
-    align-self: start;
-    width: 16.5rem;
-    height: calc(100vh - 2rem);
+    bottom: 1rem;
+    right: 0.75rem;
+    width: 5rem;
     z-index: 30;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    transition: width 0.2s ease;
+  }
+
+  .denty-rail-column:hover {
+    width: 18.7rem;
+  }
+
+  /* Side rail sits on the RIGHT for doctor / patient / supervisor — rows are
+   * mirrored so the icon stays nearest the screen edge. */
+  .denty-rail-action {
+    flex-direction: row-reverse;
+  }
+  .denty-rail-accent {
+    left: auto;
+    right: 0;
+    border-radius: 9999px 0 0 9999px;
+  }
+  .denty-rail-identity > div {
+    flex-direction: row-reverse;
+  }
+  .denty-rail-copy {
+    text-align: right;
+  }
+
+  /* Admin keeps the original left-hand rail. */
+  .denty-rail-left .denty-dashboard-layout {
+    padding-right: 0;
+    padding-left: calc(5rem + 1.5rem);
+  }
+  .denty-rail-left .denty-rail-column {
+    right: auto;
+    left: 0.75rem;
+  }
+  .denty-rail-left .denty-rail-action {
+    flex-direction: row;
+  }
+  .denty-rail-left .denty-rail-accent {
+    left: 0;
+    right: auto;
+    border-radius: 0 9999px 9999px 0;
+  }
+  .denty-rail-left .denty-rail-identity > div {
+    flex-direction: row;
+  }
+  .denty-rail-left .denty-rail-copy {
+    text-align: left;
+  }
+
+  .denty-rail-column .denty-rail-copy {
+    transition: opacity 0.15s ease;
+  }
+
+  /* Collapsed state — hide labels, section headers, search and full badges;
+   * keep the compact icon badge. No scrollbar while collapsed. */
+  .denty-rail-column:not(:hover) .denty-rail-copy {
+    opacity: 0;
+    width: 0;
+    flex: 0 0 0;
+    overflow: hidden;
+  }
+
+  /* Collapsed: center every icon in the rail (no labels taking space). */
+  .denty-rail-column:not(:hover) .denty-rail-action {
+    justify-content: center;
+    gap: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .denty-rail-column:not(:hover) .denty-rail-identity > div:first-child {
+    justify-content: center;
+    gap: 0;
+  }
+
+  .denty-rail-column:not(:hover) .denty-collapsible-rail {
+    overflow-y: hidden;
+  }
+
+  /* Collapsed: the active tab's highlight wraps just the icon — drop the
+   * full-width white pill so it doesn't look like a stray box. The icon's
+   * own dark active fill + the accent bar still mark the selection. */
+  .denty-rail-column:not(:hover)
+    .denty-rail-action:has(.denty-rail-accent[data-active="true"]) {
+    background-color: transparent;
+    border-color: transparent;
+    box-shadow: none;
+  }
+
+  .denty-rail-column:not(:hover) .denty-rail-section-label,
+  .denty-rail-column:not(:hover) .denty-rail-search,
+  .denty-rail-column:not(:hover) .denty-rail-badge-full,
+  .denty-rail-column:not(:hover) .denty-rail-identity > div:last-child {
+    display: none;
+  }
+
+  .denty-rail-column:not(:hover) .denty-rail-badge-mini {
+    display: inline-flex;
+  }
+
+  /* Identity card — a separate panel above the rail; never scrolls. */
+  .denty-rail-identity {
+    flex: 0 0 auto;
+    box-shadow:
+      0 24px 60px rgba(4, 11, 26, 0.32),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+
+  /* Nav rail — takes the remaining height and scrolls its own list. */
+  .denty-collapsible-rail {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
     overflow-x: hidden;
     overflow-y: auto;
     scrollbar-width: thin;
@@ -235,7 +362,7 @@ body {
  * un-collapses it via the .denty-rail-in-drawer override.
  * -------------------------------------------------------------------- */
 @media (max-width: 1023px) {
-  .denty-collapsible-rail {
+  .denty-rail-column {
     display: none;
   }
 }
@@ -248,20 +375,36 @@ body {
   overflow-y: auto;
 }
 
+/* In the mobile drawer the whole left lane flows normally and the sheet
+ * itself scrolls — nothing is fixed or independently scrollable. */
+.denty-rail-in-drawer .denty-rail-column {
+  display: flex !important;
+  position: static !important;
+  top: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+  right: auto !important;
+  width: 100% !important;
+  gap: 0.5rem;
+}
+
 .denty-rail-in-drawer .denty-collapsible-rail {
   display: flex !important;
   flex-direction: column;
   width: 100% !important;
   height: auto !important;
-  min-height: 100%;
+  flex: 0 0 auto;
   position: relative !important;
-  top: auto !important;
   align-self: stretch !important;
   overflow-y: visible !important;
   box-shadow: none !important;
   border-radius: 0 !important;
   border: 0 !important;
   background: transparent !important;
+}
+
+.denty-rail-in-drawer .denty-rail-identity {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .denty-rail-in-drawer .denty-rail-action {
@@ -547,9 +690,11 @@ html[dir="rtl"] .denty-mobile-drawer-sheet {
   .denty-screen {
     position: relative;
     min-height: 100vh;
-    /* Do NOT add overflow:hidden here — it would break position:sticky on
-     * the side rail. Decorative background blobs are clipped by their own
-     * absolute container in each role page. */
+    /* overflow:clip contains the decorative ::before / ::after blobs — one
+     * is positioned with bottom:-14% and otherwise hangs ~230px below the
+     * page, creating a blank scroll gap. Safe now that the side rail is
+     * position:fixed (clip does not affect fixed-positioned descendants). */
+    overflow: clip;
     color: var(--foreground);
     background:
       radial-gradient(circle at 8% 12%, rgba(11, 123, 138, 0.09), transparent 22%),
@@ -2319,5 +2464,29 @@ html[data-reduced-motion="true"] .denty-rail-accent[data-active="true"] {
 
 html[data-reduced-motion="true"] .denty-skeleton {
   animation: none !important;
+}
+
+/* Subtle hover lift on workspace cards + a tactile press on buttons —
+ * calm motion only, no recolouring. */
+.denty-dashboard-card,
+.denty-dashboard-card-soft,
+.denty-stat-card,
+.denty-list-row {
+  transition:
+    transform 0.18s var(--ease),
+    box-shadow 0.18s var(--ease);
+}
+.denty-dashboard-card:hover,
+.denty-dashboard-card-soft:hover,
+.denty-stat-card:hover,
+.denty-list-row:hover {
+  transform: translateY(-3px);
+}
+
+button:not(:disabled):active,
+.denty-action:not(:disabled):active,
+.denty-pill:not(:disabled):active {
+  transform: scale(0.97);
+  transition: transform 0.07s ease;
 }
 

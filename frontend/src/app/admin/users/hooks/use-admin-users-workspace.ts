@@ -11,8 +11,12 @@ import {
 } from "@/features/admin/services/admin-api";
 import type { ManagedUser } from "@/features/admin/types/admin";
 import { sectionByLetter } from "@/features/admin/utils/collection";
-
-export type RoleFilter = "ALL" | "SUPERVISOR" | "DOCTOR" | "PATIENT";
+import {
+  DEFAULT_FILTERS,
+  userMatches,
+  type UserFilters,
+  type UserRole,
+} from "../lib/user-filters";
 
 export type DeleteTarget = {
   id: string;
@@ -21,20 +25,21 @@ export type DeleteTarget = {
 } | null;
 
 export type GroupedUserRole = {
-  role: Exclude<RoleFilter, "ALL">;
-  label: string;
+  role: UserRole;
   users: ManagedUser[];
   count: number;
   sections: ReturnType<typeof sectionByLetter<ManagedUser>>;
 };
 
+const ROLE_ORDER: UserRole[] = ["SUPERVISOR", "DOCTOR", "PATIENT"];
+
 export function useAdminUsersWorkspace() {
   const [users, setUsers] = useState<ManagedUser[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [roleFilter, setRoleFilter] = useState<RoleFilter>("ALL");
   const [query, setQuery] = useState("");
-  const [expandedRoles, setExpandedRoles] = useState<RoleFilter[]>(["DOCTOR"]);
+  const [filters, setFilters] = useState<UserFilters>(DEFAULT_FILTERS);
+  const [expandedRoles, setExpandedRoles] = useState<UserRole[]>([]);
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget>(null);
   const [deletePassword, setDeletePassword] = useState("");
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
@@ -116,41 +121,36 @@ export function useAdminUsersWorkspace() {
     [users],
   );
 
+  /** Distinct semester labels present in the data — feeds the filter modal. */
+  const semesterOptions = useMemo(() => {
+    const labels = new Set<string>();
+    for (const user of visibleUsers) {
+      if (user.semester?.label) labels.add(user.semester.label);
+    }
+    return Array.from(labels).sort();
+  }, [visibleUsers]);
+
+  /** Flat list of accounts matching the applied filters + search query. */
+  const filteredUsers = useMemo(
+    () => visibleUsers.filter((user) => userMatches(user, filters, query)),
+    [visibleUsers, filters, query],
+  );
+
   const groupedUsers = useMemo<GroupedUserRole[]>(() => {
-    const lowerQuery = query.toLowerCase();
-    const visibleRoles: Exclude<RoleFilter, "ALL">[] =
-      roleFilter === "ALL"
-        ? ["SUPERVISOR", "DOCTOR", "PATIENT"]
-        : [roleFilter];
+    return ROLE_ORDER.filter((role) => filters.roles.includes(role)).map(
+      (role) => {
+        const roleUsers = filteredUsers.filter((user) => user.role === role);
+        return {
+          role,
+          users: roleUsers,
+          count: roleUsers.length,
+          sections: sectionByLetter(roleUsers, (user) => user.name),
+        };
+      },
+    );
+  }, [filteredUsers, filters.roles]);
 
-    return visibleRoles.map((role) => {
-      const roleUsers = visibleUsers.filter((user) => {
-        const textMatch =
-          !lowerQuery ||
-          user.name.toLowerCase().includes(lowerQuery) ||
-          user.username.toLowerCase().includes(lowerQuery) ||
-          (user.email || "").toLowerCase().includes(lowerQuery) ||
-          (user.phone || "").toLowerCase().includes(lowerQuery) ||
-          (user.doctorIdNumber || "").toLowerCase().includes(lowerQuery);
-        return user.role === role && textMatch;
-      });
-
-      return {
-        role,
-        label:
-          role === "SUPERVISOR"
-            ? "Supervisors"
-            : role === "DOCTOR"
-              ? "Doctors"
-              : "Patients",
-        users: roleUsers,
-        count: roleUsers.length,
-        sections: sectionByLetter(roleUsers, (user) => user.name),
-      };
-    });
-  }, [query, roleFilter, visibleUsers]);
-
-  const toggleRole = (role: RoleFilter) => {
+  const toggleRole = (role: UserRole) => {
     setExpandedRoles((prev) =>
       prev.includes(role)
         ? prev.filter((entry) => entry !== role)
@@ -176,12 +176,15 @@ export function useAdminUsersWorkspace() {
     error,
     setError,
     loading,
-    roleFilter,
-    setRoleFilter,
     query,
     setQuery,
+    filters,
+    setFilters,
+    semesterOptions,
     expandedRoles,
     groupedUsers,
+    visibleUsers,
+    filteredUsers,
     deleteTarget,
     deletePassword,
     setDeletePassword,

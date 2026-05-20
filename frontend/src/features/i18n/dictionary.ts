@@ -1988,6 +1988,28 @@ const EN: Dictionary = {
   "profile.report.cancel": "Cancel",
   "profile.report.sending": "Sending...",
   "profile.report.send": "Send report",
+
+  // admin analytics / export / pagination --------------------------------
+  "admin.analytics.eyebrow": "Analytics",
+  "admin.analytics.title": "Platform insights",
+  "admin.analytics.role_mix": "User role mix",
+  "admin.analytics.role_mix_note": "Active accounts grouped by role.",
+  "admin.analytics.growth": "New accounts",
+  "admin.analytics.growth_note": "Accounts created over the last six months.",
+  "admin.analytics.pipeline": "Review pipeline",
+  "admin.analytics.pipeline_note": "Items currently awaiting an admin decision.",
+  "admin.analytics.empty": "No data to chart yet.",
+  "admin.analytics.doctors": "Doctors",
+  "admin.analytics.supervisors": "Supervisors",
+  "admin.analytics.patients": "Patients",
+  "admin.analytics.supervisor_reqs": "Supervisor requests",
+  "admin.analytics.doctor_reqs": "Doctor requests",
+  "admin.analytics.blocked": "Blocked",
+  "admin.analytics.accounts": "Accounts",
+  "admin.export.csv": "Export CSV",
+  "common.pagination.prev": "Previous",
+  "common.pagination.next": "Next",
+  "common.pagination.range": "Showing {start}-{end} of {total}",
 };
 
 /* ----------------------------------------------------------------------- *
@@ -3944,6 +3966,28 @@ const AR: Dictionary = {
   "profile.report.cancel": "إلغاء",
   "profile.report.sending": "جاري الإرسال...",
   "profile.report.send": "إرسال البلاغ",
+
+  // admin analytics / export / pagination --------------------------------
+  "admin.analytics.eyebrow": "التحليلات",
+  "admin.analytics.title": "رؤى المنصة",
+  "admin.analytics.role_mix": "توزيع الأدوار",
+  "admin.analytics.role_mix_note": "الحسابات النشطة مجمَّعة حسب الدور.",
+  "admin.analytics.growth": "حسابات جديدة",
+  "admin.analytics.growth_note": "الحسابات المنشأة خلال الأشهر الستة الماضية.",
+  "admin.analytics.pipeline": "قائمة المراجعة",
+  "admin.analytics.pipeline_note": "العناصر التي تنتظر قرار المشرف حالياً.",
+  "admin.analytics.empty": "لا توجد بيانات لعرضها بعد.",
+  "admin.analytics.doctors": "الأطباء",
+  "admin.analytics.supervisors": "المشرفون",
+  "admin.analytics.patients": "المرضى",
+  "admin.analytics.supervisor_reqs": "طلبات المشرفين",
+  "admin.analytics.doctor_reqs": "طلبات الأطباء",
+  "admin.analytics.blocked": "محظور",
+  "admin.analytics.accounts": "حسابات",
+  "admin.export.csv": "تصدير CSV",
+  "common.pagination.prev": "السابق",
+  "common.pagination.next": "التالي",
+  "common.pagination.range": "عرض {start}-{end} من {total}",
 };
 
 export const DICTIONARY: Record<Lang, Dictionary> = {

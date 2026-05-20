@@ -7,6 +7,7 @@ import { getAdminShellCounts, type AdminShellCounts } from "@/features/admin/ser
 import { useTranslation } from "@/features/i18n/language-provider";
 import { BrandMark } from "@/features/ui/components/brand-mark";
 import { DashboardIcon } from "@/features/ui/components/dashboard-icon";
+import { PageHeader } from "@/features/ui/components/page-header";
 import { RoleShellLayout } from "@/features/ui/components/role-shell-layout";
 import { logout } from "@/lib/api/auth";
 
@@ -237,13 +238,11 @@ export function AdminShell({
   const initials = initialsOf(displayName);
 
   const sideRail = (
-    <aside className="frozen-stage denty-collapsible-rail overflow-y-auto rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(82,85,103,0.96),rgba(67,71,88,0.94))] px-3 py-4 text-white backdrop-blur-[28px]">
-          <div className="flex min-h-full flex-col gap-3">
-            {/* Identity card — same shape as the other three rails. Linked to
-                /admin so clicking the brand still acts as a "home" jump. */}
+    <div className="denty-rail-column">
+            {/* Identity card — a separate panel pinned above the nav rail. */}
             <Link
               href="/admin"
-              className="block rounded-[20px] border border-white/10 bg-white/6 px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition-colors hover:bg-white/8"
+              className="denty-rail-identity block rounded-[22px] border border-white/10 bg-[linear-gradient(180deg,rgba(82,85,103,0.96),rgba(67,71,88,0.94))] px-3 py-3 text-white backdrop-blur-[28px] transition-colors hover:border-white/18"
             >
               <div className="flex items-center gap-3">
                 <span
@@ -277,6 +276,8 @@ export function AdminShell({
               </div>
             </Link>
 
+            <aside className="frozen-stage denty-collapsible-rail rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(82,85,103,0.96),rgba(67,71,88,0.94))] px-3 py-4 text-white backdrop-blur-[28px]">
+            <div className="flex min-h-full flex-col gap-3">
             {/* Admin's nav search is load-bearing (filters real nav items
                 across 11 destinations), so it stays — restyled to match the
                 rest of the rail. The other three rails dropped their stub
@@ -383,12 +384,13 @@ export function AdminShell({
                 </span>
               </span>
             </button>
-          </div>
-    </aside>
+            </div>
+            </aside>
+    </div>
   );
 
   return (
-    <main className="denty-screen admin-suite-screen relative px-3 py-3 sm:px-4 sm:py-4 lg:pl-0 lg:pr-5 lg:py-6">
+    <main className="denty-screen admin-suite-screen denty-rail-left relative px-3 py-3 sm:px-4 sm:py-4 lg:pl-0 lg:pr-5 lg:py-6">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -left-28 top-14 h-[34rem] w-[34rem] rounded-full bg-[rgba(8,18,36,0.34)] blur-[120px]" />
         <div className="absolute right-[12%] top-[10%] h-[30rem] w-[30rem] rounded-full bg-[rgba(70,90,112,0.24)] blur-[120px]" />
@@ -401,40 +403,11 @@ export function AdminShell({
           sideRail={sideRail}
         >
           <section className="min-w-0 space-y-4 lg:space-y-5">
-            <div className="overflow-hidden rounded-[24px] border border-white/12 bg-[linear-gradient(180deg,rgba(249,252,255,0.78),rgba(222,233,241,0.34))] px-4 py-4 shadow-[0_22px_56px_rgba(7,18,34,0.13)] backdrop-blur-[24px] sm:px-5 sm:py-5 md:px-6 md:py-6">
-              <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-                <div className="space-y-2.5">
-                  <div className="flex items-center gap-3">
-                    <BrandMark className="h-11 w-11 frozen-float" />
-                    <span className="rounded-full border border-white/20 bg-white/26 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-[rgba(10,22,40,0.64)]">
-                      Admin workspace
-                    </span>
-                  </div>
-
-                  <div>
-                    <p className="denty-kicker">Administrative workspace</p>
-                    <h1 className="mt-2 max-w-4xl text-xl font-semibold text-[var(--foreground)] sm:text-xl md:text-xl">
-                      {title}
-                    </h1>
-                    <p className="mt-2 max-w-4xl text-sm leading-6 text-[var(--muted-foreground)] md:text-[0.95rem] md:leading-7">
-                      {description}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap gap-2 xl:justify-end">
-                  <span className="rounded-full border border-white/20 bg-white/26 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-[rgba(10,22,40,0.62)]">
-                    Approval control
-                  </span>
-                  <span className="rounded-full border border-white/20 bg-white/26 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-[rgba(10,22,40,0.62)]">
-                    Group moderation
-                  </span>
-                  <span className="rounded-full border border-white/20 bg-white/26 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-[rgba(10,22,40,0.62)]">
-                    Inbox and chat
-                  </span>
-                </div>
-              </div>
-            </div>
+            <PageHeader
+              title={title}
+              description={description}
+              badge="Admin workspace"
+            />
 
             <div key={pathname} className="denty-enter space-y-4 lg:space-y-5">
               {children}

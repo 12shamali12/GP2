@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AdminShell } from "@/features/admin/components/admin-shell";
+import { DashboardAnalytics } from "@/features/admin/components/analytics/dashboard-analytics";
 import { useTranslation } from "@/features/i18n/language-provider";
 import { useCountUp } from "@/features/ui/hooks/use-count-up";
 import {
@@ -228,6 +229,13 @@ export default function AdminPage() {
           )}
         </div>
       </div>
+
+      <DashboardAnalytics
+        users={users}
+        supervisorRequests={supervisorRequests}
+        doctorRequests={doctorRequests}
+        loading={loading}
+      />
 
       <div className="denty-enter-stagger grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
         {cards.map((card) => (

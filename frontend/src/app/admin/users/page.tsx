@@ -1,10 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import { AdminShell } from "@/features/admin/components/admin-shell";
 import { useTranslation } from "@/features/i18n/language-provider";
 import { useFeedbackToast } from "@/features/ui/hooks/use-feedback-toast";
+import { downloadCsv } from "@/lib/csv";
 import { useAdminUsersWorkspace } from "./hooks/use-admin-users-workspace";
+import { countActiveFilters, USER_CSV_COLUMNS } from "./lib/user-filters";
 import { UserDeleteDialog } from "./ui/user-delete-dialog";
+import { UsersFilterModal } from "./ui/users-filter-modal";
 import { UsersFilterPanel } from "./ui/users-filter-panel";
 import { UsersRoleSections } from "./ui/users-role-sections";
 
@@ -14,12 +18,15 @@ export default function AdminUsersPage() {
     error,
     setError,
     loading,
-    roleFilter,
-    setRoleFilter,
     query,
     setQuery,
+    filters,
+    setFilters,
+    semesterOptions,
     expandedRoles,
     groupedUsers,
+    visibleUsers,
+    filteredUsers,
     deleteTarget,
     deletePassword,
     setDeletePassword,
@@ -35,6 +42,8 @@ export default function AdminUsersPage() {
     adminUsername,
   } = useAdminUsersWorkspace();
 
+  const [filterOpen, setFilterOpen] = useState(false);
+
   useFeedbackToast({
     error,
     clearError: () => setError(null),
@@ -48,10 +57,12 @@ export default function AdminUsersPage() {
     >
       <UsersFilterPanel
         query={query}
-        roleFilter={roleFilter}
         loading={loading}
+        matchCount={filteredUsers.length}
+        totalCount={visibleUsers.length}
+        activeFilterCount={countActiveFilters(filters)}
         onQueryChange={setQuery}
-        onRoleFilterChange={setRoleFilter}
+        onOpenFilter={() => setFilterOpen(true)}
       />
 
       {loading && groupedUsers.length === 0 ? (
@@ -64,6 +75,7 @@ export default function AdminUsersPage() {
         <UsersRoleSections
           groupedUsers={groupedUsers}
           expandedRoles={expandedRoles}
+          query={query}
           onToggleRole={toggleRole}
           onBlockUser={blockUser}
           onOpenDeleteModal={openDeleteModal}
@@ -81,6 +93,22 @@ export default function AdminUsersPage() {
         onPasswordChange={setDeletePassword}
         onClose={closeDeleteModal}
         onConfirm={deleteUser}
+      />
+
+      <UsersFilterModal
+        open={filterOpen}
+        onClose={() => setFilterOpen(false)}
+        filters={filters}
+        query={query}
+        users={visibleUsers}
+        semesterOptions={semesterOptions}
+        onApply={(next) => {
+          setFilters(next);
+          setFilterOpen(false);
+        }}
+        onExport={(users) => {
+          downloadCsv("dentyhub-users", users, USER_CSV_COLUMNS);
+        }}
       />
     </AdminShell>
   );
