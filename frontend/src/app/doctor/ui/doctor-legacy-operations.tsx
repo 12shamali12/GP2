@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import { useTranslation } from "@/features/i18n/language-provider";
 
 type DoctorLegacyOperationsProps = {
@@ -45,6 +46,13 @@ type DoctorLegacyOperationsProps = {
   onYearChange: (value: number) => void;
   onCasesOpenToggle: () => void;
   onTogglePurpose: (purpose: string) => void;
+  /**
+   * Optional dynamic case list (typically the doctor's still-open
+   * `SemesterClinicCase` titles). When supplied, replaces the legacy
+   * 5-option hardcoded list. Falls back to the legacy list when empty
+   * so the surface still works for users without an active semester.
+   */
+  caseCatalog?: Array<{ purpose: string; label: string; clinicName?: string }>;
   onSelectedDayChange: (date: Date) => void;
   onToggleHour: (hour: number) => void;
   onAddMultipleSlots: () => void;
@@ -90,8 +98,59 @@ export function DoctorLegacyOperations({
   onSelectedDayChange,
   onToggleHour,
   onAddMultipleSlots,
+  caseCatalog,
 }: DoctorLegacyOperationsProps) {
   const t = useTranslation();
+
+  const legacyCases: ReadonlyArray<{ purpose: string; label: string; clinicName?: string }> =
+    caseCatalog && caseCatalog.length > 0
+      ? caseCatalog
+      : [
+          { purpose: "General", label: t("doctor.legacy.case.general") },
+          { purpose: "Check-up", label: t("doctor.legacy.case.checkup") },
+          { purpose: "Cleaning", label: t("doctor.legacy.case.cleaning") },
+          { purpose: "Pain/Urgent", label: t("doctor.legacy.case.pain") },
+          { purpose: "Whitening", label: t("doctor.legacy.case.whitening") },
+        ];
+
+  // Group cases by clinic for the dropdown so the picker reads as
+  // "Endodontics > 3 cases, Pediatrics > 4 cases ..." instead of a flat
+  // soup of titles. Cases without a clinic land under "Other".
+  const groupedCases = useMemo(() => {
+    const map = new Map<string, Array<{ purpose: string; label: string }>>();
+    legacyCases.forEach((option) => {
+      const key = option.clinicName || "Other";
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push({ purpose: option.purpose, label: option.label });
+    });
+    return Array.from(map.entries()).map(([clinicName, cases]) => ({
+      clinicName,
+      cases,
+    }));
+  }, [legacyCases]);
+
+  // Open/closed state per clinic group. First group is open by default.
+  const [openClinics, setOpenClinics] = useState<Record<string, boolean>>(() => {
+    const initial: Record<string, boolean> = {};
+    groupedCases.forEach((group, index) => {
+      initial[group.clinicName] = index === 0;
+    });
+    return initial;
+  });
+  const toggleClinicGroup = (name: string) =>
+    setOpenClinics((prev) => ({ ...prev, [name]: !prev[name] }));
+
+  // Bulk select / clear. Implemented client-side by toggling each affected
+  // option through the existing `onTogglePurpose` callback so we don't need
+  // to thread a new setter prop through the surface.
+  const selectAllCases = () => {
+    legacyCases.forEach((option) => {
+      if (!selectedPurposes.includes(option.purpose)) onTogglePurpose(option.purpose);
+    });
+  };
+  const clearAllCases = () => {
+    selectedPurposes.forEach((purpose) => onTogglePurpose(purpose));
+  };
 
   return (
     <div className="space-y-4">
@@ -534,28 +593,116 @@ export function DoctorLegacyOperations({
                 </button>
 
                 {casesOpen ? (
-                  <div className="denty-dashboard-card absolute z-20 mt-2 max-h-48 w-full overflow-auto p-2 shadow-lg">
-                    {(
-                      [
-                        ["General", "doctor.legacy.case.general"],
-                        ["Check-up", "doctor.legacy.case.checkup"],
-                        ["Cleaning", "doctor.legacy.case.cleaning"],
-                        ["Pain/Urgent", "doctor.legacy.case.pain"],
-                        ["Whitening", "doctor.legacy.case.whitening"],
-                      ] as const
-                    ).map(([purpose, labelKey]) => {
-                      const active = selectedPurposes.includes(purpose);
+                  <div className="denty-dashboard-card absolute z-20 mt-2 max-h-96 w-full overflow-auto p-2 shadow-lg">
+                    {/* ── Select-all / clear-all toolbar ──────────────── */}
+                    <div className="mb-2 flex items-center gap-2 border-b border-white/12 px-1 pb-2">
+                      <button
+                        type="button"
+                        onClick={selectAllCases}
+                        disabled={selectedPurposes.length === legacyCases.length}
+                        className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full border border-teal-300/35 bg-teal-400/12 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--foreground)] transition hover:bg-teal-400/22 disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        <svg width="11" height="11" viewBox="0 0 20 20" fill="none" aria-hidden>
+                          <path
+                            d="M4 10L8 14L16 6"
+                            stroke="currentColor"
+                            strokeWidth="2.4"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                        Select all
+                      </button>
+                      <button
+                        type="button"
+                        onClick={clearAllCases}
+                        disabled={selectedPurposes.length === 0}
+                        className="inline-flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full border border-rose-300/35 bg-rose-400/12 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--foreground)] transition hover:bg-rose-400/22 disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        <svg width="11" height="11" viewBox="0 0 20 20" fill="none" aria-hidden>
+                          <path
+                            d="M5 5L15 15M15 5L5 15"
+                            stroke="currentColor"
+                            strokeWidth="2.2"
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                        Clear
+                      </button>
+                    </div>
 
+                    {/* ── Grouped clinic accordions ─────────────────────── */}
+                    {groupedCases.map((group) => {
+                      const isOpen = openClinics[group.clinicName] ?? false;
+                      const selectedInGroup = group.cases.filter((c) =>
+                        selectedPurposes.includes(c.purpose),
+                      ).length;
                       return (
-                        <button
-                          key={purpose}
-                          type="button"
-                          onClick={() => onTogglePurpose(purpose)}
-                          className="flex w-full items-center justify-between rounded-[14px] px-3 py-2 text-sm text-[var(--foreground)] hover:bg-[rgba(230,244,246,0.78)]"
-                        >
-                          <span>{t(labelKey)}</span>
-                          <span className="ml-3 text-base">{active ? "" : ""}</span>
-                        </button>
+                        <div key={group.clinicName} className="space-y-1">
+                          <button
+                            type="button"
+                            onClick={() => toggleClinicGroup(group.clinicName)}
+                            className="flex w-full items-center gap-2 rounded-[12px] px-2.5 py-2 text-left text-xs font-semibold uppercase tracking-[0.16em] text-[var(--foreground)] transition hover:bg-white/8"
+                          >
+                            <span
+                              aria-hidden
+                              className={`inline-flex h-4 w-4 items-center justify-center text-[var(--muted-foreground)] transition ${
+                                isOpen ? "rotate-90" : ""
+                              }`}
+                            >
+                              <svg width="10" height="10" viewBox="0 0 20 20" fill="none">
+                                <path
+                                  d="M7 4L13 10L7 16"
+                                  stroke="currentColor"
+                                  strokeWidth="2.2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
+                            </span>
+                            <span className="flex-1 truncate">{group.clinicName}</span>
+                            <span className="rounded-full border border-white/15 bg-white/8 px-2 py-0.5 text-[10px] font-semibold text-[var(--muted-foreground)]">
+                              {selectedInGroup}/{group.cases.length}
+                            </span>
+                          </button>
+                          {isOpen ? (
+                            <div className="ml-3 space-y-1 border-l border-white/10 pl-2">
+                              {group.cases.map((option) => {
+                                const active = selectedPurposes.includes(option.purpose);
+                                return (
+                                  <button
+                                    key={option.purpose}
+                                    type="button"
+                                    onClick={() => onTogglePurpose(option.purpose)}
+                                    className={`flex w-full items-center justify-between rounded-[12px] px-3 py-1.5 text-sm transition ${
+                                      active
+                                        ? "bg-teal-500/15 text-[var(--foreground)]"
+                                        : "text-[var(--foreground)] hover:bg-white/8"
+                                    }`}
+                                  >
+                                    <span className="truncate text-left">{option.label}</span>
+                                    {active ? (
+                                      <span
+                                        aria-hidden
+                                        className="ml-3 inline-flex h-5 w-5 items-center justify-center rounded-full bg-teal-500/85 text-white"
+                                      >
+                                        <svg width="11" height="11" viewBox="0 0 20 20" fill="none">
+                                          <path
+                                            d="M4 10L8 14L16 6"
+                                            stroke="currentColor"
+                                            strokeWidth="2.4"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                          />
+                                        </svg>
+                                      </span>
+                                    ) : null}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          ) : null}
+                        </div>
                       );
                     })}
                   </div>
@@ -569,7 +716,7 @@ export function DoctorLegacyOperations({
               {t("doctor.legacy.pick_day")}
             </p>
 
-            <div className="grid grid-cols-7 gap-2 rounded-[22px] border border-[rgba(148,163,184,0.14)] bg-[rgba(244,245,247,0.88)] p-3">
+            <div className="denty-calendar-grid grid grid-cols-7 gap-2 rounded-[22px] border border-[rgba(148,163,184,0.14)] bg-[rgba(244,245,247,0.88)] p-3">
               {daysInView.map((day) => {
                 const dateObj = new Date(selectedYear, selectedMonth, day);
                 const isPast =
@@ -592,9 +739,9 @@ export function DoctorLegacyOperations({
                       if (!isPast) onSelectedDayChange(dateObj);
                     }}
                     disabled={isPast}
-                    className={`rounded-lg border px-2 py-2 text-xs font-semibold ${
+                    className={`denty-calendar-cell rounded-lg border px-2 py-2 text-xs font-semibold ${
                       isSelected
-                        ? "border-[rgba(11,123,138,0.18)] bg-[rgba(230,244,246,0.9)] text-[rgba(8,68,78,0.96)]"
+                        ? "denty-calendar-cell-active border-[rgba(11,123,138,0.18)] bg-[rgba(230,244,246,0.9)] text-[rgba(8,68,78,0.96)]"
                         : "border-[rgba(148,163,184,0.16)] bg-white text-[var(--foreground)] hover:border-[rgba(11,123,138,0.18)]"
                     } ${
                       isPast
@@ -631,9 +778,9 @@ export function DoctorLegacyOperations({
                       <button
                         key={hour}
                         onClick={() => onToggleHour(hour)}
-                        className={`rounded-lg border px-2 py-2 text-sm ${
+                        className={`denty-calendar-cell rounded-lg border px-2 py-2 text-sm ${
                           selected
-                            ? "border-[rgba(11,123,138,0.18)] bg-[rgba(230,244,246,0.9)] text-[rgba(8,68,78,0.96)]"
+                            ? "denty-calendar-cell-active border-[rgba(11,123,138,0.18)] bg-[rgba(230,244,246,0.9)] text-[rgba(8,68,78,0.96)]"
                             : "border-[rgba(148,163,184,0.16)] bg-white text-[var(--foreground)] hover:border-[rgba(11,123,138,0.18)]"
                         }`}
                       >

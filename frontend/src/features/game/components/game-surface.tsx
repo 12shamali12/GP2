@@ -740,20 +740,20 @@ export function GameSurface({ onViewLeaderboard }: GameSurfaceProps = {}) {
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[rgba(10,22,40,0.58)]">
               {t("game.history_visual")}
             </p>
-            <div className="mt-3 flex h-20 items-end gap-1.5">
+            <div className="mt-3 flex h-24 items-end justify-start gap-1.5">
               {[...attempts].reverse().slice(-14).map((attempt, idx) => {
                 const ratio =
                   attempt.total > 0 ? attempt.score / attempt.total : 0;
-                const height = Math.max(8, Math.round(ratio * 100));
+                const heightPx = Math.max(6, Math.round(ratio * 88));
                 return (
                   <div
                     key={attempt.id ?? idx}
-                    className="group relative flex-1"
+                    className="group relative flex h-full w-7 items-end"
                     title={`${attempt.score}/${attempt.total}`}
                   >
                     <div
                       className="w-full rounded-t-md bg-[linear-gradient(180deg,rgba(12,32,54,0.95),rgba(9,68,94,0.92))] transition-all"
-                      style={{ height: `${height}%` }}
+                      style={{ height: `${heightPx}px` }}
                     />
                   </div>
                 );
@@ -1149,20 +1149,20 @@ function AlreadyPlayedView({
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[rgba(10,22,40,0.58)]">
             {t("game.history_visual")}
           </p>
-          <div className="mt-3 flex h-16 items-end gap-1.5">
+          <div className="mt-3 flex h-16 items-end justify-start gap-1.5">
             {[...attempts].reverse().slice(-14).map((attempt, idx) => {
               const ratio =
                 attempt.total > 0 ? attempt.score / attempt.total : 0;
-              const height = Math.max(8, Math.round(ratio * 100));
+              const heightPx = Math.max(6, Math.round(ratio * 56));
               return (
                 <div
                   key={attempt.id ?? idx}
-                  className="flex-1"
+                  className="flex h-full w-7 items-end"
                   title={`${attempt.score}/${attempt.total}`}
                 >
                   <div
                     className="w-full rounded-t-md bg-[linear-gradient(180deg,rgba(12,32,54,0.92),rgba(9,68,94,0.88))]"
-                    style={{ height: `${height}%` }}
+                    style={{ height: `${heightPx}px` }}
                   />
                 </div>
               );

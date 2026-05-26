@@ -1,7 +1,9 @@
 "use client";
 
-import Link from "next/link";
+import { useState } from "react";
 import { useTranslation } from "@/features/i18n/language-provider";
+import { ProfilePopup } from "@/features/profiles/components/profile-popup";
+import { senderColor } from "@/features/chat/utils/sender-color";
 import type {
   ConversationItem,
   MessageItem,
@@ -40,6 +42,7 @@ export function AdminChatConversationPanel({
   onBackToInbox,
 }: AdminChatConversationPanelProps) {
   const t = useTranslation();
+  const [profileTargetId, setProfileTargetId] = useState<string | null>(null);
   if (!selectedConversation) {
     return (
       <div
@@ -114,9 +117,13 @@ export function AdminChatConversationPanel({
             </div>
           </div>
         ) : selectedConversation.otherUser?.id ? (
-          <Link
-            href={`/profiles/${selectedConversation.otherUser.id}`}
-            className="flex min-w-0 items-center gap-3 sm:gap-4"
+          <button
+            type="button"
+            onClick={() =>
+              selectedConversation.otherUser?.id &&
+              setProfileTargetId(selectedConversation.otherUser.id)
+            }
+            className="flex min-w-0 cursor-pointer items-center gap-3 text-left sm:gap-4"
           >
             {selectedConversation.otherUser?.avatar ? (
               <img
@@ -137,7 +144,7 @@ export function AdminChatConversationPanel({
                 {subtitle}
               </p>
             </div>
-          </Link>
+          </button>
         ) : (
           <div className="flex min-w-0 items-center gap-3 sm:gap-4">
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/14 bg-[rgba(7,111,133,0.14)] text-lg font-semibold text-[var(--foreground)] sm:h-14 sm:w-14">
@@ -154,12 +161,16 @@ export function AdminChatConversationPanel({
           </div>
         )}
         {!isRoom && selectedConversation.otherUser?.id ? (
-          <Link
-            href={`/profiles/${selectedConversation.otherUser.id}`}
-            className="denty-pill shrink-0 hover:bg-white/36"
+          <button
+            type="button"
+            onClick={() =>
+              selectedConversation.otherUser?.id &&
+              setProfileTargetId(selectedConversation.otherUser.id)
+            }
+            className="denty-pill shrink-0 cursor-pointer hover:bg-white/36"
           >
             {t("admin.chat.profile")}
-          </Link>
+          </button>
         ) : (
           <span className="denty-pill shrink-0">
             {isRoom ? t("admin.chat.room") : t("admin.chat.direct")}
@@ -187,14 +198,27 @@ export function AdminChatConversationPanel({
                 {!mine && showSender ? (
                   <div className="mb-2 flex items-center gap-2">
                     {item.sender.id ? (
-                      <Link
-                        href={`/profiles/${item.sender.id}`}
-                        className="text-xs font-semibold uppercase tracking-[0.14em] text-[rgba(10,22,40,0.48)] hover:text-[var(--foreground)]"
+                      <button
+                        type="button"
+                        onClick={() =>
+                          item.sender.id && setProfileTargetId(item.sender.id)
+                        }
+                        style={{
+                          color: senderColor(
+                            item.sender.id || item.sender.username || "?",
+                          ),
+                        }}
+                        className="cursor-pointer text-xs font-semibold uppercase tracking-[0.14em] transition hover:opacity-80"
                       >
                         {item.sender.name}
-                      </Link>
+                      </button>
                     ) : (
-                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[rgba(10,22,40,0.48)]">
+                      <p
+                        style={{
+                          color: senderColor(item.sender.username || "?"),
+                        }}
+                        className="text-xs font-semibold uppercase tracking-[0.14em]"
+                      >
                         {item.sender.name}
                       </p>
                     )}
@@ -268,6 +292,12 @@ export function AdminChatConversationPanel({
           </button>
         </div>
       </div>
+
+      <ProfilePopup
+        targetId={profileTargetId}
+        viewerIdentifier={currentUsername}
+        onClose={() => setProfileTargetId(null)}
+      />
     </div>
   );
 }

@@ -10,6 +10,7 @@ import { NotificationsModule } from "./notifications/notifications.module";
 import { ChatModule } from "./chat/chat.module";
 import { ProfilesModule } from "./profiles/profiles.module";
 import { GameModule } from "./game/game.module";
+import { CasesModule } from "./cases/cases.module";
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { GameModule } from "./game/game.module";
     ChatModule,
     ProfilesModule,
     GameModule,
+    CasesModule,
   ],
   controllers: [AppController],
   providers: [AppService, SeedService],

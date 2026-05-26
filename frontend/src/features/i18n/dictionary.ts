@@ -95,6 +95,7 @@ const EN: Dictionary = {
   "nav.users": "Users",
   "nav.groups": "Groups",
   "nav.planning": "Planning",
+  "nav.cases": "Cases",
   "nav.requests": "Requests",
   "nav.pending_queue": "Pending Queue",
   "nav.supervisor_requests": "Supervisor Requests",
@@ -1792,7 +1793,7 @@ const EN: Dictionary = {
   "supervision.sup.loading_workspace": "Loading workspace...",
   "supervision.sup.view.live": "Live clinic",
   "supervision.sup.view.reviews": "Reviews",
-  "supervision.sup.view.students": "Students & groups",
+  "supervision.sup.view.students": "Tasks & frozen accs",
   "supervision.sup.hero.eyebrow": "Supervisor clinical workspace",
   "supervision.sup.hero.title":
     "Search any student, supervise clinic duties, and review work from one desk.",
@@ -2085,6 +2086,7 @@ const AR: Dictionary = {
   "nav.users": "المستخدمون",
   "nav.groups": "المجموعات",
   "nav.planning": "التخطيط",
+  "nav.cases": "الحالات",
   "nav.requests": "الطلبات",
   "nav.pending_queue": "قائمة الانتظار",
   "nav.supervisor_requests": "طلبات المشرفين",
@@ -3770,7 +3772,7 @@ const AR: Dictionary = {
   "supervision.sup.loading_workspace": "جاري تحميل مساحة العمل...",
   "supervision.sup.view.live": "العيادة المباشرة",
   "supervision.sup.view.reviews": "المراجعات",
-  "supervision.sup.view.students": "الطلاب والمجموعات",
+  "supervision.sup.view.students": "المهام والحسابات المجمدة",
   "supervision.sup.hero.eyebrow": "مساحة العمل السريرية للمشرف",
   "supervision.sup.hero.title":
     "ابحث عن أي طالب، وأشرف على واجبات العيادة، وراجع العمل من مكتب واحد.",

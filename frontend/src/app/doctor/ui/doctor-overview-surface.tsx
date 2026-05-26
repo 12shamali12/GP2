@@ -60,6 +60,7 @@ type DoctorOverviewSurfaceProps = {
   onSelectedDayChange: (day: Date | null) => void;
   onToggleHour: (hour: number) => void;
   onAddMultipleSlots: () => void;
+  caseCatalog?: Array<{ purpose: string; label: string; clinicName?: string }>;
 };
 
 export function DoctorOverviewSurface({
@@ -109,6 +110,7 @@ export function DoctorOverviewSurface({
   onSelectedDayChange,
   onToggleHour,
   onAddMultipleSlots,
+  caseCatalog,
 }: DoctorOverviewSurfaceProps) {
   return (
     <>
@@ -170,6 +172,7 @@ export function DoctorOverviewSurface({
           onSelectedDayChange={onSelectedDayChange}
           onToggleHour={onToggleHour}
           onAddMultipleSlots={onAddMultipleSlots}
+          caseCatalog={caseCatalog}
         />
       ) : null}
     </>

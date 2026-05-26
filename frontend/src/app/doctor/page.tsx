@@ -10,6 +10,9 @@ import {
 } from "react";
 import { DoctorConfirmExitModal } from "@/app/doctor/ui/doctor-confirm-exit-modal";
 import { DoctorApprovalsView } from "@/app/doctor/ui/doctor-approvals-view";
+import { DoctorCasesView } from "@/features/cases/components/doctor-cases-view";
+import { getMyCases } from "@/features/cases/services/cases-api";
+import type { DoctorMyCasesResponse } from "@/features/cases/types";
 import { useDoctorAppointmentActions } from "@/app/doctor/hooks/use-doctor-appointment-actions";
 import { useDoctorBootstrap } from "@/app/doctor/hooks/use-doctor-bootstrap";
 import { useDoctorChat } from "@/app/doctor/hooks/use-doctor-chat";
@@ -106,9 +109,31 @@ export default function DoctorPage() {
   const [selectedHours, setSelectedHours] = useState<number[]>([]);
   const [casesOpen, setCasesOpen] = useState(false);
 
-  const [selectedPurposes, setSelectedPurposes] = useState<string[]>([
-    "General",
-  ]);
+  const [selectedPurposes, setSelectedPurposes] = useState<string[]>([]);
+
+  const [myCasesData, setMyCasesData] = useState<DoctorMyCasesResponse | null>(
+    null,
+  );
+
+  const doctorCaseCatalog = useMemo(() => {
+    if (!myCasesData) return undefined;
+    const open = myCasesData.groups.flatMap((group) =>
+      group.cases
+        .filter((entry) => entry.status !== "COMPLETED")
+        .map((entry) => ({
+          purpose: entry.case.title,
+          label: entry.case.title,
+          clinicName: group.clinic.name,
+        })),
+    );
+    // Dedupe by purpose (case title) keeping first clinic seen.
+    const seen = new Set<string>();
+    return open.filter((option) => {
+      if (seen.has(option.purpose)) return false;
+      seen.add(option.purpose);
+      return true;
+    });
+  }, [myCasesData]);
 
   const [conversations, setConversations] = useState<any[]>([]);
   const [chatSearch, setChatSearch] = useState("");
@@ -440,9 +465,27 @@ export default function DoctorPage() {
     };
   }, [identifier]);
 
+  // Pull the doctor's open `SemesterClinicCase` rows so the "select cases"
+  // picker on the availability planner offers real cases instead of the
+  // legacy hardcoded purposes. Best-effort — falls back silently.
+  useEffect(() => {
+    if (!identifier) return;
+    let cancelled = false;
+    getMyCases(identifier)
+      .then((res) => {
+        if (!cancelled) setMyCasesData(res);
+      })
+      .catch(() => {
+        /* keep legacy fallback */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [identifier]);
+
   useEffect(() => {
     if (activeSurface !== "leaderboard") return;
-    if (leaderboardSnapshot || leaderboardLoading) return;
+    if (leaderboardSnapshot) return;
 
     let cancelled = false;
     setLeaderboardLoading(true);
@@ -470,7 +513,8 @@ export default function DoctorPage() {
     return () => {
       cancelled = true;
     };
-  }, [activeSurface, leaderboardSnapshot, leaderboardLoading]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSurface, leaderboardSnapshot]);
 
   useFeedbackToast({
     message: null,
@@ -558,6 +602,7 @@ export default function DoctorPage() {
                 onNotifications={() => setActiveSurface("notifications")}
                 onApprovals={() => setActiveSurface("approvals")}
                 onReport={() => setActiveSurface("report")}
+                onCases={() => setActiveSurface("cases")}
                 onChat={() => setActiveSurface("chat")}
                 onGame={() => setActiveSurface("game")}
                 onLeaderboard={() => setActiveSurface("leaderboard")}
@@ -617,6 +662,7 @@ export default function DoctorPage() {
                 onSelectedDayChange={setSelectedDay}
                 onToggleHour={toggleHour}
                 onAddMultipleSlots={handleAddMultipleSlots}
+                caseCatalog={doctorCaseCatalog}
               />
             </div>
 
@@ -764,6 +810,10 @@ export default function DoctorPage() {
                 onSubmitPatientFeedback={() => void handleRatePatient()}
                 onSubmit={handleSubmitReport}
               />
+            </div>
+
+            <div className={activeSurface === "cases" ? "denty-enter" : "hidden"}>
+              <DoctorCasesView identifier={identifier} />
             </div>
           </section>
           </RoleShellLayout>

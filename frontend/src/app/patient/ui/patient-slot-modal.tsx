@@ -165,6 +165,13 @@ export function PatientSlotModal({
                 <h4 className="mt-2 text-lg font-semibold text-[var(--foreground)] sm:text-xl">
                   {selectedCase?.title || t("patient.slot.choose_case")}
                 </h4>
+                <p className="mt-2 text-xs text-[var(--muted-foreground)]">
+                  Showing only the cases that{" "}
+                  <span className="font-semibold text-[var(--foreground)]">
+                    {slot.doctor?.name || "this doctor"}
+                  </span>{" "}
+                  still needs to complete at this clinic.
+                </p>
               </div>
               <span className="denty-pill shrink-0">
                 {t("patient.slot.open_cases", {

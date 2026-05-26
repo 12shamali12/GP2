@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { DoctorWorkspaceData } from "../types";
 import { useTranslation } from "@/features/i18n/language-provider";
+import { authHeaders } from "@/lib/api/auth";
 import { useFeedbackToast } from "@/features/ui/hooks/use-feedback-toast";
 import { DoctorWorkspaceCommunityView } from "./doctor-workspace/doctor-workspace-community-view";
 import { DoctorWorkspaceDeskView } from "./doctor-workspace/doctor-workspace-desk-view";
@@ -55,6 +56,7 @@ export function DoctorWorkspacePanel({ apiUrl, identifier, onWorkspaceChange }: 
     try {
       const res = await fetch(
         `${apiUrl}/supervisor/doctor-workspace?identifier=${encodeURIComponent(identifier)}`,
+        { headers: authHeaders() },
       );
       const data = await res.json();
       if (!res.ok)
@@ -116,7 +118,7 @@ export function DoctorWorkspacePanel({ apiUrl, identifier, onWorkspaceChange }: 
     try {
       const res = await fetch(`${apiUrl}/supervisor/group-requests`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeaders() },
         body: JSON.stringify({
           applicantIdentifier: identifier,
           groupId: joinForm.groupId,
@@ -144,7 +146,7 @@ export function DoctorWorkspacePanel({ apiUrl, identifier, onWorkspaceChange }: 
     try {
       const res = await fetch(`${apiUrl}/supervisor/partner-requests`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeaders() },
         body: JSON.stringify({
           senderIdentifier: identifier,
           receiverIdentifier: partnerTargetId,
@@ -176,7 +178,7 @@ export function DoctorWorkspacePanel({ apiUrl, identifier, onWorkspaceChange }: 
         `${apiUrl}/supervisor/groups/${workspace.groupMembership.group.id}/posts`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...authHeaders() },
           body: JSON.stringify({
             authorIdentifier: identifier,
             title: postForm.title || undefined,

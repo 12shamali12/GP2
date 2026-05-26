@@ -186,8 +186,8 @@ export function DoctorWorkspaceDeskView({
         </div>
       </div>
 
-      <div className="space-y-5">
-        <div className="denty-panel-strong p-4 sm:p-6">
+      <div className="flex flex-col gap-5">
+        <div className="denty-panel-strong flex min-h-0 flex-1 flex-col p-4 sm:p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="denty-kicker">{t("supervision.desk.today_eyebrow")}</p>
@@ -201,7 +201,7 @@ export function DoctorWorkspaceDeskView({
               })}
             </span>
           </div>
-          <div className="mt-5 space-y-3">
+          <div className="mt-5 min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
             {todayAssignments.map((assignment) => (
               <div key={assignment.id} className="denty-dashboard-card p-4 sm:p-5">
                 <div className="flex flex-wrap items-start justify-between gap-3">

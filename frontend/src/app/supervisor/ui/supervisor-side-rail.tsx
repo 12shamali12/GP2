@@ -222,6 +222,8 @@ export function SupervisorSideRail({
   const accent = SUPERVISOR_ACCENT;
   return (
     <div className="denty-rail-column">
+      <aside className="frozen-stage denty-collapsible-rail rounded-[22px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,70,76,0.97),rgba(9,42,48,0.97))] px-4 py-5 text-white backdrop-blur-[28px]">
+      <div className="flex min-h-full flex-col gap-3">
         <RailIdentityCard
           userName={userName}
           fallbackName={t("auth.role.supervisor")}
@@ -229,13 +231,7 @@ export function SupervisorSideRail({
           brandSubtitle={t("nav.brand.subtitle.supervisor")}
           accent={accent}
         />
-
-      <aside className="frozen-stage denty-collapsible-rail rounded-[22px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,70,76,0.97),rgba(9,42,48,0.97))] px-4 py-5 text-white backdrop-blur-[28px]">
-      <div className="flex min-h-full flex-col gap-3">
-        <div className="mx-2 my-2 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-        <div className="denty-rail-section-label mb-1 px-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-white/56">
-          {t("nav.section.workspaces")}
-        </div>
+        <div className="mx-2 my-1 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
 
         <RailAction
           eyebrow="Overview"
@@ -275,11 +271,6 @@ export function SupervisorSideRail({
           onClick={onCalendar}
         />
 
-        <div className="mx-2 my-2 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-        <div className="denty-rail-section-label mb-1 px-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-white/56">
-          {t("nav.section.communication")}
-        </div>
-
         <RailAction
           eyebrow="Direct"
           label={t("nav.chat")}
@@ -291,31 +282,6 @@ export function SupervisorSideRail({
           onClick={onChat}
         />
 
-        <div className="mx-2 my-2 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-        <div className="denty-rail-section-label mb-1 px-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-white/56">
-          {t("nav.section.later")}
-        </div>
-
-        <RailAction
-          eyebrow="In progress"
-          label={t("nav.game")}
-          compactLabel="Game"
-          icon="game"
-          muted
-          accent={accent.bar}
-          onClick={() =>
-            onComingSoon({
-              title: "Toothy Game",
-              description:
-                "This feature needs a real game loop and progress design, so it is kept as a curated placeholder for now.",
-              bullets: [
-                "Meaningful progress loop",
-                "Clear relationship to student motivation",
-                "A stronger visual language than a placeholder card",
-              ],
-            })
-          }
-        />
         <RailAction
           eyebrow="Standings"
           label={t("nav.leaderboard")}

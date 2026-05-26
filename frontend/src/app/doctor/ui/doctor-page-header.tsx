@@ -9,6 +9,7 @@ export type DoctorSurface =
   | "notifications"
   | "approvals"
   | "report"
+  | "cases"
   | "chat"
   | "game"
   | "leaderboard"
@@ -83,6 +84,13 @@ export const doctorSurfaceMeta: Record<DoctorSurface, DoctorSurfaceMetaKeys> = {
       "doctor.surface.report.badge2",
       "doctor.surface.report.badge3",
     ],
+  },
+  cases: {
+    eyebrow: "Semester cases",
+    title: "My cases",
+    description:
+      "Every case you need to complete this semester, grouped by clinic. Tap a case to open its report and patient.",
+    badges: ["Per-clinic", "Live status", "Linked reports"],
   },
   chat: {
     eyebrow: "doctor.surface.chat.eyebrow",

@@ -55,7 +55,7 @@ export function SupervisorWorkspaceLiveView({
             })}
           </span>
         </div>
-        <div className="mt-5 space-y-4">
+        <div className="mt-5 max-h-[68vh] space-y-4 overflow-y-auto pr-1">
           {workspace?.clinicOverview.map((duty) => (
             <div key={duty.id} className="denty-dashboard-card p-4 sm:p-5">
               <div className="flex flex-wrap items-start justify-between gap-3">

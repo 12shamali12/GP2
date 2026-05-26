@@ -20,6 +20,7 @@ type DoctorSideRailProps = {
     | "notifications"
     | "approvals"
     | "report"
+    | "cases"
     | "chat"
     | "game"
     | "leaderboard"
@@ -38,6 +39,7 @@ type DoctorSideRailProps = {
   onApprovals: () => void;
   onReport: () => void;
   onChat: () => void;
+  onCases: () => void;
   onGame: () => void;
   onLeaderboard: () => void;
   onSettings: () => void;
@@ -111,6 +113,7 @@ type RailActionProps = {
     | "notifications"
     | "approvals"
     | "report"
+    | "cases"
     | "calendar"
     | "chat"
     | "game"
@@ -279,6 +282,7 @@ export function DoctorSideRail({
   onApprovals,
   onReport,
   onChat,
+  onCases,
   onGame,
   onLeaderboard,
   onSettings,
@@ -288,6 +292,8 @@ export function DoctorSideRail({
   const accent = ROLE_ACCENTS.doctor;
   return (
     <div className="denty-rail-column">
+      <aside className="frozen-stage denty-collapsible-rail rounded-[22px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,70,76,0.97),rgba(9,42,48,0.97))] px-4 py-5 text-white backdrop-blur-[28px]">
+      <div className="flex min-h-full flex-col gap-3">
         <RailIdentityCard
           userName={userName}
           fallbackName={t("auth.role.doctor")}
@@ -295,23 +301,8 @@ export function DoctorSideRail({
           brandSubtitle={t("nav.brand.subtitle.doctor")}
           accent={accent}
         />
+        <div className="mx-2 my-1 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
 
-      <aside className="frozen-stage denty-collapsible-rail rounded-[22px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,70,76,0.97),rgba(9,42,48,0.97))] px-4 py-5 text-white backdrop-blur-[28px]">
-      <div className="flex min-h-full flex-col gap-3">
-        <div className="mx-2 my-2 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-        <div className="denty-rail-section-label mb-1 px-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-white/56">
-          {t("nav.section.workspaces")}
-        </div>
-
-        <RailAction
-          eyebrow="Overview"
-          label={t("nav.dashboard")}
-          compactLabel="Desk"
-          icon="calendar"
-          active={activeView === "overview"}
-          accent={accent.bar}
-          onClick={onOverview}
-        />
         <RailAction
           eyebrow="Profile"
           label={t("nav.profile")}
@@ -320,6 +311,15 @@ export function DoctorSideRail({
           active={activeView === "profile"}
           accent={accent.bar}
           onClick={onProfile}
+        />
+        <RailAction
+          eyebrow="Overview"
+          label={t("nav.dashboard")}
+          compactLabel="Desk"
+          icon="calendar"
+          active={activeView === "overview"}
+          accent={accent.bar}
+          onClick={onOverview}
         />
         <RailAction
           eyebrow="Alerts"
@@ -349,11 +349,15 @@ export function DoctorSideRail({
           accent={accent.bar}
           onClick={onReport}
         />
-
-        <div className="mx-2 my-2 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-        <div className="denty-rail-section-label mb-1 px-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-white/56">
-          {t("nav.section.communication")}
-        </div>
+        <RailAction
+          eyebrow="Cases"
+          label="My cases"
+          compactLabel="Cases"
+          icon="cases"
+          active={activeView === "cases"}
+          accent={accent.bar}
+          onClick={onCases}
+        />
 
         <RailAction
           eyebrow="Direct"
@@ -365,11 +369,6 @@ export function DoctorSideRail({
           accent={accent.bar}
           onClick={onChat}
         />
-
-        <div className="mx-2 my-2 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-        <div className="denty-rail-section-label mb-1 px-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-white/56">
-          {t("nav.section.later")}
-        </div>
 
         <RailAction
           eyebrow="Practice"

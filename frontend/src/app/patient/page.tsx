@@ -70,9 +70,9 @@ export default function PatientPage() {
   const [selectedMonth, setSelectedMonth] = useState<number | "all">("all");
   const [selectedYear, setSelectedYear] = useState<number | "all">("all");
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
-  const [selectedType, setSelectedType] = useState("");
-  const [selectedClinicId, setSelectedClinicId] = useState("all");
-  const [selectedClinicCaseId, setSelectedClinicCaseId] = useState("all");
+  // Empty string means "patient hasn't picked a case yet" — slot list stays
+  // hidden behind an empty-state hint until they choose one.
+  const [selectedClinicCaseId, setSelectedClinicCaseId] = useState("");
   const [cancellingId, setCancellingId] = useState("");
   const MAX_AVATAR_BYTES = 1.5 * 1024 * 1024;
   const MAX_AVATAR_BASE64_LEN = 1_800_000;
@@ -124,46 +124,23 @@ export default function PatientPage() {
     const map: Record<string, Date> = {};
     availableSlots.forEach((slot) => {
       const date = new Date(slot.startTime);
-      const purpose = (slot.purpose || "").toLowerCase();
-      const matchesType =
-        !selectedType || purpose.includes(selectedType.toLowerCase());
       const monthOk = selectedMonth === "all" || date.getMonth() === selectedMonth;
       const yearOk = selectedYear === "all" || date.getFullYear() === selectedYear;
-      const clinicOk =
-        selectedClinicId === "all" || slot.clinic?.id === selectedClinicId;
+      // A case MUST be picked before slots appear. When empty, hide everything.
+      // The case implies its clinic — no separate clinic filter needed.
       const caseOk =
-        selectedClinicCaseId === "all" ||
+        selectedClinicCaseId !== "" &&
         (slot.caseOptions || []).some((item: any) => item.id === selectedClinicCaseId);
-      if (monthOk && yearOk && matchesType && clinicOk && caseOk) {
+      if (monthOk && yearOk && caseOk) {
         map[date.toDateString()] = date;
       }
     });
     return Object.values(map).sort((a, b) => a.getTime() - b.getTime());
-  }, [
-    availableSlots,
-    selectedClinicCaseId,
-    selectedClinicId,
-    selectedMonth,
-    selectedType,
-    selectedYear,
-  ]);
-
-  const clinicOptions = useMemo(() => {
-    const map = new Map<string, { id: string; name: string }>();
-    availableSlots.forEach((slot) => {
-      if (slot.clinic?.id && slot.clinic?.name) {
-        map.set(slot.clinic.id, { id: slot.clinic.id, name: slot.clinic.name });
-      }
-    });
-    return Array.from(map.values()).sort((left, right) =>
-      left.name.localeCompare(right.name),
-    );
-  }, [availableSlots]);
+  }, [availableSlots, selectedClinicCaseId, selectedMonth, selectedYear]);
 
   const caseOptions = useMemo(() => {
     const map = new Map<string, { id: string; title: string; clinicName: string }>();
     availableSlots.forEach((slot) => {
-      if (selectedClinicId !== "all" && slot.clinic?.id !== selectedClinicId) return;
       (slot.caseOptions || []).forEach((item: any) => {
         map.set(item.id, {
           id: item.id,
@@ -175,7 +152,7 @@ export default function PatientPage() {
     return Array.from(map.values()).sort((left, right) =>
       left.title.localeCompare(right.title),
     );
-  }, [availableSlots, selectedClinicId]);
+  }, [availableSlots]);
 
   const identifier = useMemo(
     () => user.id || user.email || user.phone || user.username || "",
@@ -342,7 +319,6 @@ export default function PatientPage() {
         t("patient.surface.overview.badge_slots", {
           count: availableSlots.length,
         }),
-        t("patient.surface.overview.badge_focus", { value: selectedType }),
       ],
     },
     profile: {
@@ -453,14 +429,11 @@ export default function PatientPage() {
                 availableSlots={availableSlots}
                 history={history}
                 unreadNotifications={unreadPatientNotifications}
-                selectedType={selectedType}
                 selectedMonth={selectedMonth}
                 selectedYear={selectedYear}
                 selectedDay={selectedDay}
                 filteredDays={filteredDays}
-                clinicOptions={clinicOptions}
                 caseOptions={caseOptions}
-                selectedClinicId={selectedClinicId}
                 selectedClinicCaseId={selectedClinicCaseId}
                 bookingForm={bookingForm}
                 error={error}
@@ -469,18 +442,13 @@ export default function PatientPage() {
                 onReserveClick={() =>
                   reservationRef.current?.scrollIntoView({ behavior: "smooth" })
                 }
-                onSelectedTypeChange={setSelectedType}
                 onSelectedMonthChange={setSelectedMonth}
                 onSelectedYearChange={setSelectedYear}
                 onSelectedDayChange={setSelectedDay}
-                onSelectedClinicChange={(value) => {
-                  setSelectedClinicId(value);
-                  setSelectedClinicCaseId("all");
-                }}
                 onSelectedClinicCaseChange={setSelectedClinicCaseId}
                 onSelectSlot={(slot) => {
                   const matchingCase =
-                    selectedClinicCaseId !== "all"
+                    selectedClinicCaseId !== ""
                       ? (slot.caseOptions || []).find(
                           (item: any) => item.id === selectedClinicCaseId,
                         )

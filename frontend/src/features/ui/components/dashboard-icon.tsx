@@ -3,6 +3,7 @@ type DashboardIconName =
   | "notifications"
   | "approvals"
   | "report"
+  | "cases"
   | "calendar"
   | "search"
   | "chat"
@@ -92,6 +93,13 @@ export function DashboardIcon({
         <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
           <path d="M8 10.5h2.5V8M8 10.5v2.5M16 9.5h.01M17.8 11.3h.01" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
           <path d="M8 18.5h8.2a3 3 0 0 0 2.9-3.8l-1.1-3.8a3 3 0 0 0-2.9-2.2H9a3 3 0 0 0-2.9 2.2L5 14.7a3 3 0 0 0 3 3.8Z" strokeWidth="1.5" strokeLinejoin="round" />
+        </svg>
+      );
+    case "cases":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+          <path d="M6 7a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12.5l-3-1.6-3 1.6-3-1.6-3 1.6V7Z" strokeWidth="1.6" strokeLinejoin="round" />
+          <path d="M9 10h6M9 13.5h4" strokeWidth="1.6" strokeLinecap="round" />
         </svg>
       );
     case "leaderboard":

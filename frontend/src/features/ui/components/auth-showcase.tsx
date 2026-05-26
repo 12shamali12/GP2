@@ -19,29 +19,6 @@ type AuthShowcaseBackgroundProps = {
   slides: AuthShowcaseSlide[];
 };
 
-function EdgeArrow({ direction }: { direction: "left" | "right" }) {
-  return (
-    <svg
-      viewBox="0 0 20 20"
-      fill="none"
-      aria-hidden="true"
-      className="h-5 w-5"
-    >
-      <path
-        d={
-          direction === "left"
-            ? "M11.75 4.5L6.25 10l5.5 5.5"
-            : "M8.25 4.5L13.75 10l-5.5 5.5"
-        }
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
 export function getAuthShowcaseSlides(
   lang: "en" | "ar"
 ): AuthShowcaseSlide[] {
@@ -183,11 +160,15 @@ export function AuthShowcaseBackground({
   onChange,
   slides,
 }: AuthShowcaseBackgroundProps) {
-  const previous = (activeIndex - 1 + slides.length) % slides.length;
   const next = (activeIndex + 1) % slides.length;
 
   return (
-    <div className="auth-background-stage" aria-hidden="true">
+    <div
+      className="auth-background-stage cursor-pointer"
+      onClick={() => onChange(next)}
+      role="button"
+      aria-label={lang === "ar" ? "الشريحة التالية" : "Next slide"}
+    >
       {slides.map((slide, index) => (
         <div
           key={`${lang}-${slide.title}`}
@@ -209,30 +190,15 @@ export function AuthShowcaseBackground({
       <div className="auth-background-overlay" />
       <div className="auth-background-noise" />
 
-      <button
-        type="button"
-        onClick={() => onChange(previous)}
-        className="auth-background-nav auth-background-nav-left"
-        aria-label={lang === "ar" ? "الشريحة السابقة" : "Previous slide"}
-      >
-        <EdgeArrow direction="left" />
-      </button>
-
-      <button
-        type="button"
-        onClick={() => onChange(next)}
-        className="auth-background-nav auth-background-nav-right"
-        aria-label={lang === "ar" ? "الشريحة التالية" : "Next slide"}
-      >
-        <EdgeArrow direction="right" />
-      </button>
-
       <div className="auth-background-dots">
         {slides.map((slide, index) => (
           <button
             key={`${lang}-${slide.eyebrow}-${index}`}
             type="button"
-            onClick={() => onChange(index)}
+            onClick={(event) => {
+              event.stopPropagation();
+              onChange(index);
+            }}
             className={`auth-background-dot ${
               index === activeIndex ? "is-active" : ""
             }`}

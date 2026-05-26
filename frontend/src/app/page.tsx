@@ -9,6 +9,7 @@ import { useAuthPortal } from "./hooks/use-auth-portal";
 import { AuthLanguageSwitch } from "./ui/auth-language-switch";
 import { AuthPortalCard } from "./ui/auth-portal-card";
 import { AuthStage } from "./ui/auth-stage";
+import { AuthThemeSwitch } from "./ui/auth-theme-switch";
 
 export default function Home() {
   const auth = useAuthPortal();
@@ -60,6 +61,7 @@ export default function Home() {
           lang={auth.lang}
           onLangChange={auth.setLang}
         />
+        <AuthThemeSwitch lang={auth.lang} />
 
         <div className="pointer-events-none relative z-10 flex min-h-screen flex-col px-4 py-16 sm:px-6 sm:py-6 lg:px-6 xl:px-10">
           <div className="grid flex-1 gap-5 py-6 xl:grid-cols-[minmax(0,0.96fr)_minmax(45rem,1.04fr)] xl:items-end xl:gap-12">
@@ -91,6 +93,7 @@ export default function Home() {
               </div>
             </div>
 
+            <div className="xl:ml-auto xl:-mr-6 xl:max-w-[80%]">
             <AuthPortalCard
               mode={auth.mode}
               role={auth.role}
@@ -124,6 +127,7 @@ export default function Home() {
               onSubmit={auth.handleSubmit}
               onResend={auth.handleResend}
             />
+            </div>
           </div>
         </div>
       </div>

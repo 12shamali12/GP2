@@ -2,18 +2,12 @@
 
 import { useTranslation } from "@/features/i18n/language-provider";
 import type { SupervisorWorkspaceData } from "../../types";
-import { type SupervisorWorkspaceViewKey } from "./supervisor-workspace-types";
 
 type Props = {
-  view: SupervisorWorkspaceViewKey;
   workspace: SupervisorWorkspaceData | null;
-  tabClass: string;
-  onChange: (view: SupervisorWorkspaceViewKey) => void;
 };
 
-const VIEW_KEYS: SupervisorWorkspaceViewKey[] = ["live", "reviews", "students"];
-
-export function SupervisorWorkspaceHero({ view, workspace, tabClass, onChange }: Props) {
+export function SupervisorWorkspaceHero({ workspace }: Props) {
   const t = useTranslation();
   return (
     <section className="frozen-stage relative overflow-hidden rounded-[38px] border border-white/10 px-4 py-5 text-white shadow-[0_34px_90px_rgba(4,11,26,0.3)] sm:px-6 md:py-6">
@@ -29,18 +23,6 @@ export function SupervisorWorkspaceHero({ view, workspace, tabClass, onChange }:
           <p className="max-w-3xl text-sm leading-7 text-white/72 md:text-base">
             {t("supervision.sup.hero.description")}
           </p>
-          <div className="flex flex-wrap gap-2 pt-2">
-            {VIEW_KEYS.map((key) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => onChange(key)}
-                className={`${tabClass} ${view === key ? "!border-white/26 !bg-white/18 !text-white" : ""}`}
-              >
-                {t(`supervision.sup.view.${key}`)}
-              </button>
-            ))}
-          </div>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="rounded-[22px] border border-white/10 bg-white/8 p-5 backdrop-blur-[16px]"><p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/56">{t("supervision.sup.hero.clinic_duties")}</p><p className="mt-3 text-xl font-semibold text-white">{workspace?.clinicOverview.length || 0}</p></div>

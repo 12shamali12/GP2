@@ -234,33 +234,26 @@ export function useDoctorBootstrap({
     const fetchGender = async () => {
       if (!identifier || user.gender) return;
 
-      const targets = [
-        `${apiUrl}/auth/profile?identifier=${encodeURIComponent(identifier)}`,
-        `${apiUrl}/auth/profile/${encodeURIComponent(identifier)}`,
-      ];
+      try {
+        const response = await fetch(
+          `${apiUrl}/auth/profile?identifier=${encodeURIComponent(identifier)}`,
+        );
+        const data = await response.json();
+        const foundGender = data?.gender || data?.user?.gender;
 
-      for (const url of targets) {
-        try {
-          const response = await fetch(url);
-          const data = await response.json();
-          const foundGender = data?.gender || data?.user?.gender;
+        if (response.ok && foundGender) {
+          const merged = { ...user, gender: foundGender };
 
-          if (response.ok && foundGender) {
-            const merged = { ...user, gender: foundGender };
+          setUser(merged);
 
-            setUser(merged);
-
-            try {
-              sessionStorage.setItem("currentUser", JSON.stringify(merged));
-            } catch {
-              /* ignore */
-            }
-
-            return;
+          try {
+            sessionStorage.setItem("currentUser", JSON.stringify(merged));
+          } catch {
+            /* ignore */
           }
-        } catch {
-          /* ignore and try next */
         }
+      } catch {
+        /* ignore */
       }
     };
 

@@ -5,20 +5,24 @@ import { useTranslation } from "@/features/i18n/language-provider";
 import { ProfilePopup } from "@/features/profiles/components/profile-popup";
 import type { SupervisorWorkspaceData } from "../../types";
 
-type TaskForm = {
+type ExamForm = {
+  clinicId: string;
+  shiftId: string;
+  scheduledAt: string;
   title: string;
-  description: string;
-  dueAt: string;
-  targetType: "doctor" | "group";
-  groupId: string;
+  cases: string;
 };
 
 type Props = {
   workspace: SupervisorWorkspaceData | null;
-  taskForm: TaskForm;
-  setTaskForm: Dispatch<SetStateAction<TaskForm>>;
-  submitTask: (doctorIds: string[], groupIds: string[]) => Promise<void>;
-  unfreezeDoctor: (doctorId: string) => Promise<void>;
+  examForm: ExamForm;
+  examDrafts: Record<string, { mark: string; notes: string }>;
+  setExamForm: Dispatch<SetStateAction<ExamForm>>;
+  setExamDrafts: Dispatch<
+    SetStateAction<Record<string, { mark: string; notes: string }>>
+  >;
+  submitExam: (studentIds: string[]) => Promise<void>;
+  submitExamGrade: (examId: string) => Promise<void>;
   viewerIdentifier: string;
 };
 
@@ -30,12 +34,14 @@ type DoctorRow = {
   semesterLabel: string;
 };
 
-export function SupervisorWorkspaceStudentsView({
+export function SupervisorWorkspaceExamsView({
   workspace,
-  taskForm,
-  setTaskForm,
-  submitTask,
-  unfreezeDoctor,
+  examForm,
+  examDrafts,
+  setExamForm,
+  setExamDrafts,
+  submitExam,
+  submitExamGrade,
   viewerIdentifier,
 }: Props) {
   const t = useTranslation();
@@ -84,21 +90,16 @@ export function SupervisorWorkspaceStudentsView({
     );
   }, [allDoctors, studentSearch]);
 
-  // From semesters, expand to groups (and group IDs will be used for the API)
-  const groupIdsFromSemesters = useMemo(() => {
-    if (!selectedSemesters.length) return [] as string[];
-    return (workspace?.groupDirectory ?? [])
-      .filter((g) => selectedSemesters.includes(g.semesterLabel))
-      .map((g) => g.id);
-  }, [selectedSemesters, workspace]);
-
-  const resolvedDoctorIds = selectedStudentIds;
-  const resolvedGroupIds = useMemo(() => {
-    const set = new Set<string>([...selectedGroupIds, ...groupIdsFromSemesters]);
-    return Array.from(set);
-  }, [selectedGroupIds, groupIdsFromSemesters]);
-
-  const totalTargets = resolvedDoctorIds.length + resolvedGroupIds.length;
+  // Compute the resolved unique student IDs from all 3 selection methods
+  const resolvedStudentIds = useMemo(() => {
+    const ids = new Set<string>(selectedStudentIds);
+    workspace?.groupDirectory.forEach((group) => {
+      if (selectedGroupIds.includes(group.id) || selectedSemesters.includes(group.semesterLabel)) {
+        group.members.forEach((m) => ids.add(m.doctor.id));
+      }
+    });
+    return Array.from(ids);
+  }, [selectedStudentIds, selectedGroupIds, selectedSemesters, workspace]);
 
   const toggleStudent = (id: string) =>
     setSelectedStudentIds((prev) =>
@@ -120,10 +121,10 @@ export function SupervisorWorkspaceStudentsView({
   };
 
   const handleSubmit = async () => {
-    if (totalTargets === 0) return;
+    if (!resolvedStudentIds.length) return;
     setSubmitting(true);
     try {
-      await submitTask(resolvedDoctorIds, resolvedGroupIds);
+      await submitExam(resolvedStudentIds);
       clearSelection();
     } finally {
       setSubmitting(false);
@@ -131,19 +132,19 @@ export function SupervisorWorkspaceStudentsView({
   };
 
   return (
-    <div className="grid gap-5 xl:grid-cols-[1fr_0.8fr]">
-      {/* ── Assign tasks panel with multi-target picker ───────────────── */}
+    <div className="grid gap-5 xl:grid-cols-[0.92fr_1.08fr]">
+      {/* ── Left: schedule form with multi-target picker ────────────────── */}
       <div className="denty-panel-strong p-4 sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="denty-kicker">{t("supervision.sup.students.tasks_eyebrow")}</p>
+            <p className="denty-kicker">
+              {t("supervision.sup.reviews.exams_eyebrow")}
+            </p>
             <h2 className="mt-3 text-xl font-semibold text-[var(--foreground)] sm:text-2xl">
-              {t("supervision.sup.students.tasks_title")}
+              {t("supervision.sup.reviews.exams_title")}
             </h2>
           </div>
-          <span className="denty-pill">
-            {totalTargets} target{totalTargets === 1 ? "" : "s"}
-          </span>
+          <span className="denty-pill">{resolvedStudentIds.length} target{resolvedStudentIds.length === 1 ? "" : "s"}</span>
         </div>
 
         {/* ── Mode selector: semester → group → student ───────────────── */}
@@ -163,6 +164,7 @@ export function SupervisorWorkspaceStudentsView({
                   type="button"
                   onClick={() => {
                     setMode(m);
+                    // Clear other modes so the resolved target stays unambiguous
                     if (m !== "semester") setSelectedSemesters([]);
                     if (m !== "group") setSelectedGroupIds([]);
                     if (m !== "student") setSelectedStudentIds([]);
@@ -184,7 +186,7 @@ export function SupervisorWorkspaceStudentsView({
         {mode === "semester" ? (
           <div className="mt-4">
             <p className="mb-2 text-xs text-[var(--muted-foreground)]">
-              Pick one or more semesters — every group under those semesters gets the task.
+              Pick one or more semesters — every student in every group under those semesters gets the exam.
             </p>
             <div className="flex flex-wrap gap-1.5">
               {allSemesters.length ? (
@@ -216,7 +218,7 @@ export function SupervisorWorkspaceStudentsView({
         {mode === "group" ? (
           <div className="mt-4">
             <p className="mb-2 text-xs text-[var(--muted-foreground)]">
-              Pick one or more groups — each selected group gets the task.
+              Pick one or more groups — every student in each selected group gets the exam.
             </p>
             <div className="flex max-h-44 flex-wrap gap-1.5 overflow-y-auto rounded-[14px] border border-white/10 bg-white/5 p-2">
               {workspace?.groupDirectory.length ? (
@@ -302,13 +304,12 @@ export function SupervisorWorkspaceStudentsView({
           </div>
         ) : null}
 
-        {totalTargets > 0 ? (
+        {/* ── Summary chip + clear ────────────────────────────────────── */}
+        {resolvedStudentIds.length > 0 ? (
           <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-[14px] border border-teal-300/25 bg-teal-400/8 px-3 py-2 text-xs">
             <span className="text-[var(--foreground)]">
-              <span className="font-semibold">{resolvedDoctorIds.length}</span> individual student
-              {resolvedDoctorIds.length === 1 ? "" : "s"} +{" "}
-              <span className="font-semibold">{resolvedGroupIds.length}</span> group
-              {resolvedGroupIds.length === 1 ? "" : "s"}
+              <span className="font-semibold">{resolvedStudentIds.length}</span> unique student
+              {resolvedStudentIds.length === 1 ? "" : "s"} will be scheduled.
             </span>
             <button
               type="button"
@@ -320,88 +321,144 @@ export function SupervisorWorkspaceStudentsView({
           </div>
         ) : null}
 
-        {/* ── Task body ───────────────────────────────────────────────── */}
+        {/* ── Exam details ────────────────────────────────────────────── */}
         <div className="mt-5 grid gap-3">
-          <input
-            value={taskForm.title}
-            onChange={(e) => setTaskForm((prev) => ({ ...prev, title: e.target.value }))}
+          <select
+            value={examForm.clinicId}
+            onChange={(e) =>
+              setExamForm((prev) => ({ ...prev, clinicId: e.target.value }))
+            }
             className="denty-field text-sm"
-            placeholder={t("supervision.sup.students.task_title_placeholder")}
-          />
-          <textarea
-            value={taskForm.description}
-            onChange={(e) => setTaskForm((prev) => ({ ...prev, description: e.target.value }))}
-            className="denty-field min-h-[110px] text-sm"
-            placeholder={t("supervision.sup.students.task_desc_placeholder")}
-          />
+          >
+            <option value="">{t("supervision.sup.reviews.choose_clinic")}</option>
+            {workspace?.clinics.map((clinic) => (
+              <option key={clinic.id} value={clinic.id}>
+                {clinic.name}
+              </option>
+            ))}
+          </select>
+          <select
+            value={examForm.shiftId}
+            onChange={(e) =>
+              setExamForm((prev) => ({ ...prev, shiftId: e.target.value }))
+            }
+            className="denty-field text-sm"
+          >
+            <option value="">{t("supervision.sup.reviews.optional_shift")}</option>
+            {workspace?.shifts.map((shift) => (
+              <option key={shift.id} value={shift.id}>
+                {shift.name} - {shift.startsAt} - {shift.endsAt}
+              </option>
+            ))}
+          </select>
           <input
             type="datetime-local"
-            value={taskForm.dueAt}
-            onChange={(e) => setTaskForm((prev) => ({ ...prev, dueAt: e.target.value }))}
+            value={examForm.scheduledAt}
+            onChange={(e) =>
+              setExamForm((prev) => ({ ...prev, scheduledAt: e.target.value }))
+            }
             className="denty-field text-sm"
+          />
+          <input
+            value={examForm.title}
+            onChange={(e) =>
+              setExamForm((prev) => ({ ...prev, title: e.target.value }))
+            }
+            className="denty-field text-sm"
+            placeholder={t("supervision.sup.reviews.exam_title_placeholder")}
+          />
+          <textarea
+            value={examForm.cases}
+            onChange={(e) =>
+              setExamForm((prev) => ({ ...prev, cases: e.target.value }))
+            }
+            className="denty-field min-h-[100px] text-sm"
+            placeholder={t("supervision.sup.reviews.exam_cases_placeholder")}
           />
           <button
             onClick={handleSubmit}
-            disabled={submitting || totalTargets === 0}
+            disabled={submitting || resolvedStudentIds.length === 0}
             className="denty-button-primary px-4 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
           >
             {submitting
-              ? "Assigning…"
-              : totalTargets > 1
-                ? `Assign task to ${totalTargets} targets`
-                : t("supervision.sup.students.assign_task")}
+              ? "Scheduling…"
+              : resolvedStudentIds.length > 1
+                ? `Schedule exam for ${resolvedStudentIds.length} students`
+                : t("supervision.sup.reviews.schedule_exam")}
           </button>
         </div>
       </div>
 
-      {/* ── Active freezes ──────────────────────────────────────────── */}
+      {/* ── Right: scheduled exams list (unchanged but styled) ─────────── */}
       <div className="denty-panel-strong p-4 sm:p-6">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <p className="denty-kicker">Frozen accounts</p>
-            <h2 className="mt-3 text-xl font-semibold text-[var(--foreground)] sm:text-2xl">
-              Active freezes
-            </h2>
-          </div>
-          <span className="denty-pill">{workspace?.activeFreezes.length || 0}</span>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <p className="denty-kicker">Scheduled exams</p>
+          <span className="denty-pill">{workspace?.upcomingExams.length || 0}</span>
         </div>
-        <div className="mt-5 max-h-[60vh] space-y-3 overflow-y-auto pr-1">
-          {workspace?.activeFreezes.length ? (
-            workspace.activeFreezes.map((freeze) => (
-              <div key={freeze.id} className="denty-dashboard-card-soft relative overflow-hidden p-4">
-                <span aria-hidden className="absolute left-0 top-0 h-full w-[3px] bg-teal-300/70" />
-                <div className="pl-2">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <button
-                        type="button"
-                        onClick={() => setProfileTargetId(freeze.doctor.id)}
-                        className="cursor-pointer text-lg font-semibold text-[var(--foreground)] underline decoration-dotted underline-offset-4 hover:decoration-solid"
-                      >
-                        {freeze.doctor.name}
-                      </button>
-                      <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-                        @{freeze.doctor.username}
-                        {freeze.doctor.doctorIdNumber ? ` · ${freeze.doctor.doctorIdNumber}` : ""}
-                      </p>
+        <div className="mt-5 max-h-[68vh] space-y-3 overflow-y-auto pr-1">
+          {workspace?.upcomingExams.length ? (
+            workspace.upcomingExams.map((exam) => {
+              const draft = examDrafts[exam.id] || { mark: "", notes: "" };
+              return (
+                <div key={exam.id} className="denty-dashboard-card-soft relative overflow-hidden p-4">
+                  <span aria-hidden className="absolute left-0 top-0 h-full w-[3px] bg-teal-300/70" />
+                  <div className="pl-2">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <p className="text-lg font-semibold text-[var(--foreground)]">{exam.title}</p>
+                        <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+                          {exam.student?.id ? (
+                            <button
+                              type="button"
+                              onClick={() => exam.student?.id && setProfileTargetId(exam.student.id)}
+                              className="cursor-pointer underline decoration-dotted underline-offset-4 hover:text-[var(--foreground)]"
+                            >
+                              {exam.student.name}
+                            </button>
+                          ) : (
+                            exam.student?.name
+                          )}{" "}
+                          · {exam.clinic.name} · {new Date(exam.scheduledAt).toLocaleString()}
+                        </p>
+                      </div>
+                      <span className="denty-pill">{exam.status}</span>
                     </div>
-                    <button
-                      onClick={() => unfreezeDoctor(freeze.doctor.id)}
-                      className="denty-button-secondary px-4 py-2 text-xs font-semibold"
-                    >
-                      {t("supervision.sup.students.unfreeze")}
-                    </button>
+                    <div className="mt-3 grid gap-2 sm:grid-cols-[0.4fr_1fr_auto] sm:items-center">
+                      <input
+                        value={draft.mark}
+                        onChange={(e) =>
+                          setExamDrafts((prev) => ({
+                            ...prev,
+                            [exam.id]: { ...draft, mark: e.target.value },
+                          }))
+                        }
+                        className="denty-field text-sm"
+                        placeholder={t("supervision.sup.reviews.mark_placeholder")}
+                      />
+                      <input
+                        value={draft.notes}
+                        onChange={(e) =>
+                          setExamDrafts((prev) => ({
+                            ...prev,
+                            [exam.id]: { ...draft, notes: e.target.value },
+                          }))
+                        }
+                        className="denty-field text-sm"
+                        placeholder={t("supervision.sup.reviews.notes_placeholder")}
+                      />
+                      <button
+                        onClick={() => submitExamGrade(exam.id)}
+                        className="denty-button-secondary w-full px-4 py-3 text-sm font-semibold sm:w-auto"
+                      >
+                        {t("supervision.sup.reviews.grade")}
+                      </button>
+                    </div>
                   </div>
-                  <p className="mt-3 text-sm text-[var(--muted-foreground)]">
-                    {t("supervision.sup.students.frozen_until", {
-                      date: new Date(freeze.blockedUntil).toLocaleString(),
-                    })}
-                  </p>
                 </div>
-              </div>
-            ))
+              );
+            })
           ) : (
-            <p className="text-sm text-[var(--muted-foreground)]">No active freezes.</p>
+            <p className="text-sm text-[var(--muted-foreground)]">No upcoming exams.</p>
           )}
         </div>
       </div>

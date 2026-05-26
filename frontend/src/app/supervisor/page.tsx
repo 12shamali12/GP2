@@ -102,7 +102,7 @@ export default function SupervisorPage() {
 
   useEffect(() => {
     if (activeSurface !== "leaderboard") return;
-    if (leaderboardSnapshot || leaderboardLoading) return;
+    if (leaderboardSnapshot) return;
 
     let cancelled = false;
     setLeaderboardLoading(true);
@@ -128,7 +128,8 @@ export default function SupervisorPage() {
     return () => {
       cancelled = true;
     };
-  }, [activeSurface, leaderboardSnapshot, leaderboardLoading]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSurface, leaderboardSnapshot]);
 
   const identifier = useMemo(
     () => user.id || user.email || user.phone || user.username || "",

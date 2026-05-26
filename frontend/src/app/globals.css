@@ -1406,10 +1406,10 @@ html[dir="rtl"] .denty-mobile-drawer-sheet {
 
   .denty-bubble-other {
     margin-right: auto;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    background: rgba(255, 255, 255, 0.08);
-    color: rgba(250, 252, 255, 0.96);
-    backdrop-filter: blur(12px);
+    border: 1px solid rgba(11, 123, 138, 0.22);
+    background: rgba(255, 255, 255, 0.78);
+    color: rgba(10, 22, 40, 0.94);
+    backdrop-filter: blur(10px);
   }
 
   .denty-status-dot {
@@ -2054,6 +2054,289 @@ html.dark .denty-avatar-shell {
 
 html.dark .denty-stat-card {
   background: linear-gradient(180deg, rgba(18, 36, 60, 0.9), rgba(12, 22, 40, 0.8));
+}
+
+/* ---------------------------------------------------------------------------
+ * Inline white-translucent surfaces re-tint in dark mode.
+ *
+ * Many panels use Tailwind utilities like `bg-white/34` / `bg-white/22` /
+ * `bg-white/8` to render frosted cards. On a light page those read as soft
+ * pearl over the page background. On a dark page they become opaque pale
+ * islands and any `text-white` content inside disappears against them.
+ *
+ * The selectors below catch the common opacity steps used across the admin
+ * planning surface and supervisor workspace and re-tint them with the same
+ * teal-tinted dark surface used by `denty-dashboard-card-soft`.
+ * ------------------------------------------------------------------------ */
+html.dark [class*="bg-white/34"],
+html.dark [class*="bg-white/30"],
+html.dark [class*="bg-white/28"],
+html.dark [class*="bg-white/26"],
+html.dark [class*="bg-white/24"],
+html.dark [class*="bg-white/22"] {
+  background-color: rgba(28, 46, 74, 0.56) !important;
+}
+
+html.dark [class*="bg-white/18"],
+html.dark [class*="bg-white/14"],
+html.dark [class*="bg-white/12"],
+html.dark [class*="bg-white/10"],
+html.dark [class*="bg-white/8"],
+html.dark [class*="bg-white/6"] {
+  background-color: rgba(20, 34, 58, 0.4) !important;
+}
+
+html.dark [class*="bg-white/55"],
+html.dark [class*="bg-white/52"],
+html.dark [class*="bg-white/45"],
+html.dark [class*="bg-white/44"],
+html.dark [class*="bg-white/42"],
+html.dark [class*="bg-white/38"],
+html.dark [class*="bg-white/36"],
+html.dark [class*="bg-white/35"] {
+  background-color: rgba(36, 56, 88, 0.7) !important;
+}
+
+html.dark [class*="bg-white/85"],
+html.dark [class*="bg-white/80"],
+html.dark [class*="bg-white/75"],
+html.dark [class*="bg-white/70"],
+html.dark [class*="bg-white/65"],
+html.dark [class*="bg-white/60"],
+html.dark [class*="bg-white/58"] {
+  background-color: rgba(46, 70, 104, 0.82) !important;
+}
+
+/* When the same translucent-white utility is used on a `hover:` variant we
+ * want a brighter lift in dark mode too, so hover provides a visible cue. */
+html.dark [class*="hover:bg-white/"]:hover {
+  background-color: rgba(45, 70, 110, 0.74) !important;
+}
+
+/* ---------------------------------------------------------------------------
+ * Auth portal card — explicit dark-mode override.
+ *
+ * The card body sets a hardcoded pearl gradient background that worked on a
+ * light page but blends with `text-[var(--foreground)]` (which becomes light
+ * in dark mode) and renders the entire form unreadable. Re-tint to a deep
+ * teal panel and lift the contrast on the small accents inside it.
+ * ------------------------------------------------------------------------ */
+html.dark .denty-auth-portal {
+  background: linear-gradient(
+    180deg,
+    rgba(11, 26, 46, 0.88),
+    rgba(8, 22, 38, 0.82)
+  ) !important;
+  border-color: rgba(45, 212, 191, 0.32) !important;
+  box-shadow:
+    0 24px 60px rgba(2, 8, 18, 0.55),
+    0 4px 12px rgba(2, 8, 18, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+}
+
+/* The login/register segmented switch pill inside the card. */
+html.dark .denty-auth-portal [class*="bg-white/55"] {
+  background-color: rgba(20, 34, 58, 0.65) !important;
+  border-color: rgba(45, 212, 191, 0.26) !important;
+}
+
+/* Portal-note teal-tinted callout — uses an `rgba(20,184,166,0.07)` fill
+ * that is invisible on the new dark surface. Bump opacity. */
+html.dark
+  .denty-auth-portal
+  [style*="rgba(20,184,166"],
+html.dark
+  .denty-auth-portal
+  [class*="bg-[rgba(20,184,166,0.07)]"] {
+  background-color: rgba(20, 184, 166, 0.16) !important;
+  border-color: rgba(45, 212, 191, 0.4) !important;
+}
+
+/* The dark-teal label inside the portal-note becomes invisible on dark. */
+html.dark
+  .denty-auth-portal
+  [class*="text-[rgba(11,90,98,0.88)]"] {
+  color: rgba(94, 234, 212, 0.92) !important;
+}
+
+/* ---------------------------------------------------------------------------
+ * Admin surfaces — global dark-mode contrast lift.
+ *
+ * Most admin panels and cards use hardcoded light pearl gradients with
+ * `bg-[linear-gradient(180deg,rgba(249,252,255,…),rgba(225,234,241,…))]` and
+ * dark slate text via `text-[rgba(10,22,40,…)]`. In dark mode the cards
+ * stayed light and the text stayed dark, so the whole admin shell read as
+ * unreadable. The blocks below catch every common variant via attribute
+ * substring selectors so we re-tint surfaces AND text in one place.
+ * ------------------------------------------------------------------------ */
+
+/* Light pearl gradients → dark teal-ink panels. */
+html.dark [class*="bg-[linear-gradient(180deg,rgba(249,252,255"],
+html.dark [class*="bg-[linear-gradient(180deg,rgba(255,255,255"],
+html.dark [class*="bg-[linear-gradient(180deg,rgba(252,255,254"],
+html.dark [class*="bg-[linear-gradient(180deg,rgba(232,250"] {
+  background: linear-gradient(
+    180deg,
+    rgba(20, 34, 58, 0.72),
+    rgba(12, 22, 40, 0.55)
+  ) !important;
+}
+
+/* Red/rose-tinted pearl panels (typically alert/rejected callouts). */
+html.dark [class*="bg-[linear-gradient(180deg,rgba(255,244,246"] {
+  background: linear-gradient(
+    180deg,
+    rgba(60, 20, 30, 0.65),
+    rgba(40, 14, 22, 0.5)
+  ) !important;
+}
+
+/* Dark slate ink text — every opacity step of `rgba(10,22,40,…)` used for
+ * labels, eyebrows and body copy on light panels. Flip to light. */
+html.dark [class*="text-[rgba(10,22,40,"] {
+  color: rgba(216, 226, 240, 0.86) !important;
+}
+
+/* Navy / deep teal headings used on light backgrounds. */
+html.dark [class*="text-[rgba(7,18,44,"],
+html.dark [class*="text-[rgba(6,83,98,"],
+html.dark [class*="text-[rgba(11,90,98,"] {
+  color: rgba(165, 233, 242, 0.94) !important;
+}
+
+/* Rose-tinted backgrounds used by "Delete" buttons and rejection callouts.
+ * In light mode these are a pastel pink. On a dark page they read as a
+ * stark white wedge that swallows the text, so re-tint with a darker rose. */
+html.dark [class*="bg-rose-50"],
+html.dark [class*="bg-rose-100"],
+html.dark [class*="bg-rose-50/85"],
+html.dark [class*="bg-rose-50/90"],
+html.dark [class*="bg-rose-50/95"] {
+  background-color: rgba(127, 29, 49, 0.62) !important;
+  border-color: rgba(244, 114, 130, 0.4) !important;
+}
+
+/* Emerald-tinted "approve"/"healthy" backgrounds — same treatment. */
+html.dark [class*="bg-emerald-50"],
+html.dark [class*="bg-emerald-100"] {
+  background-color: rgba(6, 78, 59, 0.62) !important;
+  border-color: rgba(110, 231, 183, 0.4) !important;
+}
+
+/* Amber-tinted "warning" backgrounds. */
+html.dark [class*="bg-amber-50"],
+html.dark [class*="bg-amber-100"] {
+  background-color: rgba(120, 53, 15, 0.62) !important;
+  border-color: rgba(252, 211, 77, 0.4) !important;
+}
+
+/* ---------------------------------------------------------------------------
+ * Calendar / day-cell surfaces (doctor live scheduling, slot picker).
+ *
+ * The day buttons + hour buttons sit inside a soft gray frame and use pure
+ * `bg-white` for unselected cells, a pale teal tint for the active cell,
+ * and a darker teal text for the active label. Re-tint each token so the
+ * grid is readable in dark mode without losing the active-state distinction.
+ * ------------------------------------------------------------------------ */
+html.dark [class*="bg-[rgba(244,245,247"] {
+  background-color: rgba(18, 32, 54, 0.6) !important;
+}
+
+html.dark [class*="bg-[rgba(230,244,246"] {
+  background-color: rgba(11, 123, 138, 0.35) !important;
+  border-color: rgba(94, 234, 212, 0.45) !important;
+}
+
+html.dark [class*="text-[rgba(8,68,78,"] {
+  color: rgba(153, 232, 238, 0.96) !important;
+}
+
+/* The pure `bg-white` token — used by individual day & hour cells in the
+ * calendar. Scope to a whole-word match so we DON'T affect translucent
+ * variants like `bg-white/30`, `bg-white/45` etc. which have their own
+ * rules above. */
+html.dark [class~="bg-white"] {
+  background-color: rgba(20, 34, 58, 0.7) !important;
+}
+
+/* Calendar marker-class overrides — bulletproof targeting that doesn't
+ * depend on Tailwind compiling `bg-white` predictably. The day grid
+ * frame, every cell, and the active cell all use the explicit
+ * `denty-calendar-*` hooks we set on the buttons. */
+html.dark .denty-calendar-grid {
+  background-color: rgba(18, 32, 54, 0.6) !important;
+  border-color: rgba(94, 234, 212, 0.18) !important;
+}
+
+html.dark .denty-calendar-cell {
+  background-color: rgba(20, 34, 58, 0.72) !important;
+  border-color: rgba(148, 163, 184, 0.28) !important;
+  color: rgba(226, 232, 240, 0.94) !important;
+}
+
+html.dark .denty-calendar-cell:hover:not(:disabled) {
+  border-color: rgba(94, 234, 212, 0.45) !important;
+  background-color: rgba(28, 46, 74, 0.88) !important;
+}
+
+html.dark .denty-calendar-cell.denty-calendar-cell-active {
+  background-color: rgba(11, 123, 138, 0.35) !important;
+  border-color: rgba(94, 234, 212, 0.55) !important;
+  color: rgba(153, 232, 238, 0.98) !important;
+}
+
+/* Toothie Game score timeline sparkline — the bars use a dark-navy gradient
+ * that disappears against the dark page. Flip to a bright teal gradient in
+ * dark mode so the bars read. Same applies to similar nav-tinted gradients
+ * (e.g. the active leaderboard tab pill). */
+html.dark [class*="bg-[linear-gradient(180deg,rgba(12,32,54"],
+html.dark [class*="bg-[linear-gradient(180deg,rgba(9,68,94"],
+html.dark [class*="bg-[linear-gradient(135deg,rgba(12,32,54"],
+html.dark [class*="bg-[linear-gradient(135deg,rgba(9,68,94"] {
+  background: linear-gradient(
+    180deg,
+    rgba(94, 234, 212, 0.9),
+    rgba(45, 212, 191, 0.7)
+  ) !important;
+}
+
+/* Active leaderboard tab pill — same gradient family but for the rounded
+ * full-height button form. Already covered by the rule above. The teal
+ * sapphire text-white inside reads on the new teal pill. */
+
+/* Teal hover/active accent — already light enough, but lift contrast. */
+html.dark [class*="text-[rgba(7,111,133"] {
+  color: rgba(94, 234, 212, 0.96) !important;
+}
+
+/* Light slate borders — barely visible on a dark surface. */
+html.dark [class*="border-[rgba(7,18,34"],
+html.dark [class*="border-[rgba(148,163,184,0.14)"] {
+  border-color: rgba(148, 163, 184, 0.32) !important;
+}
+
+/* Pink/rose label colors used for "rejected" callouts. Keep them recognizable
+ * but lift saturation so they read on the new dark rose panel. */
+html.dark [class*="text-rose-700"],
+html.dark [class*="text-rose-600"] {
+  color: rgba(253, 164, 175, 0.95) !important;
+}
+
+/* Chat bubbles — the received "other" bubble was hardcoded white with
+ * dark slate text. On a dark page that bubble becomes a harsh white island
+ * against the panel; flip its surface to a translucent slate. */
+html.dark .denty-bubble-other {
+  background: rgba(20, 34, 58, 0.62) !important;
+  border-color: rgba(94, 234, 212, 0.28) !important;
+  color: rgba(226, 232, 240, 0.94) !important;
+}
+
+/* Chat timestamps used inline tailwind colors for light bubbles. Lift them
+ * inside the dark "other" bubble. */
+html.dark
+  .denty-bubble-other
+  [class*="text-[rgba(10,22,40,0.52)"] {
+  color: rgba(148, 163, 184, 0.85) !important;
 }
 
 /* Plain <hr>/border dividers built with Tailwind slate utilities. */

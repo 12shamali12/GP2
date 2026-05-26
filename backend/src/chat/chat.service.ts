@@ -167,14 +167,15 @@ export class ChatService {
 
   private async ensureGroupRoom(groupId: string, groupName: string) {
     const code = `group:${groupId}`;
+    // Upsert by groupId (also unique) so we match rooms seeded without `code`.
     return this.prisma.conversation.upsert({
-      where: { code },
+      where: { groupId },
       update: {
         kind: ConversationKind.ROOM,
+        code,
         title: `${groupName} group`,
         description: `Private room for ${groupName}.`,
         audience: ConversationRoomAudience.GROUP,
-        groupId,
       },
       create: {
         kind: ConversationKind.ROOM,

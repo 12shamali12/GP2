@@ -1,9 +1,16 @@
-export type SupervisorWorkspaceViewKey = "live" | "reviews" | "students";
+export type SupervisorWorkspaceViewKey =
+  | "live"
+  | "reviews"
+  | "exams"
+  | "students"
+  | "groups";
 
 export const supervisorWorkspaceViewLabels: Record<SupervisorWorkspaceViewKey, string> = {
   live: "Live clinic",
   reviews: "Reviews",
-  students: "Students & groups",
+  exams: "Exams",
+  students: "Tasks & frozen accs",
+  groups: "Groups",
 };
 
 export type SearchDoctorItem = {

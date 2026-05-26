@@ -1,7 +1,6 @@
 "use client";
 
 import { useTranslation } from "@/features/i18n/language-provider";
-import { BrandMark } from "@/features/ui/components/brand-mark";
 import type { Role } from "../hooks/use-auth-portal";
 
 type PortalNote = {
@@ -96,27 +95,27 @@ export function AuthPortalCard({
   const tr = useTranslation();
   return (
     <section className="pointer-events-auto w-full max-w-[40rem] xl:mr-16 xl:translate-y-5 xl:justify-self-end xl:self-end xl:pb-6 2xl:mr-24 2xl:max-w-[44rem]">
-      <div className="rounded-[26px] border border-white/16 bg-[linear-gradient(180deg,rgba(255,255,255,0.34),rgba(255,255,255,0.16))] p-4 shadow-[0_22px_56px_rgba(7,18,44,0.12)] backdrop-blur-[34px] sm:p-5 xl:min-h-[38rem] xl:p-6">
+      <div className="denty-auth-portal rounded-[24px] border border-[rgba(20,184,166,0.22)] bg-[linear-gradient(180deg,rgba(252,255,254,0.58),rgba(232,250,247,0.40))] p-5 shadow-[0_24px_60px_rgba(7,18,44,0.18),0_4px_12px_rgba(7,18,44,0.08)] backdrop-blur-2xl sm:p-6 xl:min-h-[38rem] xl:p-7">
         <div className="flex flex-col gap-5 xl:min-h-[32rem] xl:justify-between">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="denty-kicker">{tr("auth.portal")}</p>
-            <div className="rounded-full border border-white/26 bg-[rgba(255,255,255,0.18)] p-1 shadow-[0_14px_30px_rgba(7,18,44,0.06)] backdrop-blur-xl">
+            <div className="inline-flex rounded-full border border-[rgba(20,184,166,0.22)] bg-white/55 p-1 shadow-[0_10px_24px_rgba(7,18,44,0.06)] backdrop-blur-xl">
               <button
                 onClick={() => onModeChange("login")}
-                className={`cursor-pointer rounded-full px-4 py-2 text-sm font-semibold ${
+                className={`min-h-[2.1rem] cursor-pointer rounded-full px-4 text-[12px] font-semibold uppercase tracking-[0.16em] transition ${
                   mode === "login"
-                    ? "denty-button-primary"
-                    : "denty-button-secondary"
+                    ? "bg-[linear-gradient(160deg,rgba(13,148,136,0.96),rgba(11,90,98,0.96))] text-white shadow-[0_6px_14px_rgba(13,90,98,0.28)]"
+                    : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
                 }`}
               >
                 {t.login}
               </button>
               <button
                 onClick={() => onModeChange("register")}
-                className={`cursor-pointer rounded-full px-4 py-2 text-sm font-semibold ${
+                className={`min-h-[2.1rem] cursor-pointer rounded-full px-4 text-[12px] font-semibold uppercase tracking-[0.16em] transition ${
                   mode === "register"
-                    ? "denty-button-primary"
-                    : "denty-button-secondary"
+                    ? "bg-[linear-gradient(160deg,rgba(13,148,136,0.96),rgba(11,90,98,0.96))] text-white shadow-[0_6px_14px_rgba(13,90,98,0.28)]"
+                    : "text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
                 }`}
               >
                 {t.register}
@@ -124,27 +123,23 @@ export function AuthPortalCard({
             </div>
           </div>
 
-          <div className="flex items-start justify-between gap-4">
-            <div className="space-y-2">
-              <h3 className="text-2xl font-semibold tracking-[-0.05em] text-[var(--foreground)] sm:text-[2.15rem]">
-                {mode === "login" ? t.welcome : t.create}
-              </h3>
-              <p className="max-w-lg text-sm leading-6 text-[var(--muted-foreground)]">
-                {mode === "login" ? t.subtitle : t.registerSubtitle}
+          <h3 className="text-3xl font-semibold leading-tight tracking-[-0.04em] text-[var(--foreground)] sm:text-[2.2rem]">
+            {mode === "login" ? t.welcome : t.create}
+          </h3>
+
+          <div className="flex gap-3 rounded-[14px] border border-[rgba(20,184,166,0.22)] bg-[rgba(20,184,166,0.07)] px-4 py-3">
+            <span
+              aria-hidden
+              className="mt-1.5 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-[rgba(13,148,136,0.95)]"
+            />
+            <div className="min-w-0">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[rgba(11,90,98,0.88)]">
+                {portalNote.label}
+              </p>
+              <p className="mt-1 text-sm leading-5 text-[var(--muted-foreground)]">
+                {portalNote.text}
               </p>
             </div>
-            <div className="hidden rounded-[1.5rem] border border-white/22 bg-[rgba(255,255,255,0.14)] p-3 shadow-[0_16px_36px_rgba(10,22,40,0.06)] backdrop-blur-xl sm:block">
-              <BrandMark tone="light" className="h-10 w-10" />
-            </div>
-          </div>
-
-          <div className="space-y-1 rounded-[22px] border border-white/22 bg-[rgba(255,255,255,0.14)] px-4 py-4 backdrop-blur-xl">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--accent-strong)]/72">
-              {portalNote.label}
-            </p>
-            <p className="text-sm leading-6 text-[var(--muted-foreground)]">
-              {portalNote.text}
-            </p>
           </div>
 
           <form className="grid gap-4 sm:grid-cols-2" onSubmit={(e) => e.preventDefault()}>
@@ -309,7 +304,7 @@ export function AuthPortalCard({
 
             <button
               type="button"
-              className="denty-button-primary w-full cursor-pointer px-4 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60 sm:col-span-2"
+              className="w-full cursor-pointer rounded-[14px] bg-[linear-gradient(160deg,rgba(13,148,136,0.96),rgba(8,80,90,0.96))] px-4 py-3.5 text-sm font-semibold text-white shadow-[0_12px_28px_rgba(13,90,98,0.34)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60 sm:col-span-2"
               onClick={onSubmit}
               disabled={loading}
             >

@@ -67,7 +67,9 @@ export default function PublicProfilePage() {
 
   useEffect(() => {
     let cancelled = false;
-    if (!targetId) return;
+    // Wait until the viewer is loaded from sessionStorage — the backend
+    // requires a viewerIdentifier, so firing before viewer is ready 401s.
+    if (!targetId || !viewerIdentifier) return;
 
     const load = async () => {
       setLoading(true);

@@ -1,8 +1,10 @@
 "use client";
 
-import Link from "next/link";
+import { useState } from "react";
 import type { ConversationItem, MessageItem } from "@/features/chat/types/chat";
+import { senderColor } from "@/features/chat/utils/sender-color";
 import { useTranslation } from "@/features/i18n/language-provider";
+import { ProfilePopup } from "@/features/profiles/components/profile-popup";
 
 type PatientChatWorkspaceProps = {
   apiUrl: string;
@@ -40,6 +42,7 @@ export function PatientChatWorkspace({
   onSend,
 }: PatientChatWorkspaceProps) {
   const t = useTranslation();
+  const [profileTargetId, setProfileTargetId] = useState<string | null>(null);
   const isRoom = selectedConversation?.kind === "ROOM";
   const selectedTitle = isRoom
     ? selectedConversation?.title || t("patient.chat.shared_room")
@@ -195,9 +198,13 @@ export function PatientChatWorkspace({
                   </div>
                 </div>
               ) : selectedConversation.otherUser?.id ? (
-                <Link
-                  href={`/profiles/${selectedConversation.otherUser.id}`}
-                  className="flex min-w-0 items-center gap-3"
+                <button
+                  type="button"
+                  onClick={() =>
+                    selectedConversation.otherUser?.id &&
+                    setProfileTargetId(selectedConversation.otherUser.id)
+                  }
+                  className="flex min-w-0 cursor-pointer items-center gap-3 text-left"
                 >
                   <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[rgba(11,123,138,0.12)] text-base font-bold text-[rgba(8,68,78,0.96)] sm:h-12 sm:w-12">
                     {selectedConversation.otherUser?.avatar ? (
@@ -225,7 +232,7 @@ export function PatientChatWorkspace({
                       {selectedMeta}
                     </p>
                   </div>
-                </Link>
+                </button>
               ) : (
                 <div className="flex min-w-0 items-center gap-3">
                   <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[rgba(11,123,138,0.12)] text-base font-bold text-[rgba(8,68,78,0.96)] sm:h-12 sm:w-12">
@@ -249,12 +256,16 @@ export function PatientChatWorkspace({
               )}
 
               {!isRoom && selectedConversation.otherUser?.id ? (
-                <Link
-                  href={`/profiles/${selectedConversation.otherUser.id}`}
-                  className="denty-pill shrink-0 hover:bg-white/36"
+                <button
+                  type="button"
+                  onClick={() =>
+                    selectedConversation.otherUser?.id &&
+                    setProfileTargetId(selectedConversation.otherUser.id)
+                  }
+                  className="denty-pill shrink-0 cursor-pointer hover:bg-white/36"
                 >
                   {t("patient.common.profile")}
-                </Link>
+                </button>
               ) : (
                 <span className="denty-pill shrink-0">{t("patient.common.room")}</span>
               )}
@@ -276,12 +287,20 @@ export function PatientChatWorkspace({
                     >
                       {!mine && showSender ? (
                         <div className="mb-2">
-                          <Link
-                            href={`/profiles/${message.sender.id}`}
-                            className="text-xs font-semibold uppercase tracking-[0.14em] text-[rgba(10,22,40,0.52)] hover:text-[var(--foreground)]"
+                          <button
+                            type="button"
+                            onClick={() =>
+                              message.sender.id && setProfileTargetId(message.sender.id)
+                            }
+                            style={{
+                              color: senderColor(
+                                message.sender.id || message.sender.username || "?",
+                              ),
+                            }}
+                            className="cursor-pointer text-xs font-semibold uppercase tracking-[0.14em] transition hover:opacity-80"
                           >
                             {message.sender.name}
-                          </Link>
+                          </button>
                         </div>
                       ) : null}
                       {message.text ? <p className="text-sm">{message.text}</p> : null}
@@ -293,7 +312,11 @@ export function PatientChatWorkspace({
                           className="mt-2 max-h-56 rounded-lg border border-slate-600/70 object-cover"
                         />
                       ) : null}
-                      <p className="mt-2 text-[10px] text-sky-100/80">
+                      <p
+                        className={`mt-2 text-[10px] ${
+                          mine ? "text-sky-100/80" : "text-[rgba(10,22,40,0.52)]"
+                        }`}
+                      >
                         {new Date(message.createdAt || Date.now()).toLocaleString()}
                       </p>
                     </div>
@@ -342,6 +365,12 @@ export function PatientChatWorkspace({
           </div>
         )}
       </div>
+
+      <ProfilePopup
+        targetId={profileTargetId}
+        viewerIdentifier={userId ?? ""}
+        onClose={() => setProfileTargetId(null)}
+      />
     </div>
   );
 }

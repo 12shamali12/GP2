@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { RefObject } from "react";
+import { useMemo, useState, type RefObject } from "react";
 import { useTranslation } from "@/features/i18n/language-provider";
 import { useCountUp } from "@/features/ui/hooks/use-count-up";
 
@@ -16,14 +16,11 @@ type PatientCareDeskViewProps = {
   availableSlots: any[];
   history: any[];
   unreadNotifications: number;
-  selectedType: string;
   selectedMonth: number | "all";
   selectedYear: number | "all";
   selectedDay: Date | null;
   filteredDays: Date[];
-  clinicOptions: Array<{ id: string; name: string }>;
   caseOptions: Array<{ id: string; title: string; clinicName: string }>;
-  selectedClinicId: string;
   selectedClinicCaseId: string;
   bookingForm: {
     slotId: string;
@@ -37,11 +34,9 @@ type PatientCareDeskViewProps = {
   message: string | null;
   reservationRef: RefObject<HTMLDivElement | null>;
   onReserveClick: () => void;
-  onSelectedTypeChange: (value: string) => void;
   onSelectedMonthChange: (value: number | "all") => void;
   onSelectedYearChange: (value: number | "all") => void;
   onSelectedDayChange: (value: Date) => void;
-  onSelectedClinicChange: (value: string) => void;
   onSelectedClinicCaseChange: (value: string) => void;
   onSelectSlot: (slot: any) => void;
   onSelectAppointment: (appointment: any) => void;
@@ -52,38 +47,64 @@ export function PatientCareDeskView({
   availableSlots,
   history,
   unreadNotifications,
-  selectedType,
   selectedMonth,
   selectedYear,
   selectedDay,
   filteredDays,
-  clinicOptions,
   caseOptions,
-  selectedClinicId,
   selectedClinicCaseId,
   bookingForm,
   error,
   message,
   reservationRef,
   onReserveClick,
-  onSelectedTypeChange,
   onSelectedMonthChange,
   onSelectedYearChange,
   onSelectedDayChange,
-  onSelectedClinicChange,
   onSelectedClinicCaseChange,
   onSelectSlot,
   onSelectAppointment,
 }: PatientCareDeskViewProps) {
   const t = useTranslation();
-  const selectedClinic =
-    selectedClinicId === "all"
-      ? null
-      : clinicOptions.find((clinic) => clinic.id === selectedClinicId) || null;
   const selectedCase =
-    selectedClinicCaseId === "all"
+    selectedClinicCaseId === "" || selectedClinicCaseId === "all"
       ? null
       : caseOptions.find((clinicCase) => clinicCase.id === selectedClinicCaseId) || null;
+
+  // Group cases by clinic name so the picker reads as
+  // "Endodontics > [case, case, …], Pediatrics > [case, case, …]".
+  const groupedCases = useMemo(() => {
+    const map = new Map<string, typeof caseOptions>();
+    caseOptions.forEach((c) => {
+      const key = c.clinicName || "Other";
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(c);
+    });
+    return Array.from(map.entries()).map(([clinicName, cases]) => ({
+      clinicName,
+      cases,
+    }));
+  }, [caseOptions]);
+
+  const [openClinics, setOpenClinics] = useState<Record<string, boolean>>({});
+  const isOpen = (name: string) => openClinics[name] ?? true;
+  const toggleClinic = (name: string) =>
+    setOpenClinics((prev) => ({ ...prev, [name]: !isOpen(name) }));
+  const [caseSearch, setCaseSearch] = useState("");
+  const filteredGroups = useMemo(() => {
+    const needle = caseSearch.trim().toLowerCase();
+    if (!needle) return groupedCases;
+    return groupedCases
+      .map((group) => ({
+        ...group,
+        cases: group.cases.filter(
+          (c) =>
+            c.title.toLowerCase().includes(needle) ||
+            group.clinicName.toLowerCase().includes(needle),
+        ),
+      }))
+      .filter((group) => group.cases.length > 0);
+  }, [groupedCases, caseSearch]);
 
   return (
     <div className="space-y-5">
@@ -285,57 +306,118 @@ export function PatientCareDeskView({
           <span className="denty-pill">{t("patient.care.live_filtering")}</span>
         </div>
 
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
-              {t("patient.care.visit_intent")}
-            </label>
-            <select
-              value={selectedType}
-              onChange={(event) => onSelectedTypeChange(event.target.value)}
-              className="denty-field"
-            >
-              <option value="">{t("patient.care.all_visit_intents")}</option>
-              <option value="General">{t("patient.care.intent_general")}</option>
-              <option value="Check-up">{t("patient.care.intent_checkup")}</option>
-              <option value="Cleaning">{t("patient.care.intent_cleaning")}</option>
-              <option value="Pain/Urgent">{t("patient.care.intent_pain")}</option>
-              <option value="Whitening">{t("patient.care.intent_whitening")}</option>
-            </select>
-          </div>
-          <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
-              {t("patient.care.clinic")}
-            </label>
-            <select
-              value={selectedClinicId}
-              onChange={(event) => onSelectedClinicChange(event.target.value)}
-              className="denty-field"
-            >
-              <option value="all">{t("patient.care.all_clinics")}</option>
-              {clinicOptions.map((clinic) => (
-                <option key={clinic.id} value={clinic.id}>
-                  {clinic.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
-              {t("patient.care.case")}
-            </label>
-            <select
-              value={selectedClinicCaseId}
-              onChange={(event) => onSelectedClinicCaseChange(event.target.value)}
-              className="denty-field"
-            >
-              <option value="all">{t("patient.care.all_cases")}</option>
-              {caseOptions.map((clinicCase) => (
-                <option key={clinicCase.id} value={clinicCase.id}>
-                  {clinicCase.title}
-                </option>
-              ))}
-            </select>
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          <div className="space-y-2 md:col-span-2 xl:col-span-2">
+            <div className="flex flex-wrap items-end justify-between gap-2">
+              <label className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
+                {t("patient.care.case")}
+                <span className="ml-1 text-rose-500">*</span>
+              </label>
+              {selectedCase ? (
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-teal-300/35 bg-teal-400/12 px-2.5 py-1 text-[11px] font-semibold text-[var(--foreground)]">
+                  <span aria-hidden className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-teal-500/85 text-white">
+                    <svg width="9" height="9" viewBox="0 0 20 20" fill="none">
+                      <path d="M4 10L8 14L16 6" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </span>
+                  {selectedCase.title}
+                  <button
+                    type="button"
+                    onClick={() => onSelectedClinicCaseChange("")}
+                    className="ml-1 cursor-pointer rounded-full p-0.5 text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+                    aria-label="Clear selected case"
+                  >
+                    <svg width="10" height="10" viewBox="0 0 20 20" fill="none">
+                      <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+                    </svg>
+                  </button>
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-400/15 px-2.5 py-1 text-[11px] font-semibold text-[var(--foreground)]">
+                  <svg width="11" height="11" viewBox="0 0 20 20" fill="none" aria-hidden>
+                    <path d="M10 2v10M10 17h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  </svg>
+                  Pick a case to see slots
+                </span>
+              )}
+            </div>
+            <div className="rounded-[18px] border border-white/10 bg-white/22 p-2">
+              <div className="relative">
+                <span aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)]">
+                  <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
+                    <circle cx="9" cy="9" r="6" stroke="currentColor" strokeWidth="2" />
+                    <path d="M14 14L17 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  </svg>
+                </span>
+                <input
+                  type="text"
+                  value={caseSearch}
+                  onChange={(e) => setCaseSearch(e.target.value)}
+                  placeholder="Search cases…"
+                  className="denty-field w-full pl-9 text-sm"
+                />
+              </div>
+              <div className="mt-2 max-h-72 space-y-1 overflow-y-auto pr-1">
+                {filteredGroups.length === 0 ? (
+                  <p className="px-2 py-3 text-xs text-[var(--muted-foreground)]">
+                    No cases available right now.
+                  </p>
+                ) : (
+                  filteredGroups.map((group) => (
+                    <div key={group.clinicName}>
+                      <button
+                        type="button"
+                        onClick={() => toggleClinic(group.clinicName)}
+                        className="flex w-full items-center gap-2 rounded-[12px] px-2.5 py-2 text-left text-xs font-semibold uppercase tracking-[0.18em] text-[var(--foreground)] transition hover:bg-white/10"
+                      >
+                        <span
+                          aria-hidden
+                          className={`inline-flex h-4 w-4 items-center justify-center text-[var(--muted-foreground)] transition ${
+                            isOpen(group.clinicName) ? "rotate-90" : ""
+                          }`}
+                        >
+                          <svg width="10" height="10" viewBox="0 0 20 20" fill="none">
+                            <path d="M7 4L13 10L7 16" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </span>
+                        <span className="flex-1 truncate">{group.clinicName}</span>
+                        <span className="rounded-full border border-white/15 bg-white/8 px-2 py-0.5 text-[10px] font-semibold text-[var(--muted-foreground)]">
+                          {group.cases.length}
+                        </span>
+                      </button>
+                      {isOpen(group.clinicName) ? (
+                        <div className="ml-3 space-y-1 border-l border-white/10 pl-2">
+                          {group.cases.map((option) => {
+                            const active = option.id === selectedClinicCaseId;
+                            return (
+                              <button
+                                key={option.id}
+                                type="button"
+                                onClick={() => onSelectedClinicCaseChange(option.id)}
+                                className={`flex w-full items-center justify-between rounded-[12px] px-3 py-1.5 text-sm transition ${
+                                  active
+                                    ? "bg-teal-500/20 text-[var(--foreground)]"
+                                    : "text-[var(--foreground)] hover:bg-white/10"
+                                }`}
+                              >
+                                <span className="truncate text-left">{option.title}</span>
+                                {active ? (
+                                  <span aria-hidden className="ml-3 inline-flex h-5 w-5 items-center justify-center rounded-full bg-teal-500/85 text-white">
+                                    <svg width="11" height="11" viewBox="0 0 20 20" fill="none">
+                                      <path d="M4 10L8 14L16 6" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                  </span>
+                                ) : null}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      ) : null}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
           </div>
           <div className="space-y-2">
             <label className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
@@ -416,36 +498,68 @@ export function PatientCareDeskView({
           </div>
         </div>
 
-        <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
-            {t("patient.care.pick_day")}
-          </p>
-          <div className="grid max-h-72 grid-cols-7 gap-2 overflow-y-auto rounded-[22px] border border-[rgba(148,163,184,0.14)] bg-[rgba(244,245,247,0.88)] p-3">
-            {filteredDays.map((date) => (
-              <button
-                key={date.toISOString()}
-                onClick={() => onSelectedDayChange(date)}
-                className={`rounded-lg border px-2 py-3 text-sm ${
-                  selectedDay?.toDateString() === date.toDateString()
-                    ? "border-[rgba(11,123,138,0.18)] bg-[rgba(230,244,246,0.9)] text-[rgba(8,68,78,0.96)]"
-                    : "border-[rgba(148,163,184,0.16)] bg-white text-[var(--foreground)] hover:border-[rgba(11,123,138,0.18)]"
-                }`}
-              >
-                <span className="block text-xs">
-                  {date.toLocaleString(undefined, { month: "short" })}
-                </span>
-                <span className="text-lg font-bold">{date.getDate()}</span>
-              </button>
-            ))}
+        {selectedCase ? (
+          <div className="space-y-2">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
+              {t("patient.care.pick_day")}
+            </p>
+            <div className="denty-calendar-grid grid max-h-72 grid-cols-7 gap-2 overflow-y-auto rounded-[22px] border border-[rgba(148,163,184,0.14)] bg-[rgba(244,245,247,0.88)] p-3">
+              {filteredDays.length === 0 ? (
+                <p className="col-span-7 px-2 py-6 text-center text-sm text-[var(--muted-foreground)]">
+                  No open days for this case yet. Try a different case or clinic.
+                </p>
+              ) : (
+                filteredDays.map((date) => (
+                  <button
+                    key={date.toISOString()}
+                    onClick={() => onSelectedDayChange(date)}
+                    className={`denty-calendar-cell rounded-lg border px-2 py-3 text-sm ${
+                      selectedDay?.toDateString() === date.toDateString()
+                        ? "denty-calendar-cell-active border-[rgba(11,123,138,0.18)] bg-[rgba(230,244,246,0.9)] text-[rgba(8,68,78,0.96)]"
+                        : "border-[rgba(148,163,184,0.16)] bg-white text-[var(--foreground)] hover:border-[rgba(11,123,138,0.18)]"
+                    }`}
+                  >
+                    <span className="block text-xs">
+                      {date.toLocaleString(undefined, { month: "short" })}
+                    </span>
+                    <span className="text-lg font-bold">{date.getDate()}</span>
+                  </button>
+                ))
+              )}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="denty-placeholder flex flex-col items-center justify-center gap-3 rounded-[22px] border border-dashed border-white/14 p-8 text-center">
+            <span
+              aria-hidden
+              className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-teal-400/15 text-teal-200"
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M6 7a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12.5l-3-1.6-3 1.6-3-1.6-3 1.6V7Z"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  strokeLinejoin="round"
+                />
+                <path d="M9 10h6M9 13.5h4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+              </svg>
+            </span>
+            <p className="text-base font-semibold text-[var(--foreground)]">
+              Pick a case first
+            </p>
+            <p className="max-w-md text-sm text-[var(--muted-foreground)]">
+              Choose the procedure you need from the list above. We&apos;ll then show
+              you every doctor and slot that still has that case open.
+            </p>
+          </div>
+        )}
 
         {selectedDay ? (
           <div className="space-y-2">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
               {t("patient.care.slots_for", {
                 date: selectedDay.toDateString(),
-                intent: selectedType || t("patient.care.any_visit_intent"),
+                intent: selectedCase?.title || t("patient.care.any_visit_intent"),
               })}
             </p>
             <div className="space-y-2">
@@ -453,17 +567,14 @@ export function PatientCareDeskView({
                 .filter((slot) => {
                   const date = new Date(slot.startTime);
                   const sameDay = date.toDateString() === selectedDay.toDateString();
-                  const purpose = (slot.purpose || "").toLowerCase();
-                  const matchesType =
-                    !selectedType || purpose.includes(selectedType.toLowerCase());
                   const matchesClinic =
                     selectedClinicId === "all" || slot.clinic?.id === selectedClinicId;
                   const matchesCase =
-                    selectedClinicCaseId === "all" ||
+                    selectedClinicCaseId !== "" &&
                     (slot.caseOptions || []).some(
                       (item: any) => item.id === selectedClinicCaseId,
                     );
-                  return sameDay && matchesType && matchesClinic && matchesCase;
+                  return sameDay && matchesClinic && matchesCase;
                 })
                 .sort(
                   (a, b) =>
@@ -582,17 +693,14 @@ export function PatientCareDeskView({
               {availableSlots.filter((slot) => {
                 const date = new Date(slot.startTime);
                 const sameDay = date.toDateString() === selectedDay.toDateString();
-                const purpose = (slot.purpose || "").toLowerCase();
-                const matchesType =
-                  !selectedType || purpose.includes(selectedType.toLowerCase());
                 const matchesClinic =
                   selectedClinicId === "all" || slot.clinic?.id === selectedClinicId;
                 const matchesCase =
-                  selectedClinicCaseId === "all" ||
+                  selectedClinicCaseId !== "" &&
                   (slot.caseOptions || []).some(
                     (item: any) => item.id === selectedClinicCaseId,
                   );
-                return sameDay && matchesType && matchesClinic && matchesCase;
+                return sameDay && matchesClinic && matchesCase;
               }).length === 0 ? (
                 <div className="denty-dashboard-card-soft p-5 text-sm leading-7 text-[var(--muted-foreground)]">
                   {t("patient.care.no_slots_match")}

@@ -26,7 +26,8 @@ type NavItem = {
     | "leaderboard"
     | "profile"
     | "notifications"
-    | "chat";
+    | "chat"
+    | "cases";
   countKey?:
     | "pendingQueue"
     | "supervisorRequests"
@@ -88,6 +89,13 @@ const navItems: NavItem[] = [
     note: "Studio",
     icon: "calendar",
     countKey: "planning",
+  },
+  {
+    href: "/admin/cases",
+    labelKey: "nav.cases",
+    searchLabel: "Cases",
+    note: "Curriculum",
+    icon: "cases",
   },
   {
     href: "/admin/leaderboard",

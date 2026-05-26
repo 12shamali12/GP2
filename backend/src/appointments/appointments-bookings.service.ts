@@ -347,6 +347,60 @@ export class AppointmentsBookingsService extends AppointmentsBaseService {
     return { message: "Appointment completed.", appointment: completed };
   }
 
+  /**
+   * Auto-reject PENDING appointments whose slot has already passed.
+   *
+   * If a doctor never accepted or rejected a request and the slot time is now
+   * in the past, the request is treated as ignored. We delete the appointment
+   * (so the slot can be re-used in the next semester rollover), reopen the
+   * slot + any partner slot, log a REJECTED event for performance accounting,
+   * and notify the patient that their request expired without a response.
+   *
+   * Called lazily from `mine()` whenever a doctor or patient fetches their
+   * list, so no cron infrastructure is needed.
+   */
+  private async purgeStalePendingForUser(
+    userId: string,
+    role: "doctor" | "patient",
+  ): Promise<void> {
+    const now = new Date();
+    const where =
+      role === "doctor"
+        ? { doctorId: userId, status: AppointmentStatus.PENDING, slot: { startTime: { lt: now } } }
+        : { patientId: userId, status: AppointmentStatus.PENDING, slot: { startTime: { lt: now } } };
+
+    const stale = await this.prisma.appointment.findMany({
+      where,
+      include: { slot: true },
+    });
+    if (!stale.length) return;
+
+    for (const appt of stale) {
+      await this.prisma.$transaction(async (tx) => {
+        // Audit trail before delete.
+        await this.createEvent({
+          doctorId: appt.doctorId,
+          patientId: appt.patientId,
+          appointmentId: appt.id,
+          type: PerformanceEventType.REJECTED,
+        });
+        await tx.appointment.delete({ where: { id: appt.id } });
+        await tx.availabilitySlot.update({
+          where: { id: appt.slotId },
+          data: { status: SlotStatus.OPEN },
+        });
+        await this.reopenPartnerSlotTx(tx, appt as never);
+        await tx.notification.create({
+          data: {
+            title: "Appointment request expired",
+            body: "Your appointment request expired without a doctor response. Please book another slot.",
+            recipientId: appt.patientId,
+          },
+        });
+      });
+    }
+  }
+
   async mine(role: "doctor" | "patient", identifier: string) {
     const user = await this.findUserByIdentifier(identifier);
     const where =
@@ -356,6 +410,12 @@ export class AppointmentsBookingsService extends AppointmentsBaseService {
           ? { patientId: user.id }
           : null;
     if (!where) throw new BadRequestException("Invalid role.");
+
+    // Auto-reject any PENDING request whose slot has already passed.
+    // If the doctor never decided, the request is treated as ignored — the
+    // appointment is removed, the slot reopens, and the patient is told.
+    await this.purgeStalePendingForUser(user.id, role);
+
     return this.prisma.appointment.findMany({
       where,
       include: {
