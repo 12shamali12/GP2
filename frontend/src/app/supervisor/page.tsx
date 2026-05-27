@@ -372,6 +372,7 @@ export default function SupervisorPage() {
             sideRail={
               <SupervisorSideRail
                 userName={user.name || t("supervisor.common.supervisor")}
+                userAvatar={user.avatar}
                 activeView={activeSurface}
                 unreadNotifications={unreadNotifications}
                 chatUnreadCount={chatUnreadCount}

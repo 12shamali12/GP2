@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import type { Dispatch, SetStateAction } from "react";
+import { authHeaders } from "@/lib/api/auth";
 
 type UsePatientNotificationsParams = {
   apiUrl: string;
@@ -37,8 +38,15 @@ export function usePatientNotifications({
           )}`;
 
     try {
-      await fetch(endpoint, { method: "PATCH" });
-      setPatientNotifications((prev) => prev.filter((n) => n.id !== id));
+      await fetch(endpoint, { method: "PATCH", headers: authHeaders() });
+      // Reading marks-as-read; only delete should remove it from the list.
+      if (action === "read") {
+        setPatientNotifications((prev) =>
+          prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
+        );
+      } else {
+        setPatientNotifications((prev) => prev.filter((n) => n.id !== id));
+      }
     } catch {
       /* ignore */
     }
@@ -56,7 +64,7 @@ export function usePatientNotifications({
               `${apiUrl}/notifications/${
                 notification.id
               }/read?identifier=${encodeURIComponent(identifier)}`,
-              { method: "PATCH" }
+              { method: "PATCH", headers: authHeaders() }
             )
           )
       );

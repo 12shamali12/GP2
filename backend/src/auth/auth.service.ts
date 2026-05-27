@@ -443,9 +443,11 @@ export class AuthService {
     const user = await this.prisma.user.findFirst({
       where: {
         OR: [
+          { id: identifier },
           { email: identifier },
           { phone: identifier },
           { username: identifier },
+          { doctorIdNumber: identifier },
         ],
       },
     });
@@ -486,6 +488,7 @@ export class AuthService {
     const user = await this.prisma.user.findFirst({
       where: {
         OR: [
+          { id: identifier },
           { email: identifier },
           { phone: identifier },
           { username: identifier },

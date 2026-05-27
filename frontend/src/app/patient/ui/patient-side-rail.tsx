@@ -14,12 +14,15 @@ type ComingSoonContent = {
 
 type PatientSideRailProps = {
   userName: string;
+  userAvatar?: string | null;
   activeView:
     | "overview"
     | "profile"
     | "notifications"
     | "chat"
+    | "history"
     | "game"
+    | "leaderboard"
     | "settings";
   unreadNotifications: number;
   chatUnreadCount: number;
@@ -27,7 +30,9 @@ type PatientSideRailProps = {
   onProfile: () => void;
   onNotifications: () => void;
   onChat: () => void;
+  onHistory: () => void;
   onGame: () => void;
+  onLeaderboard: () => void;
   onSettings: () => void;
   onComingSoon: (content: ComingSoonContent) => void;
 };
@@ -154,6 +159,8 @@ type RailIdentityCardProps = {
   roleLabel: string;
   brandSubtitle: string;
   accent: RoleAccent;
+  /** Optional avatar URL — falls back to initials when omitted/empty. */
+  avatar?: string | null;
 };
 
 function RailIdentityCard({
@@ -162,6 +169,7 @@ function RailIdentityCard({
   roleLabel,
   brandSubtitle,
   accent,
+  avatar,
 }: RailIdentityCardProps) {
   const displayName = userName?.trim() || fallbackName;
   const initials = initialsOf(displayName);
@@ -170,9 +178,14 @@ function RailIdentityCard({
       <div className="flex items-center gap-3">
         <span
           aria-hidden
-          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/16 bg-[linear-gradient(140deg,rgba(255,255,255,0.18),rgba(255,255,255,0.06))] text-base font-semibold text-white shadow-[0_8px_18px_rgba(4,11,26,0.25)]"
+          className="inline-flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/16 bg-[linear-gradient(140deg,rgba(255,255,255,0.18),rgba(255,255,255,0.06))] text-base font-semibold text-white shadow-[0_8px_18px_rgba(4,11,26,0.25)]"
         >
-          {initials}
+          {avatar ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={avatar} alt="" className="h-full w-full object-cover" />
+          ) : (
+            initials
+          )}
         </span>
         <div className="denty-rail-copy min-w-0 flex-1">
           <p className="truncate text-base font-semibold text-white">{displayName}</p>
@@ -203,6 +216,7 @@ function RailIdentityCard({
 
 export function PatientSideRail({
   userName,
+  userAvatar,
   activeView,
   unreadNotifications,
   chatUnreadCount,
@@ -210,7 +224,9 @@ export function PatientSideRail({
   onProfile,
   onNotifications,
   onChat,
+  onHistory,
   onGame,
+  onLeaderboard,
   onSettings,
   onComingSoon,
 }: PatientSideRailProps) {
@@ -219,30 +235,18 @@ export function PatientSideRail({
   const accent = PATIENT_ACCENT;
   return (
     <div className="denty-rail-column">
+      <aside className="frozen-stage denty-collapsible-rail rounded-[22px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,70,76,0.97),rgba(9,42,48,0.97))] px-4 py-5 text-white backdrop-blur-[28px]">
+      <div className="flex min-h-full flex-col gap-3">
         <RailIdentityCard
           userName={userName}
+          avatar={userAvatar}
           fallbackName={t("auth.role.patient")}
           roleLabel={t("nav.role_chip.patient")}
           brandSubtitle={t("nav.brand.subtitle.patient")}
           accent={accent}
         />
+        <div className="mx-2 my-1 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
 
-      <aside className="frozen-stage denty-collapsible-rail rounded-[22px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,70,76,0.97),rgba(9,42,48,0.97))] px-4 py-5 text-white backdrop-blur-[28px]">
-      <div className="flex min-h-full flex-col gap-3">
-        <div className="mx-2 my-2 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-        <div className="denty-rail-section-label mb-1 px-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-white/56">
-          {t("nav.section.workspaces")}
-        </div>
-
-        <RailAction
-          eyebrow="Overview"
-          label={t("nav.care_desk")}
-          compactLabel="Desk"
-          icon="calendar"
-          active={activeView === "overview"}
-          accent={accent.bar}
-          onClick={onOverview}
-        />
         <RailAction
           eyebrow="Profile"
           label={t("nav.profile")}
@@ -251,6 +255,15 @@ export function PatientSideRail({
           active={activeView === "profile"}
           accent={accent.bar}
           onClick={onProfile}
+        />
+        <RailAction
+          eyebrow="Overview"
+          label={t("nav.care_desk")}
+          compactLabel="Desk"
+          icon="calendar"
+          active={activeView === "overview"}
+          accent={accent.bar}
+          onClick={onOverview}
         />
         <RailAction
           eyebrow="Alerts"
@@ -263,11 +276,6 @@ export function PatientSideRail({
           onClick={onNotifications}
         />
 
-        <div className="mx-2 my-2 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-        <div className="denty-rail-section-label mb-1 px-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-white/56">
-          {t("nav.section.communication")}
-        </div>
-
         <RailAction
           eyebrow="Direct"
           label={t("nav.chat")}
@@ -279,30 +287,14 @@ export function PatientSideRail({
           onClick={onChat}
         />
 
-        <div className="mx-2 my-2 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-        <div className="denty-rail-section-label mb-1 px-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-white/56">
-          {t("nav.section.later")}
-        </div>
-
         <RailAction
           eyebrow="History"
           label={t("nav.past_appointments")}
           compactLabel="History"
           icon="calendar"
-          muted
+          active={activeView === "history"}
           accent={accent.bar}
-          onClick={() =>
-            onComingSoon({
-              title: "Past appointments workspace",
-              description:
-                "This entry will become a dedicated history surface with filters, summaries, and clearer appointment outcomes.",
-              bullets: [
-                "Separated past and current care flows",
-                "Better search and filtering",
-                "Cleaner visit and outcome summaries",
-              ],
-            })
-          }
+          onClick={onHistory}
         />
         <RailAction
           eyebrow="Daily"
@@ -314,24 +306,13 @@ export function PatientSideRail({
           onClick={onGame}
         />
         <RailAction
-          eyebrow="In progress"
+          eyebrow="Standings"
           label={t("nav.leaderboard")}
           compactLabel="Rank"
           icon="leaderboard"
-          muted
+          active={activeView === "leaderboard"}
           accent={accent.bar}
-          onClick={() =>
-            onComingSoon({
-              title: "Leaderboard",
-              description:
-                "The leaderboard needs a fair ranking model and more meaning before it becomes a final feature.",
-              bullets: [
-                "Transparent scoring rules",
-                "Healthier participation goals",
-                "Rewards linked to actual usage",
-              ],
-            })
-          }
+          onClick={onLeaderboard}
         />
         <RailAction
           eyebrow="Preferences"

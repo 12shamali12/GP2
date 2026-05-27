@@ -187,6 +187,8 @@ model User {
   freezeActions         DoctorFreeze[]            @relation("DoctorFreezeBySupervisor")
   freezeHistory         DoctorFreeze[]            @relation("FrozenDoctor")
   quizAttempts          QuizAttempt[]             @relation("DoctorQuizAttempts")
+  smileCheckins         SmileCheckin[]            @relation("PatientSmileCheckins")
+  arcadeAttempts        ArcadeAttempt[]           @relation("PatientArcadeAttempts")
   createdAt             DateTime                  @default(now())
   updatedAt             DateTime                  @updatedAt
 
@@ -842,4 +844,51 @@ model QuizQuestion {
   updatedAt    DateTime @updatedAt
 
   @@index([category, active])
+}
+
+model SmileCheckin {
+  id                   String   @id @default(uuid())
+  patient              User     @relation("PatientSmileCheckins", fields: [patientId], references: [id], onDelete: Cascade)
+  patientId            String
+  // YYYY-MM-DD in Asia/Amman timezone — one check-in per patient per day.
+  dateKey              String
+  score                Int
+  brushingPatternDone  Boolean  @default(false)
+  flossed              Boolean  @default(false)
+  mouthwash            Boolean  @default(false)
+  water                Boolean  @default(false)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@unique([patientId, dateKey])
+  @@index([patientId, dateKey])
+}
+
+enum ArcadeGameType {
+  PLAQUE_BLASTER
+  TOOTH_DEFENDER
+  FLOSS_RUSH
+}
+
+// One arcade game attempt per patient, per game type, per Amman day.
+// Streak is derived from consecutive day-keys on the same gameType.
+// Best score per patient is MAX(score) over their attempts.
+model ArcadeAttempt {
+  id          String         @id @default(uuid())
+  patient     User           @relation("PatientArcadeAttempts", fields: [patientId], references: [id], onDelete: Cascade)
+  patientId   String
+  gameType    ArcadeGameType
+  // YYYY-MM-DD in Asia/Amman timezone — one attempt per patient per game per day.
+  dateKey     String
+  score       Int
+  // The streak level the patient was on when they started this attempt
+  // (1-indexed). Used to scale game difficulty client-side and to display
+  // "Level N" on the leaderboard.
+  streakLevel Int            @default(1)
+  durationMs  Int            @default(0)
+  completedAt DateTime       @default(now())
+
+  @@unique([patientId, gameType, dateKey])
+  @@index([gameType, score])
+  @@index([patientId, gameType, completedAt])
 }

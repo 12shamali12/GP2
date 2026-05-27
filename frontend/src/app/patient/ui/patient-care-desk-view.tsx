@@ -106,6 +106,25 @@ export function PatientCareDeskView({
       .filter((group) => group.cases.length > 0);
   }, [groupedCases, caseSearch]);
 
+  // Count slots that actually match the user's current filters so the
+  // "Availability" stat tile reflects the real subset they're looking at,
+  // not the raw `availableSlots.length` (which never moves).
+  const matchingSlotsCount = useMemo(() => {
+    return availableSlots.filter((slot) => {
+      const date = new Date(slot.startTime);
+      const monthOk =
+        selectedMonth === "all" || date.getMonth() === selectedMonth;
+      const yearOk =
+        selectedYear === "all" || date.getFullYear() === selectedYear;
+      const caseOk =
+        selectedClinicCaseId === "" ||
+        (slot.caseOptions || []).some(
+          (item: { id: string }) => item.id === selectedClinicCaseId,
+        );
+      return monthOk && yearOk && caseOk;
+    }).length;
+  }, [availableSlots, selectedClinicCaseId, selectedMonth, selectedYear]);
+
   return (
     <div className="space-y-5">
       <div className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
@@ -261,10 +280,12 @@ export function PatientCareDeskView({
               {t("patient.care.stat_availability")}
             </p>
             <p className="mt-3 text-2xl font-semibold text-[var(--foreground)]">
-              <StatCount value={availableSlots.length} />
+              <StatCount value={matchingSlotsCount} />
             </p>
             <p className="mt-2 text-sm text-[var(--muted-foreground)]">
-              {t("patient.care.stat_availability_note")}
+              {selectedClinicCaseId
+                ? `Slots offering ${selectedCase?.title ?? "the selected case"}.`
+                : "Total open slots — pick a case to narrow it down."}
             </p>
           </div>
           <div className="denty-stat-card p-4">
@@ -419,82 +440,80 @@ export function PatientCareDeskView({
               </div>
             </div>
           </div>
-          <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
-              {t("patient.care.month_year")}
-            </label>
-            <div className="flex gap-2">
-              <select
-                value={selectedMonth}
-                onChange={(event) =>
-                  onSelectedMonthChange(
-                    event.target.value === "all" ? "all" : Number(event.target.value),
-                  )
-                }
-                className="denty-field flex-1"
-              >
-                <option value="all">{t("patient.care.all_months")}</option>
-                {[...Array(12).keys()].map((month) => (
-                  <option key={month} value={month}>
-                    {new Date(2024, month, 1).toLocaleString(undefined, {
-                      month: "short",
-                    })}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={selectedYear}
-                onChange={(event) =>
-                  onSelectedYearChange(
-                    event.target.value === "all" ? "all" : Number(event.target.value),
-                  )
-                }
-                className="denty-field w-32"
-              >
-                <option value="all">{t("patient.care.all_years")}</option>
-                {[2024, 2025, 2026].map((year) => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                ))}
-              </select>
+          <div className="flex flex-col gap-3">
+            <div className="space-y-2">
+              <label className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
+                {t("patient.care.month_year")}
+              </label>
+              <div className="flex gap-2">
+                <select
+                  value={selectedMonth}
+                  onChange={(event) =>
+                    onSelectedMonthChange(
+                      event.target.value === "all" ? "all" : Number(event.target.value),
+                    )
+                  }
+                  className="denty-field flex-1"
+                >
+                  <option value="all">{t("patient.care.all_months")}</option>
+                  {[...Array(12).keys()].map((month) => (
+                    <option key={month} value={month}>
+                      {new Date(2024, month, 1).toLocaleString(undefined, {
+                        month: "short",
+                      })}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={selectedYear}
+                  onChange={(event) =>
+                    onSelectedYearChange(
+                      event.target.value === "all" ? "all" : Number(event.target.value),
+                    )
+                  }
+                  className="denty-field w-32"
+                >
+                  <option value="all">{t("patient.care.all_years")}</option>
+                  {[2024, 2025, 2026].map((year) => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-          </div>
-        </div>
 
-        <div className="grid gap-3 md:grid-cols-3">
-          <div className="rounded-[22px] border border-white/10 bg-white/22 p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
-              {t("patient.care.clinic_focus")}
-            </p>
-            <p className="mt-2 text-base font-semibold text-[var(--foreground)]">
-              {selectedClinic?.name || t("patient.care.all_clinics")}
-            </p>
-            <p className="mt-2 text-sm text-[var(--muted-foreground)]">
-              {t("patient.care.clinic_focus_note")}
-            </p>
-          </div>
-          <div className="rounded-[22px] border border-white/10 bg-white/22 p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
-              {t("patient.care.case_focus")}
-            </p>
-            <p className="mt-2 text-base font-semibold text-[var(--foreground)]">
-              {selectedCase?.title || t("patient.care.all_available_cases")}
-            </p>
-            <p className="mt-2 text-sm text-[var(--muted-foreground)]">
-              {t("patient.care.case_focus_note")}
-            </p>
-          </div>
-          <div className="rounded-[22px] border border-white/10 bg-white/22 p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
-              {t("patient.care.pair_booking")}
-            </p>
-            <p className="mt-2 text-base font-semibold text-[var(--foreground)]">
-              {t("patient.care.pair_booking_value")}
-            </p>
-            <p className="mt-2 text-sm text-[var(--muted-foreground)]">
-              {t("patient.care.pair_booking_note")}
-            </p>
+            <div className="flex-1 rounded-[18px] border border-white/10 bg-white/22 px-3 py-3">
+              <div className="flex items-center gap-2">
+                <span
+                  aria-hidden
+                  className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] ${
+                    selectedCase
+                      ? "bg-teal-500/85 text-white"
+                      : "border border-white/15 bg-white/10 text-[var(--muted-foreground)]"
+                  }`}
+                >
+                  {selectedCase ? (
+                    <svg width="11" height="11" viewBox="0 0 20 20" fill="none">
+                      <path d="M4 10L8 14L16 6" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  ) : (
+                    <svg width="11" height="11" viewBox="0 0 20 20" fill="none">
+                      <path d="M10 4V11M10 15h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                    </svg>
+                  )}
+                </span>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
+                  {t("patient.care.case_focus")}
+                </p>
+              </div>
+              <p className="mt-2 truncate text-sm font-semibold text-[var(--foreground)]" title={selectedCase?.title}>
+                {selectedCase?.title || t("patient.care.all_available_cases")}
+              </p>
+              <p className="mt-0.5 truncate text-[11px] text-[var(--muted-foreground)]">
+                {selectedCase?.clinicName ?? t("patient.care.clinic_focus_note")}
+              </p>
+            </div>
           </div>
         </div>
 
@@ -567,14 +586,12 @@ export function PatientCareDeskView({
                 .filter((slot) => {
                   const date = new Date(slot.startTime);
                   const sameDay = date.toDateString() === selectedDay.toDateString();
-                  const matchesClinic =
-                    selectedClinicId === "all" || slot.clinic?.id === selectedClinicId;
                   const matchesCase =
                     selectedClinicCaseId !== "" &&
                     (slot.caseOptions || []).some(
                       (item: any) => item.id === selectedClinicCaseId,
                     );
-                  return sameDay && matchesClinic && matchesCase;
+                  return sameDay && matchesCase;
                 })
                 .sort(
                   (a, b) =>
@@ -693,14 +710,12 @@ export function PatientCareDeskView({
               {availableSlots.filter((slot) => {
                 const date = new Date(slot.startTime);
                 const sameDay = date.toDateString() === selectedDay.toDateString();
-                const matchesClinic =
-                  selectedClinicId === "all" || slot.clinic?.id === selectedClinicId;
                 const matchesCase =
                   selectedClinicCaseId !== "" &&
                   (slot.caseOptions || []).some(
                     (item: any) => item.id === selectedClinicCaseId,
                   );
-                return sameDay && matchesClinic && matchesCase;
+                return sameDay && matchesCase;
               }).length === 0 ? (
                 <div className="denty-dashboard-card-soft p-5 text-sm leading-7 text-[var(--muted-foreground)]">
                   {t("patient.care.no_slots_match")}

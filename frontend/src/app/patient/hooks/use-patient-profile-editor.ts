@@ -1,6 +1,7 @@
 "use client";
 
 import type { Dispatch, SetStateAction } from "react";
+import { authHeaders } from "@/lib/api/auth";
 
 type PatientUser = {
   id?: string;
@@ -167,7 +168,7 @@ export function usePatientProfileEditor({
       if (pwdEditable || oldPassword || newPassword || confirmPassword) {
         const passwordResponse = await fetch(`${apiUrl}/auth/change-password`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...authHeaders() },
           body: JSON.stringify({
             identifier,
             currentPassword: oldPassword,
@@ -196,7 +197,7 @@ export function usePatientProfileEditor({
 
       const profileResponse = await fetch(`${apiUrl}/auth/update-profile`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeaders() },
         body: JSON.stringify(payload),
       });
       const profileData = await profileResponse.json();

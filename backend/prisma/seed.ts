@@ -141,6 +141,10 @@ async function resetDemoData(): Promise<void> {
   // QuizAttempt has FK to User — wipe attempts so user.deleteMany succeeds.
   // QuizQuestion is reference data and is preserved.
   await prisma.quizAttempt.deleteMany({});
+  // SmileCheckin has FK to User (patient) — wipe before users.
+  await prisma.smileCheckin.deleteMany({});
+  // ArcadeAttempt has FK to User (patient) — wipe before users.
+  await prisma.arcadeAttempt.deleteMany({});
 
   await prisma.semesterClinicCase.deleteMany({});
   await prisma.clinicExam.deleteMany({});
@@ -523,6 +527,169 @@ async function seedPatients() {
     patients.push(user);
   }
   return patients;
+}
+
+/**
+ * Seeds 7-21 days of smile-streak check-ins per patient so the leaderboard
+ * has realistic data. Each profile gets a different consistency level so
+ * the rankings spread out naturally:
+ *   - "all-star":   21 perfect days (full habits + brushing pattern)
+ *   - "consistent": 14 mostly-good days
+ *   - "casual":     7 mixed days
+ *   - "sporadic":   3 scattered days
+ *
+ * Dates use Asia/Amman day keys to match the SmileCheckin model's invariant.
+ */
+async function seedSmileCheckins(patients: User[]) {
+  log(`seeding smile-streak check-ins for ${patients.length} patients`);
+  const AMMAN_OFFSET_MS = 3 * 60 * 60 * 1000;
+  const todayLocal = new Date(Date.now() + AMMAN_OFFSET_MS);
+  const todayKey = todayLocal.toISOString().slice(0, 10);
+
+  // Profile picker: stable per patient by hashing username, so re-seeding is
+  // deterministic.
+  const profiles: ReadonlyArray<{ days: number; hitRate: number }> = [
+    { days: 21, hitRate: 0.95 },
+    { days: 14, hitRate: 0.78 },
+    { days: 7, hitRate: 0.6 },
+    { days: 3, hitRate: 0.4 },
+  ];
+
+  for (const patient of patients) {
+    let hash = 2166136261;
+    for (const c of patient.username) {
+      hash ^= c.charCodeAt(0);
+      hash = Math.imul(hash, 16777619) >>> 0;
+    }
+    const profile = profiles[hash % profiles.length];
+    const rows: {
+      patientId: string;
+      dateKey: string;
+      score: number;
+      brushingPatternDone: boolean;
+      flossed: boolean;
+      mouthwash: boolean;
+      water: boolean;
+    }[] = [];
+
+    for (let i = profile.days - 1; i >= 0; i -= 1) {
+      // Step back i Amman-days from today.
+      const d = new Date(todayLocal.getTime() - i * 24 * 60 * 60 * 1000);
+      const dateKey = d.toISOString().slice(0, 10);
+      if (dateKey > todayKey) continue;
+
+      // Per-day deterministic randomness so habit toggles spread naturally.
+      let r = (hash ^ (i * 2654435761)) >>> 0;
+      const next = () => {
+        r = (Math.imul(r ^ (r >>> 15), 2246822507) ^
+          Math.imul(r ^ (r >>> 13), 3266489909)) >>> 0;
+        return (r >>> 0) / 4294967296;
+      };
+
+      const brushing = next() < profile.hitRate;
+      const flossed = next() < profile.hitRate;
+      const mouthwash = next() < profile.hitRate;
+      const water = next() < profile.hitRate;
+      const score =
+        (brushing ? 40 : 0) +
+        (flossed ? 20 : 0) +
+        (mouthwash ? 20 : 0) +
+        (water ? 20 : 0);
+
+      rows.push({
+        patientId: patient.id,
+        dateKey,
+        score,
+        brushingPatternDone: brushing,
+        flossed,
+        mouthwash,
+        water,
+      });
+    }
+
+    if (rows.length > 0) {
+      await prisma.smileCheckin.createMany({
+        data: rows,
+        skipDuplicates: true,
+      });
+    }
+  }
+}
+
+/**
+ * Seed arcade attempts so the leaderboard isn't empty at demo time. Each
+ * patient gets a deterministic spread of attempts across the three games:
+ *   - 1-7 days of attempts per game
+ *   - Score range varies by game (Plaque Blaster ~400-2400, Tooth Defender
+ *     ~150-1500, Floss Rush ~80-900) to look like real play data.
+ */
+async function seedArcadeAttempts(patients: User[]) {
+  log(`seeding arcade attempts for ${patients.length} patients`);
+  const AMMAN_OFFSET_MS = 3 * 60 * 60 * 1000;
+  const todayLocal = new Date(Date.now() + AMMAN_OFFSET_MS);
+
+  // (game, baseScore, maxBoost) — boost scales with day-index so older
+  // attempts look "warmup" and newer ones approach personal bests.
+  const games = [
+    { type: "PLAQUE_BLASTER" as const, base: 380, maxBoost: 2000 },
+    { type: "TOOTH_DEFENDER" as const, base: 140, maxBoost: 1300 },
+    { type: "FLOSS_RUSH" as const, base: 70, maxBoost: 800 },
+  ];
+
+  for (const patient of patients) {
+    let hash = 2166136261;
+    for (const c of patient.username) {
+      hash ^= c.charCodeAt(0);
+      hash = Math.imul(hash, 16777619) >>> 0;
+    }
+
+    for (const game of games) {
+      // Per-patient skill factor 0..1 (some patients are pros, some aren't).
+      const skill =
+        (((hash ^ game.type.length * 2654435761) >>> 0) / 4294967296) * 0.9 +
+        0.1;
+      const days = 1 + ((hash >>> 3) % 7); // 1..7 days
+      const attempts: {
+        patientId: string;
+        gameType: "PLAQUE_BLASTER" | "TOOTH_DEFENDER" | "FLOSS_RUSH";
+        dateKey: string;
+        score: number;
+        streakLevel: number;
+        durationMs: number;
+        completedAt: Date;
+      }[] = [];
+      for (let i = days - 1; i >= 0; i -= 1) {
+        const d = new Date(todayLocal.getTime() - i * 24 * 60 * 60 * 1000);
+        const dateKey = d.toISOString().slice(0, 10);
+        // Streak level = consecutive days from oldest to newest (1..days).
+        const streakLevel = Math.min(10, days - i);
+        // Score climbs with streak level + skill noise.
+        let r = (hash ^ (i * 2246822507) ^ game.type.length) >>> 0;
+        r = (Math.imul(r ^ (r >>> 15), 2246822507) ^
+          Math.imul(r ^ (r >>> 13), 3266489909)) >>> 0;
+        const noise = (r >>> 0) / 4294967296;
+        const score = Math.round(
+          game.base +
+            game.maxBoost * skill * (streakLevel / 10) * (0.7 + noise * 0.6),
+        );
+        attempts.push({
+          patientId: patient.id,
+          gameType: game.type,
+          dateKey,
+          score,
+          streakLevel,
+          durationMs: 60_000 + Math.round(noise * 30_000),
+          completedAt: new Date(d.getTime() - AMMAN_OFFSET_MS),
+        });
+      }
+      if (attempts.length > 0) {
+        await prisma.arcadeAttempt.createMany({
+          data: attempts,
+          skipDuplicates: true,
+        });
+      }
+    }
+  }
 }
 
 async function seedClinics() {
@@ -1728,6 +1895,8 @@ async function main() {
   const supervisors = await seedSupervisors(admin.id);
   const { approved: doctors } = await seedDoctors(y4s2.id, y5s1.id, admin.id);
   const patients = await seedPatients();
+  await seedSmileCheckins(patients);
+  await seedArcadeAttempts(patients);
   const clinics = await seedClinics();
   const shifts = await seedShiftTemplates();
   const clinicCases = await seedSemesterClinicCases(

@@ -10,6 +10,10 @@ import {
   getGameLeaderboard,
   type GameLeaderboardSnapshot,
 } from "@/features/game/services/game-api";
+import {
+  getSmileLeaderboard,
+  type SmileLeaderboardSnapshot,
+} from "@/features/smile-streak/services/smile-streak-api";
 import { useTranslation } from "@/features/i18n/language-provider";
 
 const panelClass =
@@ -22,15 +26,51 @@ type LeaderboardViewProps = {
   loading?: boolean;
   /** When provided, the matching row is highlighted as "you" in the full table. */
   currentUserId?: string;
+  /**
+   * Render mode:
+   * - "both" (default): academic + game tabs.
+   * - "game-only": single game-leaderboard view, no tabs.
+   * - "academic-only": single academic view, no tabs.
+   * - "smile-only": single patient smile-streak leaderboard, no tabs.
+   */
+  mode?: "both" | "game-only" | "academic-only" | "smile-only";
+  /**
+   * Cohort filter for the game leaderboard. Backend defaults to the requester's
+   * own role when omitted, so this is mainly used to force PATIENT mode from
+   * the patient surface.
+   */
+  gameRole?: "DOCTOR" | "PATIENT";
 };
 
 export function LeaderboardView({
   snapshot,
   loading = false,
   currentUserId,
+  mode = "both",
+  gameRole,
 }: LeaderboardViewProps) {
-  const [tab, setTab] = useState<LeaderboardTab>("academic");
+  const [tab, setTab] = useState<LeaderboardTab>(
+    mode === "game-only" ? "game" : "academic",
+  );
   const t = useTranslation();
+
+  // Single-mode views skip the tab bar entirely so the leaderboard reads as
+  // one focused page instead of a one-option switch.
+  if (mode === "smile-only") {
+    return <SmileLeaderboard currentUserId={currentUserId} />;
+  }
+  if (mode === "game-only") {
+    return <GameLeaderboard currentUserId={currentUserId} role={gameRole} />;
+  }
+  if (mode === "academic-only") {
+    return (
+      <AcademicLeaderboard
+        snapshot={snapshot}
+        loading={loading}
+        currentUserId={currentUserId}
+      />
+    );
+  }
 
   return (
     <div className="space-y-5">
@@ -58,7 +98,7 @@ export function LeaderboardView({
           currentUserId={currentUserId}
         />
       ) : (
-        <GameLeaderboard currentUserId={currentUserId} />
+        <GameLeaderboard currentUserId={currentUserId} role={gameRole} />
       )}
     </div>
   );
@@ -392,9 +432,10 @@ function AcademicLeaderboard({
 
 type GameLeaderboardProps = {
   currentUserId?: string;
+  role?: "DOCTOR" | "PATIENT";
 };
 
-function GameLeaderboard({ currentUserId }: GameLeaderboardProps) {
+function GameLeaderboard({ currentUserId, role }: GameLeaderboardProps) {
   const [snapshot, setSnapshot] = useState<GameLeaderboardSnapshot | null>(
     null,
   );
@@ -406,7 +447,7 @@ function GameLeaderboard({ currentUserId }: GameLeaderboardProps) {
     setLoading(true);
     setError(null);
     try {
-      const data = await getGameLeaderboard();
+      const data = await getGameLeaderboard(role);
       setSnapshot(data);
     } catch (e: unknown) {
       const message =
@@ -417,7 +458,7 @@ function GameLeaderboard({ currentUserId }: GameLeaderboardProps) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [role]);
 
   // Lazy: only fetch when the Game tab actually mounts (which is exactly
   // when this component mounts).
@@ -544,6 +585,177 @@ function GameLeaderboard({ currentUserId }: GameLeaderboardProps) {
                   </p>
                   <p className="mt-2 text-lg font-semibold text-[var(--foreground)] sm:text-xl">
                     {entry.averageScore !== null ? entry.averageScore.toFixed(1) : "—"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
+// Smile-streak leaderboard (patient cohort, ranked by lifetime cumulative score)
+// =============================================================================
+
+type SmileLeaderboardProps = {
+  currentUserId?: string;
+};
+
+function SmileLeaderboard({ currentUserId }: SmileLeaderboardProps) {
+  const [snapshot, setSnapshot] = useState<SmileLeaderboardSnapshot | null>(
+    null,
+  );
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await getSmileLeaderboard();
+      setSnapshot(data);
+    } catch (e: unknown) {
+      const message =
+        e instanceof Error
+          ? e.message
+          : "Failed to load the smile-streak leaderboard.";
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const entries = snapshot?.entries ?? [];
+
+  return (
+    <div className={panelClass}>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="denty-kicker">Healthy Smile Standings</p>
+          <h2 className="mt-3 text-2xl font-semibold text-[var(--foreground)]">
+            Lifetime Smile Points
+          </h2>
+          <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--muted-foreground)]">
+            Patients ranked by lifetime smile-streak points (brushing pattern,
+            flossing, mouthwash, water). Daily check-ins are worth up to 100
+            points — keep your streak alive to climb the board.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => void load()}
+          disabled={loading}
+          className="inline-flex min-h-[2.5rem] cursor-pointer items-center justify-center rounded-[16px] border border-white/14 bg-white/30 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[rgba(10,22,40,0.7)] transition hover:bg-white/45 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {loading ? "Refreshing…" : "Refresh"}
+        </button>
+      </div>
+
+      {error ? (
+        <p className="mt-5 rounded-[20px] border border-rose-400/30 bg-rose-100/40 px-4 py-3 text-sm text-rose-900">
+          {error}
+        </p>
+      ) : null}
+
+      <div className="denty-enter-stagger mt-5 max-h-[54rem] space-y-3 overflow-y-auto pr-1">
+        {loading && !snapshot
+          ? Array.from({ length: 5 }).map((_, index) => (
+              <div key={index} className="denty-skeleton denty-skeleton-card" />
+            ))
+          : null}
+
+        {!loading && entries.length === 0 && !error ? (
+          <div className="rounded-[24px] border border-dashed border-white/16 bg-white/14 p-5">
+            <p className="text-sm text-[var(--muted-foreground)]">
+              No check-ins yet. Be the first to log a healthy smile!
+            </p>
+          </div>
+        ) : null}
+
+        {entries.map((entry) => {
+          const isCurrentUser =
+            Boolean(currentUserId) && entry.patient.id === currentUserId;
+          return (
+            <div
+              key={entry.patient.id}
+              className={`rounded-[24px] border p-4 shadow-[0_18px_42px_rgba(7,18,34,0.08)] backdrop-blur-[18px] ${
+                isCurrentUser
+                  ? "border-[rgba(7,111,133,0.45)] bg-[linear-gradient(180deg,rgba(176,224,238,0.55),rgba(154,206,224,0.32))] ring-2 ring-[rgba(7,111,133,0.4)]"
+                  : "border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.42),rgba(229,237,243,0.16))]"
+              }`}
+            >
+              <div className="grid gap-4 xl:grid-cols-[auto_minmax(0,1fr)_auto] xl:items-center">
+                <div className="inline-flex h-14 w-14 items-center justify-center overflow-hidden rounded-full border border-white/12 bg-[rgba(9,20,38,0.08)] text-lg font-semibold text-[var(--foreground)]">
+                  {entry.patient.avatar ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={entry.patient.avatar}
+                      alt=""
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    entry.rank
+                  )}
+                </div>
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-lg font-semibold text-[var(--foreground)]">
+                      #{entry.rank} · {entry.patient.name}
+                    </span>
+                    {isCurrentUser ? (
+                      <span className="rounded-full border border-[rgba(7,111,133,0.36)] bg-[rgba(7,111,133,0.18)] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-[rgba(6,83,98,0.96)]">
+                        You
+                      </span>
+                    ) : null}
+                    {entry.streak > 0 ? (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-[rgba(234,88,12,0.3)] bg-[rgba(254,215,170,0.4)] px-3 py-1 text-[11px] font-semibold text-[rgba(124,45,18,0.95)]">
+                        <span aria-hidden>🔥</span>
+                        {entry.streak} day streak
+                      </span>
+                    ) : null}
+                  </div>
+                  <p className="mt-1 text-sm text-[var(--muted-foreground)] wrap-break-word">
+                    @{entry.patient.username}
+                    {entry.lastCheckinAt
+                      ? ` · last check-in ${new Date(entry.lastCheckinAt).toLocaleDateString()}`
+                      : ""}
+                  </p>
+                </div>
+                <span className="rounded-full border border-[rgba(7,111,133,0.16)] bg-[rgba(7,111,133,0.1)] px-4 py-2 text-sm font-semibold text-[rgba(6,83,98,0.96)]">
+                  {entry.cumulative} pts
+                </span>
+              </div>
+
+              <div className="mt-4 grid grid-cols-3 gap-3">
+                <div className="rounded-[20px] border border-white/10 bg-white/30 px-3 py-3 sm:px-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[rgba(10,22,40,0.48)]">
+                    Check-ins
+                  </p>
+                  <p className="mt-2 text-lg font-semibold text-[var(--foreground)] sm:text-xl">
+                    {entry.checkinCount}
+                  </p>
+                </div>
+                <div className="rounded-[20px] border border-white/10 bg-white/30 px-3 py-3 sm:px-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[rgba(10,22,40,0.48)]">
+                    Best streak
+                  </p>
+                  <p className="mt-2 text-lg font-semibold text-[var(--foreground)] sm:text-xl">
+                    {entry.bestStreak}
+                  </p>
+                </div>
+                <div className="rounded-[20px] border border-white/10 bg-white/30 px-3 py-3 sm:px-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[rgba(10,22,40,0.48)]">
+                    Current streak
+                  </p>
+                  <p className="mt-2 text-lg font-semibold text-[var(--foreground)] sm:text-xl">
+                    {entry.streak}
                   </p>
                 </div>
               </div>

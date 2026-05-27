@@ -39,6 +39,16 @@ const QUIZ_POINTS_CAP = 30;
 const POINTS_PER_ATTEMPT_MAX = 3;
 const DAILY_QUESTION_COUNT = 10;
 
+/**
+ * Test-mode escape hatch: when `GAME_TEST_MODE=true` (set in backend/.env),
+ * the one-attempt-per-day guard is disabled so the demo flow can be exercised
+ * back-to-back without waiting for Amman midnight. MUST be flipped off (or
+ * unset) before any production / defense demo so streak integrity holds.
+ */
+function gameTestMode(): boolean {
+  return process.env.GAME_TEST_MODE === "true";
+}
+
 // --- timezone helpers (Asia/Amman, UTC+3) ---------------------------------
 function ammanDateKey(d: Date): string {
   const t = new Date(d.getTime() + 3 * 60 * 60 * 1000);
@@ -181,7 +191,7 @@ export class GameService {
     }
 
     return {
-      canPlay: !todayAttempt,
+      canPlay: gameTestMode() ? true : !todayAttempt,
       todayScore: todayAttempt
         ? {
             score: todayAttempt.score,
@@ -205,14 +215,16 @@ export class GameService {
     const todayKey = ammanDateKey(now);
     const resetAt = ammanNextMidnight(now);
 
-    const existing = await this.prisma.quizAttempt.findFirst({
-      where: { doctorId: user.id, completedAt: { gte: todayMidnight } },
-      select: { id: true },
-    });
-    if (existing) {
-      throw new ConflictException(
-        `Already played today. Try again after ${resetAt.toISOString()}.`,
-      );
+    if (!gameTestMode()) {
+      const existing = await this.prisma.quizAttempt.findFirst({
+        where: { doctorId: user.id, completedAt: { gte: todayMidnight } },
+        select: { id: true },
+      });
+      if (existing) {
+        throw new ConflictException(
+          `Already played today. Try again after ${resetAt.toISOString()}.`,
+        );
+      }
     }
 
     const bank = await this.prisma.quizQuestion.findMany({
@@ -225,7 +237,13 @@ export class GameService {
       );
     }
 
-    const seed = hash32(`${user.id}|${todayKey}`);
+    // In test mode reshuffle on every fetch so the tester sees fresh
+    // questions back-to-back; in normal mode the daily seed keeps the set
+    // deterministic so a refresh doesn't change the prompts mid-quiz.
+    const seedKey = gameTestMode()
+      ? `${user.id}|${todayKey}|${Date.now()}`
+      : `${user.id}|${todayKey}`;
+    const seed = hash32(seedKey);
     const shuffled = seededShuffle(bank, seed);
     const picked = shuffled.slice(0, Math.min(DAILY_QUESTION_COUNT, bank.length));
 
@@ -247,15 +265,17 @@ export class GameService {
     const todayKey = ammanDateKey(now);
     const resetAt = ammanNextMidnight(now);
 
-    // Guard: one attempt per Amman-day.
-    const existing = await this.prisma.quizAttempt.findFirst({
-      where: { doctorId: user.id, completedAt: { gte: todayMidnight } },
-      select: { id: true },
-    });
-    if (existing) {
-      throw new ConflictException(
-        `Already played today. Try again after ${resetAt.toISOString()}.`,
-      );
+    // Guard: one attempt per Amman-day (bypassed when GAME_TEST_MODE=true).
+    if (!gameTestMode()) {
+      const existing = await this.prisma.quizAttempt.findFirst({
+        where: { doctorId: user.id, completedAt: { gte: todayMidnight } },
+        select: { id: true },
+      });
+      if (existing) {
+        throw new ConflictException(
+          `Already played today. Try again after ${resetAt.toISOString()}.`,
+        );
+      }
     }
 
     const ids = Array.from(new Set(dto.answers.map((a) => a.questionId)));
@@ -338,15 +358,20 @@ export class GameService {
   // -------------------------------------------------------------------------
   // GET /game/leaderboard  — game-specific board (separate from /profiles)
   // -------------------------------------------------------------------------
-  async getLeaderboard() {
+  async getLeaderboard(roleFilter?: Role) {
     const now = new Date();
     const todayKey = ammanDateKey(now);
+    const effectiveRole = roleFilter ?? Role.DOCTOR;
 
     const [doctors, attempts] = await Promise.all([
       this.prisma.user.findMany({
         where: {
-          role: Role.DOCTOR,
-          doctorStatus: DoctorStatus.APPROVED,
+          role: effectiveRole,
+          // Only doctors are gated by the APPROVED status; patients have no
+          // such gate. Use the spread so the where clause stays clean.
+          ...(effectiveRole === Role.DOCTOR
+            ? { doctorStatus: DoctorStatus.APPROVED }
+            : {}),
           blocked: false,
           OR: [{ blockedUntil: null }, { blockedUntil: { lte: now } }],
         },
@@ -452,8 +477,12 @@ export class GameService {
   // helpers
   // -------------------------------------------------------------------------
   private requireDoctor(user: AuthUser) {
-    if (user.role !== Role.DOCTOR) {
-      throw new ForbiddenException("Only doctors can use the game endpoints.");
+    // The game is open to doctors and patients. Only block roles that
+    // shouldn't accrue quiz state (admin / supervisor / unauthenticated).
+    if (user.role !== Role.DOCTOR && user.role !== Role.PATIENT) {
+      throw new ForbiddenException(
+        "Only doctors and patients can use the game endpoints.",
+      );
     }
   }
 }

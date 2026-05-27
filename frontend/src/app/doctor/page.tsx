@@ -593,6 +593,7 @@ export default function DoctorPage() {
             sideRail={
               <DoctorSideRail
                 userName={user.name || t("doctor.common.doctor")}
+                userAvatar={user.avatar}
                 activeView={activeSurface}
                 unreadNotifications={unreadNotifications}
                 chatUnreadCount={chatUnreadCount}

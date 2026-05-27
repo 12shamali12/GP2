@@ -11,6 +11,8 @@ import { ChatModule } from "./chat/chat.module";
 import { ProfilesModule } from "./profiles/profiles.module";
 import { GameModule } from "./game/game.module";
 import { CasesModule } from "./cases/cases.module";
+import { SmileStreakModule } from "./smile-streak/smile-streak.module";
+import { ArcadeModule } from "./arcade/arcade.module";
 
 @Module({
   imports: [
@@ -23,6 +25,8 @@ import { CasesModule } from "./cases/cases.module";
     ProfilesModule,
     GameModule,
     CasesModule,
+    SmileStreakModule,
+    ArcadeModule,
   ],
   controllers: [AppController],
   providers: [AppService, SeedService],

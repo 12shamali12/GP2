@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useTranslation } from "@/features/i18n/language-provider";
 
 type PatientSlotModalProps = {
@@ -11,6 +10,8 @@ type PatientSlotModalProps = {
   onClose: () => void;
   onCancel: () => void;
   onReserve: () => void;
+  /** Open the inline profile popup instead of navigating away. */
+  onOpenProfile?: (doctorId: string) => void;
 };
 
 export function PatientSlotModal({
@@ -21,6 +22,7 @@ export function PatientSlotModal({
   onClose,
   onCancel,
   onReserve,
+  onOpenProfile,
 }: PatientSlotModalProps) {
   const t = useTranslation();
 
@@ -51,10 +53,12 @@ export function PatientSlotModal({
         <div className="grid gap-4 md:grid-cols-[0.9fr_1.1fr]">
           <div className="denty-dashboard-card-soft space-y-4 p-4 sm:p-5">
             <div className="flex items-center gap-3">
-              {slot.doctor?.id ? (
-                <Link
-                  href={`/profiles/${slot.doctor.id}`}
-                  className="denty-avatar-shell h-12 w-12 text-lg font-bold hover:scale-[1.02]"
+              {slot.doctor?.id && onOpenProfile ? (
+                <button
+                  type="button"
+                  onClick={() => onOpenProfile(slot.doctor.id)}
+                  className="denty-avatar-shell h-12 w-12 cursor-pointer text-lg font-bold hover:scale-[1.02]"
+                  title={t("patient.common.view_profile")}
                 >
                   {slot.doctor?.avatar ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -66,7 +70,7 @@ export function PatientSlotModal({
                   ) : (
                     (slot.doctor?.name || "D").charAt(0).toUpperCase()
                   )}
-                </Link>
+                </button>
               ) : (
                 <div className="denty-avatar-shell h-12 w-12 text-lg font-bold">
                   {slot.doctor?.avatar ? (
@@ -82,15 +86,16 @@ export function PatientSlotModal({
                 </div>
               )}
               <div>
-                {slot.doctor?.id ? (
-                  <Link
-                    href={`/profiles/${slot.doctor.id}`}
-                    className="text-lg font-semibold text-[var(--foreground)] hover:text-[rgba(7,111,133,0.96)]"
+                {slot.doctor?.id && onOpenProfile ? (
+                  <button
+                    type="button"
+                    onClick={() => onOpenProfile(slot.doctor.id)}
+                    className="cursor-pointer text-lg font-semibold text-[var(--foreground)] hover:text-[rgba(7,111,133,0.96)]"
                   >
                     {t("patient.appt.doctor_prefix", {
                       name: slot.doctor?.name || t("patient.common.unknown"),
                     })}
-                  </Link>
+                  </button>
                 ) : (
                   <p className="text-lg font-semibold text-[var(--foreground)]">
                     {t("patient.appt.doctor_prefix", {
@@ -147,13 +152,14 @@ export function PatientSlotModal({
               <p className="mt-3 text-sm leading-7 text-[var(--foreground)]">
                 {t("patient.slot.pair_aware_note")}
               </p>
-              {slot.doctor?.id ? (
-                <Link
-                  href={`/profiles/${slot.doctor.id}`}
-                  className="mt-4 inline-flex rounded-full border border-white/12 bg-white/28 px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[rgba(10,22,40,0.62)] hover:bg-white/38"
+              {slot.doctor?.id && onOpenProfile ? (
+                <button
+                  type="button"
+                  onClick={() => onOpenProfile(slot.doctor.id)}
+                  className="mt-4 inline-flex cursor-pointer rounded-full border border-white/12 bg-white/28 px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[rgba(10,22,40,0.62)] hover:bg-white/38"
                 >
                   {t("patient.common.view_profile")}
-                </Link>
+                </button>
               ) : null}
             </div>
           </div>

@@ -130,8 +130,12 @@ export const getMyAttempts = (): Promise<QuizAttempt[]> =>
 
 /**
  * Returns the game-specific leaderboard, ranked by `totalQuizPoints`.
+ * Optionally filter the cohort — patients see PATIENT, doctors default to DOCTOR.
  */
-export const getGameLeaderboard = (): Promise<GameLeaderboardSnapshot> =>
+export const getGameLeaderboard = (
+  role?: "DOCTOR" | "PATIENT",
+): Promise<GameLeaderboardSnapshot> =>
   httpJson<GameLeaderboardSnapshot>("/game/leaderboard", {
     headers: authHeaders(),
+    query: role ? { role } : undefined,
   });

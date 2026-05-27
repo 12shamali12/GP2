@@ -3,10 +3,12 @@ import {
   Controller,
   Get,
   Post,
+  Query,
   UnauthorizedException,
   UseGuards,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
+import { Role } from "@prisma/client";
 import { GameService } from "./game.service";
 import { SubmitQuizAttemptDto } from "./dto";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
@@ -48,8 +50,17 @@ export class GameController {
   }
 
   @Get("leaderboard")
-  getLeaderboard(@CurrentUser() user: AuthUser | undefined) {
+  getLeaderboard(
+    @CurrentUser() user: AuthUser | undefined,
+    @Query("role") role?: string,
+  ) {
     if (!user) throw new UnauthorizedException();
-    return this.gameService.getLeaderboard();
+    // Whitelist the values we actually support; default to the requester's
+    // own role so the rail tab always shows their cohort first.
+    let roleFilter: Role | undefined;
+    if (role === "PATIENT") roleFilter = Role.PATIENT;
+    else if (role === "DOCTOR") roleFilter = Role.DOCTOR;
+    else if (user.role === Role.PATIENT) roleFilter = Role.PATIENT;
+    return this.gameService.getLeaderboard(roleFilter);
   }
 }

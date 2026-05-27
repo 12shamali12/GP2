@@ -4,7 +4,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "@/features/i18n/language-provider";
 import { usePublicProfile } from "@/features/profiles/hooks/use-public-profile";
 import { SettingsPanel } from "@/features/settings/components/settings-panel";
-import { SmileStreakSurface } from "@/features/smile-streak/components/smile-streak-surface";
+import { ArcadeHub } from "@/features/arcade/components/arcade-hub";
+import { ArcadeLeaderboardView } from "@/features/arcade/components/arcade-leaderboard";
 import { PageHeader } from "@/features/ui/components/page-header";
 import { ComingSoonModal } from "@/features/ui/components/coming-soon-modal";
 import { RoleShellLayout } from "@/features/ui/components/role-shell-layout";
@@ -21,6 +22,8 @@ import { PatientNotificationsView } from "./ui/patient-notifications-view";
 import { PatientProfilePanel } from "./ui/patient-profile-panel";
 import { PatientSideRail } from "./ui/patient-side-rail";
 import { PatientSlotModal } from "./ui/patient-slot-modal";
+import { PatientHistoryView } from "./ui/patient-history-view";
+import { ProfilePopup } from "@/features/profiles/components/profile-popup";
 
 type PatientUser = {
   id?: string;
@@ -38,7 +41,9 @@ type PatientSurface =
   | "profile"
   | "notifications"
   | "chat"
+  | "history"
   | "game"
+  | "leaderboard"
   | "settings";
 
 export default function PatientPage() {
@@ -67,12 +72,30 @@ export default function PatientPage() {
   const [selectedAppointment, setSelectedAppointment] = useState<any | null>(
     null,
   );
+  // Filter state is persisted to sessionStorage so navigating to the public
+  // profile page (or any other page) and coming back via the browser's back
+  // button keeps the patient's case + day selection intact. Restore happens
+  // post-hydration via a `useEffect` (not in the useState initializer) so the
+  // server-rendered HTML matches the client's first render.
+  const PATIENT_FILTER_KEY = "patient.booking.filters.v1";
+  type PatientFilterSnapshot = {
+    selectedMonth: number | "all";
+    selectedYear: number | "all";
+    selectedDay: string | null; // ISO string
+    selectedClinicCaseId: string;
+  };
   const [selectedMonth, setSelectedMonth] = useState<number | "all">("all");
   const [selectedYear, setSelectedYear] = useState<number | "all">("all");
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   // Empty string means "patient hasn't picked a case yet" — slot list stays
   // hidden behind an empty-state hint until they choose one.
   const [selectedClinicCaseId, setSelectedClinicCaseId] = useState("");
+  // Guard against writing the empty defaults back over the restored snapshot
+  // on the very first mount before restoration completes.
+  const [filtersHydrated, setFiltersHydrated] = useState(false);
+  // Target user id for the in-page profile popup. Avoids navigating away to
+  // `/profiles/[id]` so the filter / slot state survives across profile views.
+  const [profileTargetId, setProfileTargetId] = useState<string | null>(null);
   const [cancellingId, setCancellingId] = useState("");
   const MAX_AVATAR_BYTES = 1.5 * 1024 * 1024;
   const MAX_AVATAR_BASE64_LEN = 1_800_000;
@@ -285,6 +308,60 @@ export default function PatientPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeSurface, conversations.length]);
 
+  // Hydrate booking filters from sessionStorage AFTER the initial render so
+  // the server-rendered HTML and the client's first render match (no
+  // hydration mismatch). Once this effect runs, `filtersHydrated` flips and
+  // subsequent state changes start writing back.
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      setFiltersHydrated(true);
+      return;
+    }
+    try {
+      const raw = sessionStorage.getItem(PATIENT_FILTER_KEY);
+      if (raw) {
+        const snapshot = JSON.parse(raw) as PatientFilterSnapshot;
+        if (snapshot.selectedMonth !== undefined)
+          setSelectedMonth(snapshot.selectedMonth);
+        if (snapshot.selectedYear !== undefined)
+          setSelectedYear(snapshot.selectedYear);
+        if (snapshot.selectedDay)
+          setSelectedDay(new Date(snapshot.selectedDay));
+        if (snapshot.selectedClinicCaseId !== undefined)
+          setSelectedClinicCaseId(snapshot.selectedClinicCaseId);
+      }
+    } catch {
+      /* malformed or unavailable — best-effort */
+    }
+    setFiltersHydrated(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Persist booking filters to sessionStorage so the case picker + chosen day
+  // survive navigation (e.g. "Open full profile" → back). Skip the very first
+  // pass before hydration restoration finishes so we don't overwrite the
+  // saved snapshot with the empty defaults.
+  useEffect(() => {
+    if (!filtersHydrated || typeof window === "undefined") return;
+    try {
+      const snapshot: PatientFilterSnapshot = {
+        selectedMonth,
+        selectedYear,
+        selectedDay: selectedDay ? selectedDay.toISOString() : null,
+        selectedClinicCaseId,
+      };
+      sessionStorage.setItem(PATIENT_FILTER_KEY, JSON.stringify(snapshot));
+    } catch {
+      /* quota or private-mode — best-effort */
+    }
+  }, [
+    filtersHydrated,
+    selectedMonth,
+    selectedYear,
+    selectedDay,
+    selectedClinicCaseId,
+  ]);
+
   const handleAttachChatImage = () => {
     const input = document.createElement("input");
     input.type = "file";
@@ -342,6 +419,24 @@ export default function PatientPage() {
         t("patient.surface.notifications.badge_inbox"),
         t("patient.surface.notifications.badge_updates"),
       ],
+    },
+    history: {
+      eyebrow: "Past appointments",
+      title: "Your appointment history",
+      description:
+        "Every appointment you've had — completed, cancelled, rejected, or marked no-show — with the doctor, clinic, and case at a glance.",
+      badges: [
+        `${history.length} total`,
+        "Searchable",
+        "Filter by status & year",
+      ],
+    },
+    leaderboard: {
+      eyebrow: "Standings",
+      title: "Toothie game leaderboard",
+      description:
+        "How you stack up against other Toothie game players. Score points by completing daily quizzes and growing your streak.",
+      badges: ["Daily quiz", "Streak rewards", "Live ranking"],
     },
     chat: {
       eyebrow: t("patient.surface.chat.eyebrow"),
@@ -403,6 +498,7 @@ export default function PatientPage() {
             sideRail={
               <PatientSideRail
                 userName={user.name || t("patient.common.patient")}
+                userAvatar={user.avatar}
                 activeView={activeSurface}
                 unreadNotifications={unreadPatientNotifications}
                 chatUnreadCount={chatUnreadCount}
@@ -410,7 +506,9 @@ export default function PatientPage() {
                 onProfile={() => setActiveSurface("profile")}
                 onNotifications={() => setActiveSurface("notifications")}
                 onChat={() => setActiveSurface("chat")}
+                onHistory={() => setActiveSurface("history")}
                 onGame={() => setActiveSurface("game")}
+                onLeaderboard={() => setActiveSurface("leaderboard")}
                 onSettings={() => setActiveSurface("settings")}
                 onComingSoon={setComingSoon}
               />
@@ -529,6 +627,22 @@ export default function PatientPage() {
               />
             </div>
 
+            <div className={activeSurface === "history" ? "denty-enter" : "hidden"}>
+              <PatientHistoryView
+                history={history}
+                onSelectAppointment={(appointment) =>
+                  setSelectedAppointment(appointment)
+                }
+                onOpenProfile={setProfileTargetId}
+              />
+            </div>
+
+            <div className={activeSurface === "leaderboard" ? "denty-enter" : "hidden"}>
+              <div className="denty-panel p-6 md:p-7">
+                <ArcadeLeaderboardView currentUserId={user.id} />
+              </div>
+            </div>
+
             <div className={activeSurface === "chat" ? "denty-enter" : "hidden"}>
               <PatientChatWorkspace
                 apiUrl={API_URL}
@@ -551,7 +665,9 @@ export default function PatientPage() {
 
             <div className={activeSurface === "game" ? "denty-enter" : "hidden"}>
               <div className="denty-panel p-6 md:p-7">
-                <SmileStreakSurface />
+                <ArcadeHub
+                  onOpenLeaderboard={() => setActiveSurface("leaderboard")}
+                />
               </div>
             </div>
 
@@ -577,6 +693,13 @@ export default function PatientPage() {
           setBookingForm((form) => ({ ...form, slotId: "" }));
         }}
         onReserve={handleBook}
+        onOpenProfile={setProfileTargetId}
+      />
+
+      <ProfilePopup
+        targetId={profileTargetId}
+        viewerIdentifier={user.id || user.email || user.phone || user.username || ""}
+        onClose={() => setProfileTargetId(null)}
       />
 
       <PatientAppointmentModal

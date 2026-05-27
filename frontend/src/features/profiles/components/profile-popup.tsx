@@ -82,12 +82,12 @@ export function ProfilePopup({ targetId, viewerIdentifier, onClose }: Props) {
         className="denty-modal-enter relative max-h-[90vh] w-full max-w-2xl overflow-hidden rounded-[28px] border border-white/12 bg-[rgba(8,30,38,0.94)] text-white shadow-[0_40px_140px_rgba(0,30,40,0.55)]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="relative h-32 overflow-hidden bg-[linear-gradient(120deg,rgba(15,118,110,0.95),rgba(8,145,178,0.82))]">
+        <div className="relative h-24 overflow-visible bg-[linear-gradient(120deg,rgba(15,118,110,0.95),rgba(8,145,178,0.82))]">
           <div className="absolute inset-0 opacity-30 [background:radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.4),transparent_60%)]" />
           <button
             type="button"
             onClick={onClose}
-            className="absolute right-4 top-4 inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-white/25 bg-white/10 text-white transition hover:bg-white/20"
+            className="absolute right-4 top-4 z-20 inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-white/25 bg-white/10 text-white transition hover:bg-white/20"
             aria-label="Close"
           >
             <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
@@ -99,14 +99,27 @@ export function ProfilePopup({ targetId, viewerIdentifier, onClose }: Props) {
               />
             </svg>
           </button>
+          {/* Avatar pinned to the bottom-left of the header band, half over,
+              half on the dark body — so the body text below starts cleanly. */}
+          <div className="absolute -bottom-10 left-6 z-10 flex h-20 w-20 items-center justify-center overflow-hidden rounded-[22px] border-4 border-[rgba(8,30,38,0.94)] bg-[linear-gradient(135deg,rgba(15,118,110,0.95),rgba(8,145,178,0.82))] text-xl font-bold text-white shadow-[0_18px_40px_rgba(0,0,0,0.35)] sm:left-8">
+            {profile?.avatar ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={profile.avatar}
+                alt={profile.name || "avatar"}
+                className="h-full w-full object-cover"
+              />
+            ) : profile ? (
+              initials(profile.name)
+            ) : (
+              "…"
+            )}
+          </div>
         </div>
 
-        <div className="px-6 pb-6 pt-4 sm:px-8 sm:pb-8">
-          <div className="flex flex-wrap items-start gap-4">
-            <div className="-mt-14 flex h-24 w-24 flex-none items-center justify-center rounded-[24px] border-4 border-[rgba(8,30,38,0.94)] bg-[linear-gradient(135deg,rgba(15,118,110,0.95),rgba(8,145,178,0.82))] text-2xl font-bold text-white shadow-[0_18px_40px_rgba(0,0,0,0.35)]">
-              {profile ? initials(profile.name) : "…"}
-            </div>
-            <div className="min-w-0 flex-1 pt-1">
+        <div className="px-6 pb-6 pl-32 pt-4 sm:px-8 sm:pb-8 sm:pl-36">
+          <div className="min-w-0">
+            <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-white/65">
                 {profile?.role ?? "Profile"}
               </p>

@@ -23,6 +23,7 @@ import { useTranslation } from "@/features/i18n/language-provider";
 import {
   ALL_BADGES,
   computeCumulative,
+  getAmmanDateKey,
   getNextAmmanMidnight,
   hasCheckedInToday,
   loadSmileData,
@@ -32,6 +33,12 @@ import {
   type SmileHabits,
   type SmileStreakData,
 } from "@/features/smile-streak/lib/storage";
+import {
+  getSmileStreak,
+  importSmileCheckins,
+  submitSmileCheckin,
+  type SmileCheckinPayload,
+} from "@/features/smile-streak/services/smile-streak-api";
 
 type SmilePhase =
   | { kind: "loading" }
@@ -86,18 +93,63 @@ export function SmileStreakSurface() {
   /* Bootstrap                                                            */
   /* -------------------------------------------------------------------- */
 
+  const applyData = useCallback(
+    (data: SmileStreakData, alreadyDone?: boolean) => {
+      // The server can override the "already done today" check (test mode
+      // returns false even when there's a row for today). Otherwise fall back
+      // to the local check so an offline tester still sees the right phase.
+      const done = alreadyDone ?? hasCheckedInToday(data);
+      if (done) {
+        setPhase({
+          kind: "already-done",
+          data,
+          resetIn: Math.max(0, getNextAmmanMidnight() - Date.now()),
+        });
+      } else {
+        setPhase({ kind: "step-brushing", data });
+      }
+    },
+    [],
+  );
+
   const bootstrap = useCallback(() => {
-    const data = loadSmileData();
-    if (hasCheckedInToday(data)) {
-      setPhase({
-        kind: "already-done",
-        data,
-        resetIn: Math.max(0, getNextAmmanMidnight() - Date.now()),
-      });
-    } else {
-      setPhase({ kind: "step-brushing", data });
-    }
-  }, []);
+    // Show local cache instantly so the page never sits on "loading"; the
+    // server fetch below replaces it once it returns.
+    const local = loadSmileData();
+    applyData(local);
+
+    void (async () => {
+      try {
+        // Migrate any localStorage-only entries to the server (skip-duplicates
+        // server-side so re-running is safe).
+        if (local.entries.length > 0) {
+          await importSmileCheckins(
+            local.entries.map((e) => ({
+              dateKey: e.date,
+              brushingPatternDone: e.score >= 40,
+              flossed: e.habits.flossed,
+              mouthwash: e.habits.mouthwash,
+              water: e.habits.water,
+            })),
+          );
+        }
+        const server = await getSmileStreak();
+        const merged: SmileStreakData = {
+          entries: server.entries.map((e) => ({
+            date: e.date,
+            score: e.score,
+            habits: e.habits,
+          })),
+          streak: server.streak,
+          bestStreak: server.bestStreak,
+          badgesEarned: server.badgesEarned,
+        };
+        applyData(merged, server.hasCheckedInToday);
+      } catch {
+        // Offline / unauthenticated — fall back to local-only mode.
+      }
+    })();
+  }, [applyData]);
 
   useEffect(() => {
     bootstrap();
@@ -152,6 +204,19 @@ export function SmileStreakSurface() {
     setPhase((prev) => {
       if (prev.kind !== "step-habits") return prev;
       const result = saveCheckin(prev.brushingPatternDone, habits);
+      // Fire-and-forget the server sync so the leaderboard updates without
+      // blocking the celebration screen. Local cache already shows the
+      // correct streak/badge state.
+      const payload: SmileCheckinPayload = {
+        dateKey: getAmmanDateKey(),
+        brushingPatternDone: prev.brushingPatternDone,
+        flossed: habits.flossed,
+        mouthwash: habits.mouthwash,
+        water: habits.water,
+      };
+      void submitSmileCheckin(payload).catch(() => {
+        /* offline / unauthenticated — local copy still saved */
+      });
       return {
         kind: "summary",
         data: result.data,

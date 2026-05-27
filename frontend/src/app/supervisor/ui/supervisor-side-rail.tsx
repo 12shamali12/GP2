@@ -14,6 +14,7 @@ type ComingSoonContent = {
 
 type SupervisorSideRailProps = {
   userName: string;
+  userAvatar?: string | null;
   activeView:
     | "overview"
     | "profile"
@@ -156,6 +157,8 @@ type RailIdentityCardProps = {
   roleLabel: string;
   brandSubtitle: string;
   accent: RoleAccent;
+  /** Optional avatar URL — falls back to initials when omitted/empty. */
+  avatar?: string | null;
 };
 
 function RailIdentityCard({
@@ -164,6 +167,7 @@ function RailIdentityCard({
   roleLabel,
   brandSubtitle,
   accent,
+  avatar,
 }: RailIdentityCardProps) {
   const displayName = userName?.trim() || fallbackName;
   const initials = initialsOf(displayName);
@@ -172,9 +176,14 @@ function RailIdentityCard({
       <div className="flex items-center gap-3">
         <span
           aria-hidden
-          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/16 bg-[linear-gradient(140deg,rgba(255,255,255,0.18),rgba(255,255,255,0.06))] text-base font-semibold text-white shadow-[0_8px_18px_rgba(4,11,26,0.25)]"
+          className="inline-flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/16 bg-[linear-gradient(140deg,rgba(255,255,255,0.18),rgba(255,255,255,0.06))] text-base font-semibold text-white shadow-[0_8px_18px_rgba(4,11,26,0.25)]"
         >
-          {initials}
+          {avatar ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={avatar} alt="" className="h-full w-full object-cover" />
+          ) : (
+            initials
+          )}
         </span>
         <div className="denty-rail-copy min-w-0 flex-1">
           <p className="truncate text-base font-semibold text-white">{displayName}</p>
@@ -205,6 +214,7 @@ function RailIdentityCard({
 
 export function SupervisorSideRail({
   userName,
+  userAvatar,
   activeView,
   unreadNotifications,
   chatUnreadCount,
@@ -226,6 +236,7 @@ export function SupervisorSideRail({
       <div className="flex min-h-full flex-col gap-3">
         <RailIdentityCard
           userName={userName}
+          avatar={userAvatar}
           fallbackName={t("auth.role.supervisor")}
           roleLabel={t("nav.role_chip.supervisor")}
           brandSubtitle={t("nav.brand.subtitle.supervisor")}
