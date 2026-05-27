@@ -40,7 +40,7 @@ const GAME_META: Record<
 > = {
   PLAQUE_BLASTER: {
     label: "Plaque Blaster",
-    tagline: "60 seconds. Tap fast. Don't bite the sugar.",
+    tagline: "30 seconds. Tap fast. Don't bite the sugar.",
     description:
       "A 5×3 grid of teeth. Plaque, gold cavities, brushes and sugar bombs spawn — tap to score, ignore the candy. Chain hits for combo multipliers.",
     emoji: "🦷",
@@ -323,22 +323,49 @@ export function ArcadeHub({ onOpenLeaderboard }: ArcadeHubProps) {
                     })}
                   </select>
                   {/* Best-at-this-level mini stat — refreshes when the player
-                      picks a different level in the dropdown. */}
+                      picks a different level in the dropdown. Shows "not
+                      played yet" when the slot is empty so a 0 doesn't look
+                      like a bad score. */}
                   {entry ? (
-                    <span className="text-[11px] text-white/80">
-                      Best at Lv {selected}:{" "}
-                      <span className="font-bold tabular-nums text-white">
-                        {(entry.bestScorePerLevel[selected - 1] ?? 0).toLocaleString()}
-                      </span>
-                    </span>
+                    (() => {
+                      const bestHere =
+                        entry.bestScorePerLevel?.[selected - 1] ?? 0;
+                      return (
+                        <span className="text-[11px] text-white/80">
+                          Best at Lv {selected}:{" "}
+                          {bestHere > 0 ? (
+                            <span className="font-bold tabular-nums text-white">
+                              {bestHere.toLocaleString()}
+                            </span>
+                          ) : (
+                            <span className="font-semibold text-white/55">
+                              not played yet
+                            </span>
+                          )}
+                        </span>
+                      );
+                    })()
                   ) : null}
                   {entry && entry.nextThreshold !== null ? (
-                    <span className="text-[10px] text-white/65">
-                      {(
-                        entry.nextThreshold - entry.bestScore
-                      ).toLocaleString()}{" "}
-                      more pts to unlock Level {unlocked + 1}
-                    </span>
+                    (() => {
+                      // Unlocks are sequential: the threshold must be earned
+                      // playing AT the highest unlocked level.
+                      const bestAtUnlocked =
+                        entry.bestScorePerLevel?.[unlocked - 1] ?? 0;
+                      const remaining = Math.max(
+                        0,
+                        entry.nextThreshold - bestAtUnlocked,
+                      );
+                      return (
+                        <span className="text-[10px] text-white/65">
+                          Score {remaining.toLocaleString()} more{" "}
+                          <span className="font-semibold text-white/85">
+                            at Lv {unlocked}
+                          </span>{" "}
+                          to unlock Lv {unlocked + 1}
+                        </span>
+                      );
+                    })()
                   ) : entry && entry.nextThreshold === null ? (
                     <span className="text-[10px] font-semibold text-amber-200">
                       ⭐ All 10 levels unlocked
@@ -632,7 +659,7 @@ function ArcadeResultCelebration({
           {result.newLevelUnlocked
             ? `Level ${result.unlockedLevel} is now playable from the dropdown. Tougher spawns, faster cadence, bigger rewards — go push your best.`
             : result.nextThreshold !== null
-              ? `${(result.nextThreshold - result.bestScore).toLocaleString()} more points and Level ${result.unlockedLevel + 1} unlocks.`
+              ? `Score ${result.nextThreshold.toLocaleString()} or more at Level ${result.unlockedLevel} to unlock Level ${result.unlockedLevel + 1}.`
               : "Level 10 — you've maxed out the unlocks. Now chase the leaderboard."}
         </p>
 

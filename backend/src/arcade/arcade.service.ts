@@ -38,29 +38,45 @@ const ALL_GAMES: ArcadeGameType[] = [
 ];
 
 /**
- * Score thresholds to unlock each level. Index 0 is the threshold to unlock
- * Level 2 (Level 1 is always unlocked), index 8 unlocks Level 10. The curves
- * are calibrated to each game's natural scoring rate.
+ * Score thresholds to unlock each level. Index 0 is the threshold for
+ * unlocking Level 2 — and importantly the score must be earned WHILE PLAYING
+ * Level 1, not just any best ever. So:
+ *   - thresholds[0] = score required AT Level 1 to unlock Level 2
+ *   - thresholds[1] = score required AT Level 2 to unlock Level 3
+ *   - ...
+ *   - thresholds[8] = score required AT Level 9 to unlock Level 10
+ *
+ * Unlocks are strictly sequential: you cannot skip levels by scoring high at
+ * a lower level. You must climb one at a time.
  */
 const LEVEL_THRESHOLDS: Record<ArcadeGameType, number[]> = {
-  // Plaque Blaster — 60s round, mid-game runs ~400-800.
-  PLAQUE_BLASTER: [300, 600, 1000, 1500, 2100, 2800, 3600, 4500, 5500],
+  // Plaque Blaster — 30s round, decent play scores ~200-400 at Level 1.
+  PLAQUE_BLASTER: [150, 300, 500, 750, 1050, 1400, 1800, 2250, 2750],
   // Tooth Defender — open-ended, each kill ~25-150 pts.
   TOOTH_DEFENDER: [500, 1000, 1800, 2800, 4000, 5500, 7000, 9000, 11000],
   // Floss Rush — score + distance, dies on first sugar.
   FLOSS_RUSH: [200, 500, 900, 1400, 2000, 2700, 3500, 4500, 5800],
 };
 
-/** Returns the highest level unlocked given a best score for that game. */
+/**
+ * Sequential unlock computation. To unlock Level N+1, the player must have
+ * scored at least `thresholds[N-1]` IN A RUN AT LEVEL N. A 9999 at Level 1
+ * still only unlocks Level 2.
+ */
 function computeUnlockedLevel(
   gameType: ArcadeGameType,
-  bestScore: number,
+  bestScorePerLevel: number[],
 ): number {
   const thresholds = LEVEL_THRESHOLDS[gameType];
   let unlocked = 1;
   for (let i = 0; i < thresholds.length; i += 1) {
-    if (bestScore >= thresholds[i]) unlocked = i + 2;
-    else break;
+    // To unlock level i+2, the player must have scored thresholds[i] at
+    // level i+1 (which is bestScorePerLevel[i]).
+    if ((bestScorePerLevel[i] ?? 0) >= thresholds[i]) {
+      unlocked = i + 2;
+    } else {
+      break;
+    }
   }
   return Math.min(10, unlocked);
 }
@@ -116,7 +132,8 @@ export class ArcadeService {
         0,
       );
       // Per-level best score, indexed 0..9 for levels 1..10. Lets the hub
-      // card show "Best at Level N: 1,200" when the patient picks a level.
+      // card show "Best at Level N: 1,200" when the patient picks a level,
+      // and drives the sequential unlock computation below.
       const bestScorePerLevel = Array<number>(10).fill(0);
       for (const a of mine) {
         const lv = Math.max(1, Math.min(10, a.streakLevel)) - 1;
@@ -124,9 +141,10 @@ export class ArcadeService {
       }
       const streak = computeStreak(dateKeys, todayKey);
       const playedToday = dateKeys.has(todayKey);
-      const unlockedLevel = computeUnlockedLevel(gameType, bestScore);
-      // Next threshold (score the patient still needs) for the next level,
-      // or null if Level 10 is already unlocked.
+      const unlockedLevel = computeUnlockedLevel(gameType, bestScorePerLevel);
+      // Next threshold = score needed AT the currently unlocked level to
+      // unlock the level after it. (e.g. unlocked=3 → need thresholds[2]
+      // at Level 3 to unlock Level 4.) Null if at Level 10.
       const nextThreshold =
         unlockedLevel >= 10
           ? null
@@ -172,13 +190,23 @@ export class ArcadeService {
 
     const past = await this.prisma.arcadeAttempt.findMany({
       where: { patientId: user.id, gameType: dto.gameType },
-      select: { dateKey: true, score: true },
+      select: { dateKey: true, score: true, streakLevel: true },
     });
+    // Build the prior per-level best table so we can compute unlocks
+    // sequentially (a 9999 at L1 still only unlocks L2).
+    const prevBestPerLevel = Array<number>(10).fill(0);
+    for (const a of past) {
+      const lv = Math.max(1, Math.min(10, a.streakLevel)) - 1;
+      if (a.score > prevBestPerLevel[lv]) prevBestPerLevel[lv] = a.score;
+    }
     const prevBest = past.reduce(
       (acc, a) => (a.score > acc ? a.score : acc),
       0,
     );
-    const unlockedBefore = computeUnlockedLevel(dto.gameType, prevBest);
+    const unlockedBefore = computeUnlockedLevel(
+      dto.gameType,
+      prevBestPerLevel,
+    );
     // Player picks their level from the unlocked range; we trust the DTO
     // but clamp defensively so a tampered client can't play Level 10 cold.
     const startedAtLevel = Math.min(
@@ -214,8 +242,18 @@ export class ArcadeService {
       },
     });
 
+    // Re-compute the per-level table with this attempt folded in, then
+    // derive the new unlocked level. Crucially, only the slot for
+    // startedAtLevel gets updated — earning Level 10 at Level 3 doesn't
+    // shortcut the climb.
+    const newBestPerLevel = prevBestPerLevel.slice();
+    const idx = startedAtLevel - 1;
+    if (attempt.score > newBestPerLevel[idx]) newBestPerLevel[idx] = attempt.score;
     const newBest = Math.max(prevBest, attempt.score);
-    const unlockedAfter = computeUnlockedLevel(dto.gameType, newBest);
+    const unlockedAfter = computeUnlockedLevel(
+      dto.gameType,
+      newBestPerLevel,
+    );
     const newLevelUnlocked = unlockedAfter > unlockedBefore;
 
     return {
@@ -227,7 +265,7 @@ export class ArcadeService {
       unlockedLevel: unlockedAfter,
       newLevelUnlocked,
       // If still climbing, surface the next threshold so the celebration
-      // can read "1500 to unlock Level 5".
+      // can read "1500 more at Level N to unlock Level N+1".
       nextThreshold:
         unlockedAfter >= 10
           ? null

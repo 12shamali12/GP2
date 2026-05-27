@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Plaque Blaster — 60-second tap-to-clean arcade game.
+ * Plaque Blaster — 30-second tap-to-clean arcade game.
  *
  * A 5×3 grid of teeth. Targets spawn on random cells; the player taps to
  * destroy them. Hit/miss timing, decoys, and spawn rate all escalate with
@@ -50,7 +50,7 @@ type SpawnedTarget = {
 const GRID_COLS = 5;
 const GRID_ROWS = 3;
 const TOTAL_CELLS = GRID_COLS * GRID_ROWS;
-const ROUND_DURATION_MS = 60_000;
+const ROUND_DURATION_MS = 30_000;
 
 const KIND_INFO: Record<
   TargetKind,
