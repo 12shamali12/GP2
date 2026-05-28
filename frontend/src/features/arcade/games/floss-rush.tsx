@@ -45,14 +45,29 @@ const ITEM_INFO: Record<
   sugar: { points: 0, emoji: "🍬", deadly: true },
 };
 
-function levelTuning(level: number) {
-  const lv = Math.max(1, Math.min(10, level));
+function levelTuning(level: number, elapsedSec = 0) {
+  // Lv 11 = endless. Starts at Lv 2 (slow scroll, low sugar) and climbs
+  // about one level every 15 seconds:
+  //   0s  → Lv 2     (calm scroll, easy collectibles)
+  //   30s → Lv 4
+  //   60s → Lv 6
+  //   90s → Lv 8
+  //   120s → Lv 10   (Lv 10-equivalent intensity)
+  //   180s → Lv 14   (beyond fixed-level peak)
+  const endless = level >= 11;
+  const baseLv = endless ? 2 : Math.max(1, Math.min(10, level));
+  const escalation = endless ? Math.min(12, elapsedSec / 15) : 0;
+  const lv = baseLv + escalation;
+  // Eased: slower scroll, less sugar, more gold. One-shot game-over on
+  // sugar is already punishing — keep the spawn density humane.
   return {
-    // px / second
-    baseSpeed: 280 + (lv - 1) * 32, // 280 → 568
-    spawnIntervalMs: Math.max(380, 950 - (lv - 1) * 65), // 950 → 380
-    sugarShare: 0.16 + (lv - 1) * 0.025, // 16% → 38%
-    goldShare: Math.max(0.04, 0.12 - (lv - 1) * 0.008),
+    // Slower base + tighter cap so endless stays controllable.
+    baseSpeed: Math.min(680, 250 + (lv - 1) * 26),
+    spawnIntervalMs: Math.max(320, 1000 - (lv - 1) * 60),
+    // Sugar grows more gently — Lv 10 used to be 38%, now 26%.
+    sugarShare: Math.min(0.4, 0.12 + (lv - 1) * 0.016),
+    // A bit more gold so collecting feels rewarding.
+    goldShare: Math.max(0.06, 0.14 - (lv - 1) * 0.007),
   };
 }
 
@@ -94,6 +109,9 @@ export function FlossRushGame({
   const [crashed, setCrashed] = useState(false);
 
   const itemsRef = useRef<Item[]>([]);
+  // DOM refs per item — used to apply translateX every frame without going
+  // through React state (which was the source of the laggy motion).
+  const itemNodesRef = useRef(new Map<number, HTMLDivElement | null>());
   const laneRef = useRef(lane);
   const startedAtRef = useRef<number>(performance.now());
   const lastFrameRef = useRef<number>(performance.now());
@@ -216,16 +234,19 @@ export function FlossRushGame({
     if (!running) return;
     let raf = 0;
 
-    const tuning = levelTuning(level);
-
     const tick = (now: number) => {
       const dt = (now - lastFrameRef.current) / 1000;
       lastFrameRef.current = now;
-      // Speed ramps with time inside the round so long runs get harder.
+      // Speed ramps with time inside the round so long runs get harder. In
+      // endless (Lv 11) the tuning itself also escalates with time.
       const elapsedSec = (now - startedAtRef.current) / 1000;
-      const speed = tuning.baseSpeed + Math.min(220, elapsedSec * 8);
+      const tuning = levelTuning(level, elapsedSec);
+      // Softer time-boost so long runs ramp up gradually instead of
+      // becoming impossible after 30 seconds.
+      const speed = tuning.baseSpeed + Math.min(140, elapsedSec * 4);
 
-      // Spawn
+      // Spawn — adds to membership, requires a setItems call.
+      let membershipChanged = false;
       if (now - lastSpawnRef.current > tuning.spawnIntervalMs) {
         lastSpawnRef.current = now;
         const r = Math.random();
@@ -241,15 +262,19 @@ export function FlossRushGame({
           kind,
         };
         itemsRef.current = [...itemsRef.current, newItem];
+        membershipChanged = true;
       }
 
-      // Advance items + collision
+      // Advance items + collision. Position updates happen in-place on
+      // itemsRef + via direct DOM transform mutation — NO setItems per frame.
       let collided = false;
       const next: Item[] = [];
       for (const it of itemsRef.current) {
         const nx = it.x - speed * dt;
-        if (nx < -40) continue;
-        // Collision if same lane and the item's x crossed the player's x.
+        if (nx < -40) {
+          membershipChanged = true;
+          continue;
+        }
         if (
           it.lane === laneRef.current &&
           it.x > PLAYER_X &&
@@ -262,7 +287,6 @@ export function FlossRushGame({
           } else {
             scoreRef.current += info.points;
             setScore(scoreRef.current);
-            // Gold tooth → biggest celebration; floss/water still substantial.
             const size: "xl" | "xxl" = it.kind === "gold" ? "xxl" : "xl";
             const color =
               it.kind === "gold"
@@ -270,16 +294,26 @@ export function FlossRushGame({
                 : "rgba(94,234,212,0.98)";
             popFloat(it.lane, PLAYER_X, `+${info.points}`, color, size);
           }
+          membershipChanged = true;
           continue;
         }
-        next.push({ ...it, x: nx });
+        it.x = nx;
+        next.push(it);
+        // Direct DOM transform update — bypasses React state entirely so
+        // motion stays at 60fps even with many items on screen.
+        const node = itemNodesRef.current.get(it.id);
+        if (node) {
+          node.style.transform = `translate3d(${nx - ITEM_RADIUS}px, 0, 0)`;
+        }
       }
       itemsRef.current = next;
-      setItems(next);
+      if (membershipChanged) setItems(next);
 
-      // Distance accrual (metres ≈ speed * dt / 12 just to keep number nice)
+      // Distance accrual. Throttle to integer increments so React only
+      // re-renders the HUD when the displayed number actually changes.
       distanceRef.current += (speed * dt) / 12;
-      setDistance(distanceRef.current);
+      const floored = Math.floor(distanceRef.current);
+      if (floored !== Math.floor(distance)) setDistance(distanceRef.current);
 
       if (collided) {
         setCrashed(true);
@@ -401,7 +435,9 @@ export function FlossRushGame({
           </div>
         </div>
 
-        {/* Items */}
+        {/* Items — positioned at left:0 then translated via DOM ref per
+            frame from the rAF loop, so scrolling stays at 60fps without
+            forcing React to re-render every tick. */}
         {items.map((it) => {
           const info = ITEM_INFO[it.kind];
           const top = (it.lane + 0.5) * (100 / LANES);
@@ -409,9 +445,19 @@ export function FlossRushGame({
             <div
               key={it.id}
               aria-hidden
-              className="absolute"
+              ref={(node) => {
+                if (node) {
+                  itemNodesRef.current.set(it.id, node);
+                  // Apply the initial position synchronously so the item
+                  // doesn't flash at left:0 before the next rAF tick.
+                  node.style.transform = `translate3d(${it.x - ITEM_RADIUS}px, 0, 0)`;
+                } else {
+                  itemNodesRef.current.delete(it.id);
+                }
+              }}
+              className="absolute will-change-transform"
               style={{
-                left: it.x - ITEM_RADIUS,
+                left: 0,
                 top: `calc(${top}% - ${ITEM_RADIUS}px)`,
               }}
             >

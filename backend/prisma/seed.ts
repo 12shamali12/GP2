@@ -643,12 +643,16 @@ async function seedArcadeAttempts(patients: User[]) {
       hash = Math.imul(hash, 16777619) >>> 0;
     }
 
+    // Hanan Talhouni gets every level pre-unlocked so the demo can test
+    // any difficulty without grinding. Other patients get a normal spread.
+    const isDemoUnlockAll = patient.username === "p.hanan.talhouni";
+
     for (const game of games) {
       // Per-patient skill factor 0..1 (some patients are pros, some aren't).
       const skill =
         (((hash ^ game.type.length * 2654435761) >>> 0) / 4294967296) * 0.9 +
         0.1;
-      const days = 1 + ((hash >>> 3) % 7); // 1..7 days
+
       const attempts: {
         patientId: string;
         gameType: "PLAQUE_BLASTER" | "TOOTH_DEFENDER" | "FLOSS_RUSH";
@@ -658,29 +662,57 @@ async function seedArcadeAttempts(patients: User[]) {
         durationMs: number;
         completedAt: Date;
       }[] = [];
-      for (let i = days - 1; i >= 0; i -= 1) {
-        const d = new Date(todayLocal.getTime() - i * 24 * 60 * 60 * 1000);
-        const dateKey = d.toISOString().slice(0, 10);
-        // Streak level = consecutive days from oldest to newest (1..days).
-        const streakLevel = Math.min(10, days - i);
-        // Score climbs with streak level + skill noise.
-        let r = (hash ^ (i * 2246822507) ^ game.type.length) >>> 0;
-        r = (Math.imul(r ^ (r >>> 15), 2246822507) ^
-          Math.imul(r ^ (r >>> 13), 3266489909)) >>> 0;
-        const noise = (r >>> 0) / 4294967296;
-        const score = Math.round(
-          game.base +
-            game.maxBoost * skill * (streakLevel / 10) * (0.7 + noise * 0.6),
-        );
-        attempts.push({
-          patientId: patient.id,
-          gameType: game.type,
-          dateKey,
-          score,
-          streakLevel,
-          durationMs: 60_000 + Math.round(noise * 30_000),
-          completedAt: new Date(d.getTime() - AMMAN_OFFSET_MS),
-        });
+
+      if (isDemoUnlockAll) {
+        // 11 attempts on 11 distinct prior days, one at each level. Scores
+        // are calibrated to comfortably clear every threshold so unlocks
+        // chain all the way to Lv 11.
+        for (let lv = 1; lv <= 11; lv += 1) {
+          const dayIdx = 11 - lv; // L1 = oldest, L11 = today-ish
+          const d = new Date(
+            todayLocal.getTime() - dayIdx * 24 * 60 * 60 * 1000,
+          );
+          const dateKey = d.toISOString().slice(0, 10);
+          // Score scales with level — generous enough to pass any threshold.
+          const score = Math.round(game.base + game.maxBoost * (lv / 10));
+          attempts.push({
+            patientId: patient.id,
+            gameType: game.type,
+            dateKey,
+            score,
+            streakLevel: lv,
+            durationMs: 60_000,
+            completedAt: new Date(d.getTime() - AMMAN_OFFSET_MS),
+          });
+        }
+      } else {
+        const days = 1 + ((hash >>> 3) % 7); // 1..7 days
+        for (let i = days - 1; i >= 0; i -= 1) {
+          const d = new Date(
+            todayLocal.getTime() - i * 24 * 60 * 60 * 1000,
+          );
+          const dateKey = d.toISOString().slice(0, 10);
+          // Streak level = consecutive days from oldest to newest (1..days).
+          const streakLevel = Math.min(11, days - i);
+          // Score climbs with streak level + skill noise.
+          let r = (hash ^ (i * 2246822507) ^ game.type.length) >>> 0;
+          r = (Math.imul(r ^ (r >>> 15), 2246822507) ^
+            Math.imul(r ^ (r >>> 13), 3266489909)) >>> 0;
+          const noise = (r >>> 0) / 4294967296;
+          const score = Math.round(
+            game.base +
+              game.maxBoost * skill * (streakLevel / 10) * (0.7 + noise * 0.6),
+          );
+          attempts.push({
+            patientId: patient.id,
+            gameType: game.type,
+            dateKey,
+            score,
+            streakLevel,
+            durationMs: 60_000 + Math.round(noise * 30_000),
+            completedAt: new Date(d.getTime() - AMMAN_OFFSET_MS),
+          });
+        }
       }
       if (attempts.length > 0) {
         await prisma.arcadeAttempt.createMany({

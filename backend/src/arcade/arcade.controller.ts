@@ -53,9 +53,9 @@ export class ArcadeController {
     let levelFilter: number | undefined;
     if (level !== undefined && level !== "") {
       const parsed = Number(level);
-      if (!Number.isInteger(parsed) || parsed < 1 || parsed > 10) {
+      if (!Number.isInteger(parsed) || parsed < 1 || parsed > 11) {
         throw new BadRequestException(
-          "Query parameter 'level' must be an integer between 1 and 10.",
+          "Query parameter 'level' must be an integer between 1 and 11.",
         );
       }
       levelFilter = parsed;

@@ -158,7 +158,7 @@ export function ArcadeLeaderboardView({
                 <option value="all" style={{ background: "#0a1729", color: "#fff" }}>
                   All levels
                 </option>
-                {Array.from({ length: 10 }).map((_, i) => {
+                {Array.from({ length: 11 }).map((_, i) => {
                   const lv = i + 1;
                   return (
                     <option
@@ -166,7 +166,7 @@ export function ArcadeLeaderboardView({
                       value={String(lv)}
                       style={{ background: "#0a1729", color: "#fff" }}
                     >
-                      Level {lv}
+                      {lv === 11 ? "Level 11 · Endless" : `Level ${lv}`}
                     </option>
                   );
                 })}

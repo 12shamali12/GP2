@@ -50,35 +50,54 @@ const ALL_GAMES: ArcadeGameType[] = [
  * a lower level. You must climb one at a time.
  */
 const LEVEL_THRESHOLDS: Record<ArcadeGameType, number[]> = {
-  // Plaque Blaster — 30s round, decent play scores ~200-400 at Level 1.
-  PLAQUE_BLASTER: [150, 300, 500, 750, 1050, 1400, 1800, 2250, 2750],
-  // Tooth Defender — open-ended, each kill ~25-150 pts.
-  TOOTH_DEFENDER: [500, 1000, 1800, 2800, 4000, 5500, 7000, 9000, 11000],
-  // Floss Rush — score + distance, dies on first sugar.
-  FLOSS_RUSH: [200, 500, 900, 1400, 2000, 2700, 3500, 4500, 5800],
+  // Plaque Blaster — 30s round. Hard but reachable curve: low Lv 1 bar so
+  // anyone gets through the first unlock, then steady steps that demand
+  // genuine improvement to keep climbing. Index 9 is the Lv 11 unlock.
+  PLAQUE_BLASTER: [200, 350, 500, 700, 900, 1150, 1400, 1700, 2000, 2400],
+  // Tooth Defender — open-ended. Each tier asks for a longer kill chain
+  // without breaching the tooth. Lowered another 10% (now ~28% off the
+  // original curve) so the early levels click without too many runs.
+  // Index 9 is the Lv 11 (endless) unlock.
+  TOOTH_DEFENDER: [360, 720, 1200, 1800, 2500, 3450, 4550, 5750, 7200, 9000],
+  // Floss Rush — score + distance, dies on first sugar. Slower ramp early,
+  // steeper at the top. Index 9 is the Lv 11 (endless) unlock.
+  FLOSS_RUSH: [200, 500, 900, 1400, 2000, 2700, 3500, 4500, 5800, 7200],
 };
 
 /**
- * Sequential unlock computation. To unlock Level N+1, the player must have
- * scored at least `thresholds[N-1]` IN A RUN AT LEVEL N. A 9999 at Level 1
- * still only unlocks Level 2.
+ * Sticky sequential unlock. Two rules combine so unlocks never regress:
+ *   1. STICKY FLOOR — once you've ever played Level N (any score), Level N
+ *      stays unlocked forever. Stops a later threshold bump from kicking
+ *      you back down.
+ *   2. THRESHOLD EXTENSION — from the floor, scoring `thresholds[i]` at
+ *      Level i+1 unlocks Level i+2 (sequential, no skipping).
  */
+/** Total level count (1..11). Level 11 is the endless "open" mode. */
+const MAX_LEVEL = 11;
+
 function computeUnlockedLevel(
   gameType: ArcadeGameType,
   bestScorePerLevel: number[],
 ): number {
   const thresholds = LEVEL_THRESHOLDS[gameType];
+  // Sticky floor: highest level the patient has ever played at (any score).
+  // Any non-zero slot means they completed at least one round at that level.
   let unlocked = 1;
-  for (let i = 0; i < thresholds.length; i += 1) {
-    // To unlock level i+2, the player must have scored thresholds[i] at
-    // level i+1 (which is bestScorePerLevel[i]).
+  for (let i = 0; i < MAX_LEVEL; i += 1) {
+    if ((bestScorePerLevel[i] ?? 0) > 0) {
+      unlocked = Math.max(unlocked, i + 1);
+    }
+  }
+  // Sequential extension: starting from the floor, see how far the player
+  // has climbed by hitting the per-level threshold.
+  for (let i = unlocked - 1; i < thresholds.length; i += 1) {
     if ((bestScorePerLevel[i] ?? 0) >= thresholds[i]) {
       unlocked = i + 2;
     } else {
       break;
     }
   }
-  return Math.min(10, unlocked);
+  return Math.min(MAX_LEVEL, unlocked);
 }
 
 // Count consecutive Amman days, ending at today/yesterday, with attempts for
@@ -134,9 +153,9 @@ export class ArcadeService {
       // Per-level best score, indexed 0..9 for levels 1..10. Lets the hub
       // card show "Best at Level N: 1,200" when the patient picks a level,
       // and drives the sequential unlock computation below.
-      const bestScorePerLevel = Array<number>(10).fill(0);
+      const bestScorePerLevel = Array<number>(MAX_LEVEL).fill(0);
       for (const a of mine) {
-        const lv = Math.max(1, Math.min(10, a.streakLevel)) - 1;
+        const lv = Math.max(1, Math.min(MAX_LEVEL, a.streakLevel)) - 1;
         if (a.score > bestScorePerLevel[lv]) bestScorePerLevel[lv] = a.score;
       }
       const streak = computeStreak(dateKeys, todayKey);
@@ -146,7 +165,7 @@ export class ArcadeService {
       // unlock the level after it. (e.g. unlocked=3 → need thresholds[2]
       // at Level 3 to unlock Level 4.) Null if at Level 10.
       const nextThreshold =
-        unlockedLevel >= 10
+        unlockedLevel >= MAX_LEVEL
           ? null
           : LEVEL_THRESHOLDS[gameType][unlockedLevel - 1];
       return {
@@ -194,9 +213,9 @@ export class ArcadeService {
     });
     // Build the prior per-level best table so we can compute unlocks
     // sequentially (a 9999 at L1 still only unlocks L2).
-    const prevBestPerLevel = Array<number>(10).fill(0);
+    const prevBestPerLevel = Array<number>(MAX_LEVEL).fill(0);
     for (const a of past) {
-      const lv = Math.max(1, Math.min(10, a.streakLevel)) - 1;
+      const lv = Math.max(1, Math.min(MAX_LEVEL, a.streakLevel)) - 1;
       if (a.score > prevBestPerLevel[lv]) prevBestPerLevel[lv] = a.score;
     }
     const prevBest = past.reduce(
@@ -267,7 +286,7 @@ export class ArcadeService {
       // If still climbing, surface the next threshold so the celebration
       // can read "1500 more at Level N to unlock Level N+1".
       nextThreshold:
-        unlockedAfter >= 10
+        unlockedAfter >= MAX_LEVEL
           ? null
           : LEVEL_THRESHOLDS[dto.gameType][unlockedAfter - 1],
     };

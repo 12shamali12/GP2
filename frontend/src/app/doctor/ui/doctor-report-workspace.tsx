@@ -200,7 +200,37 @@ export function DoctorReportWorkspace({
                         <div className="flex flex-wrap gap-2">
                           <span className="denty-pill">{appointment.status}</span>
                           {appointment.report?.status ? (
-                            <span className="denty-pill">{appointment.report.status}</span>
+                            (() => {
+                              const s = appointment.report.status;
+                              // Color-code so the doctor immediately sees a
+                              // rejection or edit-request without having to
+                              // open the appointment.
+                              const cls =
+                                s === "NEEDS_EDIT"
+                                  ? "border-amber-500/60 bg-amber-500/85 text-white"
+                                  : s === "CASE_REJECTED"
+                                    ? "border-rose-500/60 bg-rose-500/85 text-white"
+                                    : s === "REVIEWED"
+                                      ? "border-emerald-500/60 bg-emerald-500/85 text-white"
+                                      : "border-sky-500/60 bg-sky-500/85 text-white";
+                              const label =
+                                s === "NEEDS_EDIT"
+                                  ? "Needs edit"
+                                  : s === "CASE_REJECTED"
+                                    ? "Case rejected — redo"
+                                    : s === "REVIEWED"
+                                      ? "Reviewed"
+                                      : s === "SUBMITTED"
+                                        ? "Submitted"
+                                        : s;
+                              return (
+                                <span
+                                  className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] ${cls}`}
+                                >
+                                  {label}
+                                </span>
+                              );
+                            })()
                           ) : null}
                         </div>
                       </div>

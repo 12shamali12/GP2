@@ -26,6 +26,7 @@ import { PlaqueBlasterGame } from "@/features/arcade/games/plaque-blaster";
 import { ToothDefenderGame } from "@/features/arcade/games/tooth-defender";
 import { FlossRushGame } from "@/features/arcade/games/floss-rush";
 import { QuitConfirmModal } from "@/features/arcade/components/quit-confirm-modal";
+import { ArcadeIntroCard } from "@/features/arcade/components/arcade-intro-card";
 
 const GAME_META: Record<
   ArcadeGameType,
@@ -221,18 +222,57 @@ export function ArcadeHub({ onOpenLeaderboard }: ArcadeHubProps) {
 
   return (
     <div className="space-y-5">
-      <div className="rounded-[24px] border border-white/12 bg-[linear-gradient(180deg,rgba(249,252,255,0.78),rgba(222,233,241,0.34))] p-5 shadow-[0_28px_72px_rgba(7,18,34,0.16)] backdrop-blur-[24px] sm:p-6">
-        <p className="denty-kicker">Daily Arcade</p>
-        <h2 className="mt-3 text-2xl font-semibold text-[var(--foreground)]">
-          One run per game, per day
-        </h2>
-        <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--muted-foreground)]">
-          Three competitive mini-games. Each game has its own leaderboard,
-          ranked by your best score. Keep your streak alive — every consecutive
-          day raises the difficulty by one level (up to Level 10).
-        </p>
+      {/* Hub header — arcade-flavored: dark themed bg, animated tooth mascot,
+          three colored pill badges, gradient title. */}
+      <div
+        className="relative overflow-hidden rounded-[24px] border border-white/14 p-5 text-white shadow-[0_28px_72px_rgba(7,18,34,0.32)] backdrop-blur-[24px] sm:p-7"
+        style={{
+          background:
+            "radial-gradient(900px circle at 15% 0%, rgba(94,234,212,0.28), transparent 55%), radial-gradient(700px circle at 95% 100%, rgba(244,114,182,0.28), transparent 55%), linear-gradient(160deg, rgba(8,18,38,0.96) 0%, rgba(15,32,56,0.96) 50%, rgba(8,18,38,0.96) 100%)",
+        }}
+      >
+        <span
+          aria-hidden
+          className="pointer-events-none absolute -top-6 -right-6 h-44 w-44 rounded-full bg-[radial-gradient(circle,rgba(94,234,212,0.35),transparent_70%)] blur-2xl"
+        />
+        <div className="relative flex flex-wrap items-center gap-4">
+          <span
+            aria-hidden
+            className="inline-flex h-14 w-14 items-center justify-center rounded-[18px] bg-[linear-gradient(135deg,rgba(94,234,212,0.95),rgba(20,184,166,0.7))] text-3xl shadow-[0_14px_30px_rgba(2,6,18,0.5)] sm:h-16 sm:w-16 sm:text-4xl"
+            style={{
+              animation: "denty-pulse 2400ms ease-in-out infinite",
+            }}
+          >
+            🦷
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-[11px] font-bold uppercase tracking-[0.32em] text-cyan-200/80">
+              Toothie&apos;s Games
+            </p>
+            <h2 className="mt-1 bg-[linear-gradient(135deg,#bef264,#5eead4,#a5b4fc)] bg-clip-text text-3xl font-extrabold text-transparent sm:text-4xl">
+              Three games. Eleven levels. One leaderboard each.
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-white/80">
+              Play once per game per day. Score the per-level threshold to
+              unlock the next difficulty. Reach <span className="font-bold text-amber-200">Lv 11 Endless</span> for an open run with no timer — survive as long as you can.
+            </p>
+          </div>
+        </div>
+        {/* Quick badges per game, color-coded to match the cards below. */}
+        <div className="relative mt-5 flex flex-wrap gap-2">
+          {GAME_ORDER.map((g) => (
+            <span
+              key={g}
+              className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/90"
+              style={{ background: GAME_META[g].gradient }}
+            >
+              <span aria-hidden>{GAME_META[g].emoji}</span>
+              {GAME_META[g].label}
+            </span>
+          ))}
+        </div>
         {error ? (
-          <p className="mt-3 rounded-[16px] border border-rose-400/30 bg-rose-100/40 px-4 py-2 text-sm text-rose-900">
+          <p className="relative mt-3 rounded-[16px] border border-rose-400/30 bg-rose-500/14 px-4 py-2 text-sm text-rose-100">
             {error}
           </p>
         ) : null}
@@ -255,12 +295,9 @@ export function ArcadeHub({ onOpenLeaderboard }: ArcadeHubProps) {
               style={{ background: meta.gradient }}
             >
               <div className="relative z-10 flex h-full flex-col gap-4 p-5 sm:p-6">
-                <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
                   <span className="text-4xl drop-shadow-[0_4px_10px_rgba(7,18,34,0.4)]" aria-hidden>
                     {meta.emoji}
-                  </span>
-                  <span className="rounded-full border border-white/30 bg-white/14 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/90">
-                    {locked ? "Played today" : "Ready"}
                   </span>
                 </div>
                 <div>
@@ -275,12 +312,15 @@ export function ArcadeHub({ onOpenLeaderboard }: ArcadeHubProps) {
 
                 <div className="mt-auto grid grid-cols-2 gap-2">
                   <StatChip
-                    label="Best"
-                    value={entry?.bestScore.toLocaleString() ?? "—"}
+                    label={`Best at Lv ${selected}`}
+                    value={(() => {
+                      const v = entry?.bestScorePerLevel?.[selected - 1] ?? 0;
+                      return v > 0 ? v.toLocaleString() : "—";
+                    })()}
                   />
                   <StatChip
                     label="Unlocked"
-                    value={`Lv ${unlocked}/10`}
+                    value={`Lv ${unlocked}/11`}
                   />
                 </div>
 
@@ -301,10 +341,18 @@ export function ArcadeHub({ onOpenLeaderboard }: ArcadeHubProps) {
                     disabled={locked}
                     className="cursor-pointer rounded-[14px] border border-white/30 bg-[rgba(4,10,22,0.55)] px-3 py-2 text-sm font-bold text-white outline-none transition hover:bg-[rgba(4,10,22,0.7)] focus:border-white/60 disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    {Array.from({ length: 10 }).map((_, i) => {
+                    {Array.from({ length: 11 }).map((_, i) => {
                       const lv = i + 1;
                       const isLocked = lv > unlocked;
                       const threshold = entry?.thresholds[lv - 2];
+                      const label =
+                        lv === 11
+                          ? isLocked
+                            ? `🔒 Level 11 · Endless — need ${threshold?.toLocaleString() ?? "?"}`
+                            : "♾️ Level 11 · Endless"
+                          : isLocked
+                            ? `🔒 Level ${lv} — need ${threshold?.toLocaleString() ?? "?"}`
+                            : `Level ${lv}${lv === 1 ? " (start)" : ""}`;
                       return (
                         <option
                           key={lv}
@@ -315,36 +363,21 @@ export function ArcadeHub({ onOpenLeaderboard }: ArcadeHubProps) {
                             color: isLocked ? "rgba(255,255,255,0.45)" : "#fff",
                           }}
                         >
-                          {isLocked
-                            ? `🔒 Level ${lv} — need ${threshold?.toLocaleString() ?? "?"}`
-                            : `Level ${lv}${lv === 1 ? " (start)" : ""}`}
+                          {label}
                         </option>
                       );
                     })}
                   </select>
-                  {/* Best-at-this-level mini stat — refreshes when the player
-                      picks a different level in the dropdown. Shows "not
-                      played yet" when the slot is empty so a 0 doesn't look
-                      like a bad score. */}
+                  {/* Best-of-all-time across every level. Compact secondary
+                      stat — the prominent chip above already shows the
+                      per-level best for whatever level is selected. */}
                   {entry ? (
-                    (() => {
-                      const bestHere =
-                        entry.bestScorePerLevel?.[selected - 1] ?? 0;
-                      return (
-                        <span className="text-[11px] text-white/80">
-                          Best at Lv {selected}:{" "}
-                          {bestHere > 0 ? (
-                            <span className="font-bold tabular-nums text-white">
-                              {bestHere.toLocaleString()}
-                            </span>
-                          ) : (
-                            <span className="font-semibold text-white/55">
-                              not played yet
-                            </span>
-                          )}
-                        </span>
-                      );
-                    })()
+                    <span className="text-[11px] text-white/80">
+                      Best of all:{" "}
+                      <span className="font-bold tabular-nums text-white">
+                        {(entry.bestScore ?? 0).toLocaleString()}
+                      </span>
+                    </span>
                   ) : null}
                   {entry && entry.nextThreshold !== null ? (
                     (() => {
@@ -377,7 +410,7 @@ export function ArcadeHub({ onOpenLeaderboard }: ArcadeHubProps) {
                   type="button"
                   disabled={locked || loading}
                   onClick={() => startGame(gameType)}
-                  className="inline-flex min-h-12 w-full items-center justify-center rounded-[16px] border border-white/20 bg-white/95 px-4 py-3 text-sm font-bold uppercase tracking-[0.18em] text-slate-900 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
+                  className="denty-play-button inline-flex min-h-12 w-full items-center justify-center rounded-[16px] border border-white/20 bg-white/95 px-4 py-3 text-sm font-bold uppercase tracking-[0.18em] text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {locked
                     ? "Locked till tomorrow"
@@ -461,6 +494,14 @@ function ArcadeFullscreenStage({
   const [hudSlot, setHudSlot] = useState<HTMLDivElement | null>(null);
   const [quitOpen, setQuitOpen] = useState(false);
   const inResult = result !== null;
+  // Intro card plays before the actual game mounts; once the player skips or
+  // the 3-second countdown ends, we flip this and the game takes over.
+  const [introDone, setIntroDone] = useState(false);
+  // Reset the intro flag whenever the player re-enters with a new game/level
+  // (e.g. clicking "Play again" from the celebration).
+  useEffect(() => {
+    if (!inResult) setIntroDone(false);
+  }, [game, level, inResult]);
 
   useEffect(() => {
     setMounted(true);
@@ -553,6 +594,15 @@ function ArcadeFullscreenStage({
               onPlayAgain={onPlayAgain}
               onOpenLeaderboard={onOpenLeaderboard}
             />
+          ) : !introDone ? (
+            <ArcadeIntroCard
+              game={game}
+              level={level}
+              gradient={meta.gradient}
+              emoji={meta.emoji}
+              label={meta.label}
+              onStart={() => setIntroDone(true)}
+            />
           ) : game === "PLAQUE_BLASTER" ? (
             <PlaqueBlasterGame
               level={level}
@@ -639,19 +689,19 @@ function ArcadeResultCelebration({
           {headline}
         </p>
         <p className="mt-2 text-sm text-white/80">
-          You scored{" "}
-          <span className="font-bold text-white">
-            {score.toLocaleString()}
-          </span>{" "}
-          at Level {level}.
+          You played at Level {level}.
         </p>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
-          <Stat label="Score" value={result.score.toLocaleString()} />
+          {/* Score card = the score the player just earned this round.
+              result.score is the persisted max (could be a prior higher
+              today-run in test mode), so we display the actual round score
+              passed in from the game. */}
+          <Stat label="Score" value={score.toLocaleString()} />
           <Stat label="Best" value={result.bestScore.toLocaleString()} />
           <Stat
             label="Unlocked"
-            value={`Lv ${result.unlockedLevel}/10`}
+            value={`Lv ${result.unlockedLevel}/11`}
           />
         </div>
 
@@ -667,7 +717,7 @@ function ArcadeResultCelebration({
           <button
             type="button"
             onClick={onPlayAgain}
-            className="inline-flex min-h-11 items-center justify-center rounded-[14px] bg-white px-5 py-2.5 text-sm font-bold uppercase tracking-[0.16em] text-slate-900 transition hover:bg-white/90"
+            className="denty-play-button inline-flex min-h-11 items-center justify-center rounded-[14px] bg-white px-5 py-2.5 text-sm font-bold uppercase tracking-[0.16em] text-slate-900"
           >
             Play again
           </button>

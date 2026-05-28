@@ -17,12 +17,13 @@
  * component only invokes `onFinish(score)` when the timer hits 0.
  */
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { HudChip } from "@/features/arcade/components/hud-chip";
 
 type GameProps = {
-  /** 1..10 — controls spawn cadence, target lifetime, decoy ratio. */
+  /** 1..11 — controls spawn cadence, target lifetime, decoy ratio. Lv 11
+   *  is endless mode (no fixed timer; ends only on bomb tap). */
   level: number;
   /** Called with the final score at t=0. Caller submits to the backend. */
   onFinish: (score: number, durationMs: number) => void;
@@ -51,6 +52,52 @@ const GRID_COLS = 5;
 const GRID_ROWS = 3;
 const TOTAL_CELLS = GRID_COLS * GRID_ROWS;
 const ROUND_DURATION_MS = 30_000;
+/** Cumulative misses (empty taps + expired good targets) that end the run. */
+const MISS_LIMIT = 10;
+
+/* -------------------------------------------------------------------------- */
+/* Endless-mode stages                                                        */
+/* -------------------------------------------------------------------------- */
+
+/** How long the player actually plays before the next stage banner triggers. */
+const STAGE_PLAY_MS = 12_500;
+/** Length of the "Stage N" countdown break between stages. */
+const STAGE_BREAK_MS = 3_000;
+
+/**
+ * Each stage maps to a fixed-mode "effective level" the tuning uses while
+ * that stage is active. Stage 1 plays like Lv 2 (warmup, no sugar). Stage 9
+ * plays like Lv 10 (max fixed). Beyond stage 9 we keep pushing past Lv 10
+ * for true endless chaos.
+ */
+function stageEffectiveLevel(stage: number): number {
+  if (stage <= 0) return 2;
+  return Math.min(13, 1 + stage);
+}
+
+type StageBrief = { title: string; blurb: string };
+
+/** Headline + one-liner shown on the stage-break banner. */
+function stageBrief(stage: number): StageBrief {
+  const briefs: StageBrief[] = [
+    { title: "Warm up", blurb: "Tap plaque and cavities — get a feel for the grid." },
+    { title: "Sugar drop", blurb: "Lollipops invade. Don't tap them!" },
+    { title: "Faster fingers", blurb: "Spawn rate climbs. Targets fade quicker." },
+    { title: "Boom incoming", blurb: "Bombs appear — one tap ends the run." },
+    { title: "Tighten up", blurb: "Lifetimes shorten. React or miss." },
+    { title: "Double trouble", blurb: "Two targets can land at once now." },
+    { title: "Pressure cooker", blurb: "More sugar, more bombs. Stay focused." },
+    { title: "Triple threat", blurb: "Three-target spawns possible." },
+    { title: "Final chaos", blurb: "Max cadence, max decoys. Survive." },
+  ];
+  if (stage >= 1 && stage <= briefs.length) {
+    return briefs[stage - 1];
+  }
+  return {
+    title: "Beyond the wall",
+    blurb: "You've passed every fixed level. Score as long as you can.",
+  };
+}
 
 const KIND_INFO: Record<
   TargetKind,
@@ -162,11 +209,32 @@ function restingTint(cell: number) {
  *   L9  : everything faster, more bombs                           — hardcore
  *   L10 : maxed out — minimal lifetime, max decoy share           — expert
  */
-function levelTuning(level: number) {
-  const lv = Math.max(1, Math.min(10, level));
+function levelTuning(level: number, elapsedSec = 0) {
+  // Lv 11 = endless. Starts at Lv 2 (very forgiving — no sugar, no bombs)
+  // and climbs roughly one level every 15 seconds. After ~2 minutes you're
+  // past the Lv 10 wall and the run becomes a survival exercise.
+  // 0s   → Lv 2     (just plaque + cavity + brush)
+  // 15s  → Lv 3     (sugar unlocks)
+  // 45s  → Lv 5     (bombs unlock — first real danger)
+  // 90s  → Lv 8     (double spawn + faster cadence)
+  // 150s → Lv 12+   (beyond fixed-level peak)
+  const endless = level >= 11;
+  const baseLv = endless ? 2 : Math.max(1, Math.min(10, level));
+  const escalation = endless ? Math.min(13, elapsedSec / 15) : 0;
+  const lv = baseLv + escalation;
+
+  // Per-level fine-tune nudge. Some levels feel a bit too punishing on the
+  // linear curve — nudge them softer (>1 multiplier on cadence/lifetime,
+  // <1 on decoy shares). Keep this list tight so the overall ramp stays
+  // intuitive.
+  const ease = !endless && level === 6 ? 1.05 : 1.0;
 
   // Spawn cadence — Level 1 is generous (900ms), tightens to ~230ms at L10.
-  const spawnIntervalMs = Math.round(900 - (lv - 1) * 75);
+  // Floor at 180ms so endless can't push past human reaction time.
+  const spawnIntervalMs = Math.max(
+    180,
+    Math.round((900 - (lv - 1) * 75) * ease),
+  );
 
   // Mechanic gates — features unlock at specific levels.
   const brushUnlocked = lv >= 2;
@@ -180,16 +248,30 @@ function levelTuning(level: number) {
     ? Math.max(0.06, 0.16 - (lv - 2) * 0.008)
     : 0;
   // Sugar share starts modest at L3 (~12%) and climbs sharply through L10.
+  // Capped at 55% so endless mode doesn't drown the grid in lollipops.
   const sugarShare = sugarUnlocked
-    ? 0.12 + (lv - 3) * 0.05 // 12% → 47%
+    ? Math.min(0.55, (0.12 + (lv - 3) * 0.05) / ease)
     : 0;
   // Bomb share — tiny at first, grows with level. Caps so the run stays fair.
   const bombShare = bombUnlocked
-    ? Math.min(0.12, 0.03 + (lv - 5) * 0.018) // 3% → 12%
+    ? Math.min(0.12, (0.03 + (lv - 5) * 0.018) / ease)
     : 0;
 
-  // Lifetime scale — gentle at L1 (1.4x base), aggressive at L10 (0.5x).
-  const lifeScale = Math.max(0.5, 1.4 - (lv - 1) * 0.1);
+  // Lifetime scale — much more generous than before so the player can
+  // actually react at higher levels. Even at Lv 10 targets stick around
+  // longer than their base lifetime; the challenge comes from cadence +
+  // decoys, not impossible reaction windows.
+  // Lv 1: 1.7×  Lv 5: 1.38×  Lv 8: 1.16×  Lv 10: 1.02×
+  const lifeScale = Math.max(0.95, (1.7 - (lv - 1) * 0.075) * ease);
+
+  // Multi-spawn — pushed later in the curve so it doesn't pile on at Lv 7
+  // when the player is still adjusting. Double spawn now starts at L8,
+  // triple only at L10. Caps lowered so it never feels overwhelming.
+  const doubleSpawnChance = lv >= 8 ? Math.min(0.35, (lv - 7) * 0.15) : 0;
+  const tripleSpawnChance = lv >= 10 ? 0.2 : 0;
+  // Visual jitter — only at the final fixed level so it stays a "you've
+  // earned this challenge" thing, not a wall at L8.
+  const jitter = lv >= 10;
 
   return {
     spawnIntervalMs,
@@ -201,6 +283,9 @@ function levelTuning(level: number) {
     brushUnlocked,
     sugarUnlocked,
     bombUnlocked,
+    doubleSpawnChance,
+    tripleSpawnChance,
+    jitter,
   };
 }
 
@@ -252,11 +337,55 @@ export function PlaqueBlasterGame({
   >([]);
   // Bomb explosion overlay (cell + flash) — drives the dramatic game-over.
   const [bombBlast, setBombBlast] = useState<{ cell: number } | null>(null);
+  // Total misses this round — counts empty-cell taps AND expired good
+  // targets. Hitting MISS_LIMIT ends the run regardless of level.
+  const [misses, setMisses] = useState(0);
+  const missesRef = useRef(0);
 
   const startedAtRef = useRef<number>(performance.now());
   const idRef = useRef<number>(0);
-  const tuning = levelTuning(level);
   const finishedRef = useRef(false);
+  const endless = level >= 11;
+  // Active elapsed = total elapsed minus time spent on stage-break overlays.
+  // This is what drives both the displayed timer AND the stage / level
+  // escalation so 3-second breaks don't count toward the curve.
+  const pausedMsRef = useRef(0);
+  const pauseStartRef = useRef<number | null>(null);
+  // Stage state — only used in endless mode. activeStage is the current
+  // stage number (1, 2, 3, …). showStageBanner gates the 3-second overlay
+  // before the new stage's gameplay begins. We mirror showStageBanner into
+  // a ref so the rAF loop closure can read the latest value without
+  // re-running the effect on every banner toggle.
+  const [activeStage, setActiveStage] = useState(1);
+  const [showStageBanner, setShowStageBanner] = useState(false);
+  const showStageBannerRef = useRef(false);
+  useEffect(() => {
+    showStageBannerRef.current = showStageBanner;
+  }, [showStageBanner]);
+  const lastStageRef = useRef(1);
+  // We re-tune every couple seconds in endless mode so spawn cadence and
+  // lifetime keep tightening as the run goes on. tuningTick increments via
+  // an interval and forces the memo to recompute.
+  const [tuningTick, setTuningTick] = useState(0);
+  useEffect(() => {
+    if (!endless) return;
+    const id = setInterval(() => setTuningTick((n) => n + 1), 1500);
+    return () => clearInterval(id);
+  }, [endless]);
+  const tuning = useMemo(() => {
+    const totalMs = performance.now() - startedAtRef.current;
+    const activeMs = totalMs - pausedMsRef.current;
+    // Endless mode steps per stage instead of climbing smoothly. The
+    // stage's effective level is fed into levelTuning via a synthetic
+    // elapsedSec — escalation = (lv - 2) * 15.
+    if (endless) {
+      const stage = Math.max(1, activeStage);
+      const stageLv = stageEffectiveLevel(stage);
+      return levelTuning(11, (stageLv - 2) * 15);
+    }
+    return levelTuning(level, activeMs / 1000);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [level, tuningTick, endless, activeStage]);
 
   // popFloat is used by both the rAF loop (for expired-target "missed!"
   // markers) and handleTap (for hit/miss popups), so it has to be declared
@@ -273,6 +402,26 @@ export function PlaqueBlasterGame({
     [],
   );
 
+  // addMisses likewise has to be hoisted above the rAF effect that calls
+  // it on every expired good target. Bumps the cumulative miss counter
+  // and ends the round when it crosses MISS_LIMIT.
+  const addMisses = useCallback(
+    (count: number) => {
+      if (finishedRef.current || count <= 0) return;
+      missesRef.current = Math.min(MISS_LIMIT, missesRef.current + count);
+      setMisses(missesRef.current);
+      if (missesRef.current >= MISS_LIMIT) {
+        finishedRef.current = true;
+        setRunning(false);
+        setTimeout(() => {
+          const elapsed = performance.now() - startedAtRef.current;
+          onFinish(scoreRef.current, Math.round(elapsed));
+        }, 1100);
+      }
+    },
+    [onFinish],
+  );
+
   /* -------------------------------------------------------------------- */
   /* Main RAF loop — timer + lifetime decay                               */
   /* -------------------------------------------------------------------- */
@@ -280,9 +429,58 @@ export function PlaqueBlasterGame({
   useEffect(() => {
     let raf = 0;
     const tick = () => {
-      const elapsed = performance.now() - startedAtRef.current;
-      const remaining = Math.max(0, ROUND_DURATION_MS - elapsed);
-      setTimeLeft(remaining);
+      const totalElapsed = performance.now() - startedAtRef.current;
+      // Active elapsed excludes time spent on stage-break banners so the
+      // game timer doesn't tick during the 3-second pause.
+      const activeElapsed = totalElapsed - pausedMsRef.current;
+      // In endless we display the playing time (monotonic — always changing
+      // so React keeps re-rendering the decay rings). In fixed mode we show
+      // the countdown remaining.
+      const displayed = endless
+        ? activeElapsed
+        : Math.max(0, ROUND_DURATION_MS - activeElapsed);
+      setTimeLeft(displayed);
+
+      // While the stage-break banner is showing, freeze game logic — no
+      // expiration checks, no stage advancement. pauseStartRef + bornAt
+      // shifting happens at transition time so we don't need to touch them
+      // here.
+      if (showStageBannerRef.current) {
+        raf = requestAnimationFrame(tick);
+        return;
+      }
+
+      // Endless-mode stage transitions: every STAGE_PLAY_MS of active play
+      // we bump the stage, freeze the game, and show a 3s banner.
+      if (endless) {
+        const currentStage =
+          Math.floor(activeElapsed / STAGE_PLAY_MS) + 1;
+        if (currentStage > lastStageRef.current) {
+          lastStageRef.current = currentStage;
+          setActiveStage(currentStage);
+          // Set the ref synchronously so the spawner setInterval + handleTap
+          // see the pause on their very next tick (state update is async).
+          showStageBannerRef.current = true;
+          pauseStartRef.current = performance.now();
+          setShowStageBanner(true);
+          setTimeout(() => {
+            // Shift target bornAt forward by the pause duration so their
+            // decay rings resume from where they were instead of expiring
+            // all at once. Also bump pausedMsRef so the game timer didn't
+            // count the break.
+            if (pauseStartRef.current != null) {
+              const pauseDur = performance.now() - pauseStartRef.current;
+              pausedMsRef.current += pauseDur;
+              for (const t of targetsRef.current) {
+                t.bornAt += pauseDur;
+              }
+              pauseStartRef.current = null;
+            }
+            showStageBannerRef.current = false;
+            setShowStageBanner(false);
+          }, STAGE_BREAK_MS);
+        }
+      }
 
       // Detect targets that expired this frame. "Good" expirations (plaque,
       // cavity, brush) mean the player failed to tap in time — that breaks
@@ -323,9 +521,14 @@ export function PlaqueBlasterGame({
         for (const t of missed) {
           popFloat(t.cell, "missed!", "rgba(244,63,94,0.85)", "lg");
         }
+        // Each expired good target costs a miss toward the 10-miss limit.
+        addMisses(missed.length);
       }
 
-      if (remaining === 0) {
+      // Endless skips the timer end — the round only finishes on bomb tap
+      // (handled in triggerBomb). Use activeElapsed so the round doesn't
+      // end prematurely because of paused stage-break time.
+      if (!endless && activeElapsed >= ROUND_DURATION_MS) {
         if (!finishedRef.current) {
           finishedRef.current = true;
           setRunning(false);
@@ -339,7 +542,7 @@ export function PlaqueBlasterGame({
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [onFinish, popFloat]);
+  }, [onFinish, popFloat, endless, addMisses]);
 
   // Mirror score into a ref so the raf-loop closure can read the latest.
   const scoreRef = useRef(score);
@@ -373,6 +576,9 @@ export function PlaqueBlasterGame({
   useEffect(() => {
     if (!running) return;
     const interval = setInterval(() => {
+      // Freeze new spawns during the stage-break banner so the player
+      // isn't penalized by targets expiring behind the overlay.
+      if (showStageBannerRef.current) return;
       setTargets((prev) => {
         // Don't crowd the grid — keep at most 6 live targets so the game
         // stays readable even at high level.
@@ -383,23 +589,36 @@ export function PlaqueBlasterGame({
           if (!occupied.has(i)) free.push(i);
         }
         if (free.length === 0) return prev;
-        const cell = free[Math.floor(Math.random() * free.length)];
-        const kind = pickKind(tuning);
-        idRef.current += 1;
-        return [
-          ...prev,
-          {
+
+        // How many targets to drop on this tick — L7+ rolls for a double
+        // spawn, L9+ rolls for triple. Capped by free-cell count.
+        let spawnCount = 1;
+        if (Math.random() < tuning.tripleSpawnChance) spawnCount = 3;
+        else if (Math.random() < tuning.doubleSpawnChance) spawnCount = 2;
+        spawnCount = Math.min(spawnCount, free.length, 6 - prev.length);
+
+        // Fisher–Yates pick `spawnCount` distinct cells from free.
+        for (let i = free.length - 1; i > 0; i -= 1) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [free[i], free[j]] = [free[j], free[i]];
+        }
+        const cells = free.slice(0, spawnCount);
+        const additions: SpawnedTarget[] = cells.map((cell) => {
+          idRef.current += 1;
+          const kind = pickKind(tuning);
+          return {
             id: idRef.current,
             cell,
             kind,
             bornAt: performance.now(),
             lifeMs: Math.round(KIND_INFO[kind].lifeMs * tuning.lifeScale),
-          },
-        ];
+          };
+        });
+        return [...prev, ...additions];
       });
     }, tuning.spawnIntervalMs);
     return () => clearInterval(interval);
-  }, [running, tuning.lifeScale, tuning.spawnIntervalMs, tuning.brushShare, tuning.cavityShare, tuning.sugarShare]);
+  }, [running, tuning]);
 
   /* -------------------------------------------------------------------- */
   /* Tap handler                                                          */
@@ -452,6 +671,9 @@ export function PlaqueBlasterGame({
   const handleTap = useCallback(
     (cell: number) => {
       if (!running) return;
+      // Ignore taps while the stage-break banner is up so the player can't
+      // accidentally miss-tap their combo away behind the overlay.
+      if (showStageBannerRef.current) return;
       const hit = targets.find((t) => t.cell === cell);
 
       if (!hit) {
@@ -475,6 +697,8 @@ export function PlaqueBlasterGame({
         }
         popRipple(cell, "rgba(244,63,94,0.7)");
         flashShake(cell);
+        // Empty taps cost score + combo but do NOT count toward the
+        // 10-miss limit — only expired good targets do.
         return;
       }
 
@@ -541,6 +765,7 @@ export function PlaqueBlasterGame({
     : `×${combo}`;
   const comboVariant = comboLossActive ? "danger" : "combo";
 
+  const missesLeft = MISS_LIMIT - misses;
   const hud = (
     <>
       <HudChip label="Score" value={score} variant="score" />
@@ -551,8 +776,25 @@ export function PlaqueBlasterGame({
         variant={comboVariant}
         urgent={comboLossActive || combo >= 5}
       />
-      <HudChip label="Level" value={level} variant="level" />
-      <HudChip label="Time" value={`${seconds}s`} variant="timer" urgent={urgent} />
+      <HudChip
+        label="Misses"
+        value={`${misses}/${MISS_LIMIT}`}
+        variant={
+          missesLeft <= 2 ? "danger" : missesLeft <= 4 ? "lives" : "neutral"
+        }
+        urgent={missesLeft <= 2}
+      />
+      <HudChip
+        label="Level"
+        value={endless ? "∞" : level}
+        variant="level"
+      />
+      <HudChip
+        label={endless ? "Endless" : "Time"}
+        value={endless ? `${Math.floor((performance.now() - startedAtRef.current) / 1000)}s` : `${seconds}s`}
+        variant="timer"
+        urgent={!endless && urgent}
+      />
     </>
   );
 
@@ -579,8 +821,15 @@ export function PlaqueBlasterGame({
           {Array.from({ length: TOTAL_CELLS }).map((_, cell) => {
             const target = targets.find((t) => t.cell === cell);
             const float = floats.find((f) => f.cell === cell);
+            // During a stage break, freeze the "current time" to when the
+            // pause started so decay rings don't keep draining behind the
+            // overlay. On resume, bornAt is shifted forward by pauseDur
+            // (see the stage-transition setTimeout) so the rings continue
+            // smoothly from where they left off.
+            const nowForAge =
+              pauseStartRef.current ?? performance.now();
             const age = target
-              ? (performance.now() - target.bornAt) / target.lifeMs
+              ? (nowForAge - target.bornAt) / target.lifeMs
               : 0;
             const ringPercent = Math.max(0, Math.min(100, (1 - age) * 100));
             const rest = restingTint(cell);
@@ -625,14 +874,16 @@ export function PlaqueBlasterGame({
                           "radial-gradient(circle, transparent 58%, black 60%)",
                       }}
                     />
-                    {/* Bomb gets a wobble animation; other kinds use the standard pop. */}
+                    {/* Bomb gets a wobble animation; other kinds use the standard pop.
+                        At Level 8+ the jitter class adds a constant wiggle so
+                        the eye can't lock to one position. */}
                     <span
                       key={target.id}
                       className={`relative z-10 text-4xl drop-shadow-[0_4px_8px_rgba(7,18,34,0.3)] sm:text-5xl md:text-6xl ${
                         target.kind === "bomb"
                           ? "denty-blast-bomb"
                           : "denty-blast-spawn"
-                      }`}
+                      } ${tuning.jitter ? "denty-blast-jitter" : ""}`}
                     >
                       {KIND_INFO[target.kind].emoji}
                     </span>
@@ -772,6 +1023,74 @@ export function PlaqueBlasterGame({
             </div>
           </div>
         ) : null}
+
+        {/* GAME OVER banner when the miss limit is hit (10 missed clicks /
+            expirations). Distinct from the bomb banner — no fireball, more
+            of a "too sloppy" feel. */}
+        {misses >= MISS_LIMIT && !bombBlast ? (
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <div
+              className="rounded-[24px] border border-amber-200/60 bg-[linear-gradient(135deg,rgba(217,119,6,0.92),rgba(120,53,15,0.92))] px-6 py-4 text-center text-white shadow-[0_28px_60px_rgba(120,53,15,0.55)] sm:px-10 sm:py-6"
+              style={{
+                animation:
+                  "denty-pop 380ms cubic-bezier(0.34, 1.56, 0.64, 1) both",
+              }}
+            >
+              <p className="text-[11px] font-bold uppercase tracking-[0.32em] text-amber-100/85">
+                Too many misses
+              </p>
+              <p className="mt-1 text-4xl font-extrabold tracking-tight sm:text-5xl">
+                Game Over
+              </p>
+              <p className="mt-1 text-sm text-amber-50/90">
+                Final score{" "}
+                <span className="font-bold tabular-nums">{score}</span>
+              </p>
+            </div>
+          </div>
+        ) : null}
+
+        {/* Endless-mode stage-break banner — pauses gameplay for 3 seconds
+            and announces the next stage with a short description. */}
+        {showStageBanner && endless ? (
+          <div className="pointer-events-none absolute inset-0 z-40 flex items-center justify-center bg-[rgba(4,10,22,0.55)] backdrop-blur-[8px]">
+            <div
+              key={activeStage}
+              className="w-full max-w-xl overflow-hidden rounded-[26px] border border-cyan-200/30 bg-[linear-gradient(135deg,rgba(15,32,56,0.96),rgba(8,18,38,0.96))] px-6 py-6 text-center text-white shadow-[0_30px_80px_rgba(2,6,18,0.55)] sm:px-10 sm:py-8"
+              style={{
+                animation:
+                  "denty-pop 420ms cubic-bezier(0.34, 1.56, 0.64, 1) both",
+              }}
+            >
+              <p className="text-[11px] font-bold uppercase tracking-[0.32em] text-cyan-200/80">
+                ♾️ Endless · Stage {activeStage}
+              </p>
+              <p
+                className="mt-2 bg-[linear-gradient(135deg,#bef264,#5eead4,#a5b4fc)] bg-clip-text text-5xl font-extrabold leading-none text-transparent sm:text-6xl"
+                style={{
+                  animation:
+                    "denty-pop 500ms cubic-bezier(0.34, 1.56, 0.64, 1) both",
+                }}
+              >
+                {stageBrief(activeStage).title}
+              </p>
+              <p className="mt-3 text-sm text-white/85">
+                {stageBrief(activeStage).blurb}
+              </p>
+              {/* Countdown bar — animates from full to empty over 3s so the
+                  player feels the break ticking down. */}
+              <div className="mt-5 h-1.5 w-full overflow-hidden rounded-full bg-white/12">
+                <span
+                  aria-hidden
+                  className="block h-full rounded-full bg-[linear-gradient(90deg,#bef264,#5eead4)]"
+                  style={{
+                    animation: "denty-stage-bar 3000ms linear forwards",
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        ) : null}
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-1 text-[11px] text-white/70">
@@ -779,7 +1098,10 @@ export function PlaqueBlasterGame({
           <span aria-hidden>🦠</span> +10 &nbsp; <span aria-hidden>✨</span> +50 &nbsp;{" "}
           <span aria-hidden>🪥</span> +20 &nbsp; <span aria-hidden>🍭</span> −50 &nbsp;{" "}
           <span aria-hidden className="text-rose-200">💣</span>{" "}
-          <span className="text-rose-200/90">game over</span>
+          <span className="text-rose-200/90">game over</span> &nbsp;·&nbsp;{" "}
+          <span className="text-amber-100/90">
+            {MISS_LIMIT} expired targets = game over
+          </span>
         </span>
         <span>Best combo: ×{bestCombo}</span>
       </div>

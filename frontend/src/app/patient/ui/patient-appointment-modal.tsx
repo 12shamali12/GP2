@@ -54,7 +54,13 @@ export function PatientAppointmentModal({
     appointment.slot?.purpose ||
     t("patient.common.general");
   const reportRejected = appointment.report?.status === "CASE_REJECTED";
-  const canRate = appointment.status === "COMPLETED" && !reportRejected;
+  // Patient can only rate once the doctor has actually filed the report —
+  // before that the visit hasn't been finalised on the doctor's side, so
+  // rating it would be premature.
+  const reportSubmitted =
+    appointment.reportSubmitted === true || !!appointment.report?.id;
+  const canRate =
+    appointment.status === "COMPLETED" && reportSubmitted && !reportRejected;
 
   return (
     <div className="denty-backdrop-enter fixed inset-0 z-30 flex items-center justify-center bg-[rgba(19,37,58,0.22)] p-3 backdrop-blur-md sm:p-4">

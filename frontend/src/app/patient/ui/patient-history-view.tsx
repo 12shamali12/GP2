@@ -18,6 +18,8 @@ function StatusPill({ status }: { status: string }) {
       "border-emerald-500/50 bg-emerald-500/85 text-white shadow-[0_2px_8px_rgba(16,185,129,0.35)]",
     SUBMITTED:
       "border-sky-500/50 bg-sky-500/85 text-white shadow-[0_2px_8px_rgba(14,165,233,0.35)]",
+    AWAITING_REPORT:
+      "border-sky-500/50 bg-sky-500/85 text-white shadow-[0_2px_8px_rgba(14,165,233,0.35)]",
     CANCELLED:
       "border-rose-500/50 bg-rose-500/85 text-white shadow-[0_2px_8px_rgba(244,63,94,0.35)]",
     REJECTED:
@@ -26,13 +28,35 @@ function StatusPill({ status }: { status: string }) {
       "border-amber-500/50 bg-amber-500/85 text-white shadow-[0_2px_8px_rgba(245,158,11,0.35)]",
   };
   const cls = config[key] || "border-white/15 bg-white/10 text-[var(--foreground)]";
+  // Pretty-print the underscore variant — "AWAITING REPORT" reads better
+  // than the raw enum key.
+  const label = key === "AWAITING_REPORT" ? "AWAITING REPORT" : (status || "—");
   return (
     <span
       className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] ${cls}`}
     >
-      {status || "—"}
+      {label}
     </span>
   );
+}
+
+/**
+ * Patient-facing status derived from the raw Appointment.status + whether
+ * the doctor has actually filed a report. The patient only sees an
+ * appointment as "COMPLETED" once the report is in — otherwise the visit
+ * sits in "AWAITING REPORT" until the doctor finalises it.
+ */
+function derivePatientStatus(appt: {
+  status?: string | null;
+  reportSubmitted?: boolean | null;
+  report?: { id?: string } | null;
+}): string {
+  const raw = (appt.status || "").toUpperCase();
+  if (raw === "COMPLETED") {
+    const hasReport = appt.reportSubmitted === true || !!appt.report?.id;
+    return hasReport ? "COMPLETED" : "AWAITING_REPORT";
+  }
+  return raw;
 }
 
 export function PatientHistoryView({
@@ -62,7 +86,8 @@ export function PatientHistoryView({
   const statusOptions = useMemo(() => {
     const set = new Set<string>();
     history.forEach((appt) => {
-      if (appt.status) set.add(appt.status);
+      const s = derivePatientStatus(appt);
+      if (s) set.add(s);
     });
     return Array.from(set).sort();
   }, [history]);
@@ -71,7 +96,7 @@ export function PatientHistoryView({
     const needle = search.trim().toLowerCase();
     return history
       .filter((appt) => {
-        const status = appt.status || "";
+        const status = derivePatientStatus(appt);
         if (statusFilter !== "all" && status !== statusFilter) return false;
         const date = appt.slot?.startTime
           ? new Date(appt.slot.startTime)
@@ -113,13 +138,16 @@ export function PatientHistoryView({
     return history.reduce(
       (acc, appt) => {
         acc.total++;
-        const status = (appt.status || "").toUpperCase();
+        const status = derivePatientStatus(appt);
+        // "Completed" only counts appointments where the doctor has filed
+        // the report — pre-report visits sit in the AWAITING_REPORT bucket.
         if (status === "COMPLETED" || status === "REVIEWED") acc.completed++;
+        else if (status === "AWAITING_REPORT") acc.awaitingReport++;
         else if (status === "CANCELLED" || status === "REJECTED") acc.cancelled++;
         else if (status === "NO_SHOW") acc.noShow++;
         return acc;
       },
-      { total: 0, completed: 0, cancelled: 0, noShow: 0 },
+      { total: 0, completed: 0, awaitingReport: 0, cancelled: 0, noShow: 0 },
     );
   }, [history]);
 
@@ -140,6 +168,11 @@ export function PatientHistoryView({
           <span className="inline-flex items-center rounded-full border border-emerald-500/50 bg-emerald-500/85 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-white">
             {summary.completed} done
           </span>
+          {summary.awaitingReport > 0 ? (
+            <span className="inline-flex items-center rounded-full border border-sky-500/50 bg-sky-500/85 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-white">
+              {summary.awaitingReport} awaiting report
+            </span>
+          ) : null}
           {summary.cancelled > 0 ? (
             <span className="inline-flex items-center rounded-full border border-rose-500/50 bg-rose-500/85 px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-white">
               {summary.cancelled} cancelled
@@ -236,7 +269,7 @@ export function PatientHistoryView({
                 <div className="flex flex-wrap items-start justify-between gap-3 pl-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <StatusPill status={appt.status} />
+                      <StatusPill status={derivePatientStatus(appt)} />
                       <p className="text-[11px] uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
                         {startTime
                           ? new Date(startTime).toLocaleDateString(undefined, {

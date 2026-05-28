@@ -52,13 +52,29 @@ type Bacteria = {
   hits: number;
 };
 
-function levelTuning(level: number) {
-  const lv = Math.max(1, Math.min(10, level));
+function levelTuning(level: number, elapsedSec = 0) {
+  // Lv 11 is endless. Starts at Lv 2 (slow spawns, 1-HP bacteria) and
+  // climbs ~1 level every 15 seconds:
+  //   0s  → Lv 2     (gentle warmup, lots of kill chains)
+  //   30s → Lv 4     (faster spawns)
+  //   60s → Lv 6     (tougher bacteria)
+  //   120s → Lv 10   (Lv 10-equivalent intensity)
+  //   180s → Lv 14   (beyond fixed-level peak)
+  const endless = level >= 11;
+  const baseLv = endless ? 2 : Math.max(1, Math.min(10, level));
+  const escalation = endless ? Math.min(12, elapsedSec / 15) : 0;
+  const lv = baseLv + escalation;
+  // Eased across the board: slower spawns, slower bacteria, lower HP wall.
+  // Old Lv 10 = 6 HP bacteria + 1.23 u/s; new peak = 4 HP + 0.95 u/s.
   return {
-    spawnIntervalMs: Math.round(1100 - (lv - 1) * 65), // 1100 → 515
-    bacteriaSpeed: 0.6 + (lv - 1) * 0.07, // 0.6 → 1.23 units/s
-    bacteriaHp: Math.max(1, 1 + Math.floor((lv - 1) / 2)), // 1..6
-    scoreMult: 1 + (lv - 1) * 0.15,
+    // Slower cadence — gives the player breathing room to land hits.
+    spawnIntervalMs: Math.max(380, Math.round(1300 - (lv - 1) * 60)),
+    // Gentler speed curve so even endless stays clickable.
+    bacteriaSpeed: 0.45 + (lv - 1) * 0.05,
+    // HP grows every 3 levels instead of every 2, capped at 4. Way fewer
+    // shots-per-kill at high levels.
+    bacteriaHp: Math.min(4, 1 + Math.floor((lv - 1) / 3)),
+    scoreMult: 1 + (lv - 1) * 0.12,
   };
 }
 
@@ -194,7 +210,10 @@ export function ToothDefenderGame({
         }}
       >
         <Canvas
-          camera={{ position: [0, 0.6, 7.5], fov: 50 }}
+          // Camera is higher and tilted slightly downward so bacteria
+          // approaching from "behind" the tooth (from camera's POV) are
+          // still visible above and to the sides instead of hidden.
+          camera={{ position: [0, 4.2, 7], fov: 55 }}
           gl={{ antialias: true }}
         >
           <color attach="background" args={["#06141f"]} />
@@ -312,31 +331,73 @@ export function ToothDefenderGame({
 /* Tooth                                                                      */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Tooth model — built from primitives to look like an actual molar:
+ *   - Crown: rounded sphere flattened slightly, with 4 cusp bumps on top
+ *   - Two root cones extending downward
+ *   - Subtle gum-line gradient via a darker base ring
+ *
+ * The whole group bobs gently via <Float>; the crown rotates so the cusps
+ * catch the directional light.
+ */
 function Tooth() {
-  const meshRef = useRef<THREE.Mesh>(null);
+  const crownRef = useRef<THREE.Mesh>(null);
   useFrame((_, dt) => {
-    if (meshRef.current) meshRef.current.rotation.y += dt * 0.3;
+    if (crownRef.current) crownRef.current.rotation.y += dt * 0.25;
   });
   return (
-    <Float speed={1.2} rotationIntensity={0.4} floatIntensity={0.5}>
+    <Float speed={1.1} rotationIntensity={0.25} floatIntensity={0.45}>
       <group>
-        <mesh ref={meshRef} castShadow receiveShadow>
-          <icosahedronGeometry args={[TOOTH_RADIUS, 4]} />
+        {/* Crown — wide flattened sphere */}
+        <mesh
+          ref={crownRef}
+          castShadow
+          receiveShadow
+          scale={[1.05, 0.85, 1.05]}
+        >
+          <sphereGeometry args={[TOOTH_RADIUS, 36, 28]} />
           <meshStandardMaterial
             color="#f8fafc"
-            roughness={0.32}
-            metalness={0.18}
-            emissive="#dbeafe"
-            emissiveIntensity={0.15}
+            roughness={0.28}
+            metalness={0.16}
+            emissive="#e0f2fe"
+            emissiveIntensity={0.12}
           />
         </mesh>
-        <mesh position={[0, -0.4, 0.4]} scale={[0.55, 0.7, 0.45]}>
-          <sphereGeometry args={[0.6, 24, 16]} />
+        {/* Cusps — four little bumps on top of the crown */}
+        {[
+          [0.42, 0.55, 0.42],
+          [-0.42, 0.55, 0.42],
+          [0.42, 0.55, -0.42],
+          [-0.42, 0.55, -0.42],
+        ].map(([x, y, z], i) => (
+          <mesh key={i} position={[x, y, z]} castShadow>
+            <sphereGeometry args={[0.22, 20, 16]} />
+            <meshStandardMaterial
+              color="#ffffff"
+              roughness={0.25}
+              emissive="#dbeafe"
+              emissiveIntensity={0.18}
+            />
+          </mesh>
+        ))}
+        {/* Roots — two cones extending downward */}
+        <mesh position={[0.32, -0.85, 0]} rotation={[Math.PI, 0, 0]}>
+          <coneGeometry args={[0.32, 0.85, 18]} />
+          <meshStandardMaterial color="#f1f5f9" roughness={0.45} />
+        </mesh>
+        <mesh position={[-0.32, -0.85, 0]} rotation={[Math.PI, 0, 0]}>
+          <coneGeometry args={[0.32, 0.85, 18]} />
+          <meshStandardMaterial color="#f1f5f9" roughness={0.45} />
+        </mesh>
+        {/* Gum-line band — subtle pinkish ring around the base of the crown */}
+        <mesh position={[0, -0.35, 0]} scale={[1.04, 0.18, 1.04]}>
+          <sphereGeometry args={[TOOTH_RADIUS, 28, 12]} />
           <meshStandardMaterial
-            color="#fef3c7"
-            roughness={0.5}
+            color="#fb7185"
+            roughness={0.6}
             transparent
-            opacity={0.55}
+            opacity={0.85}
           />
         </mesh>
       </group>
@@ -356,13 +417,35 @@ type SwarmProps = {
   onMissClick: (xPct: number, yPct: number) => void;
 };
 
+/** Toothpaste droplet flying from the tooth to a bacteria's position. */
+type Projectile = {
+  id: number;
+  origin: THREE.Vector3;
+  target: THREE.Vector3;
+  startMs: number;
+  durationMs: number;
+};
+
 function Swarm({ level, onKill, onHit, onMissClick, running }: SwarmProps) {
-  const tuning = useMemo(() => levelTuning(level), [level]);
   const { camera, gl } = useThree();
   const [, force] = useState(0);
   const swarmRef = useRef<Bacteria[]>([]);
+  const projectilesRef = useRef<Projectile[]>([]);
   const idRef = useRef(0);
   const lastSpawnRef = useRef(0);
+  const startedAtRef = useRef(performance.now());
+  // Re-tune every 2s in endless mode so spawn cadence / HP escalate.
+  const [tuningTick, setTuningTick] = useState(0);
+  useEffect(() => {
+    if (level < 11) return;
+    const id = setInterval(() => setTuningTick((n) => n + 1), 2000);
+    return () => clearInterval(id);
+  }, [level]);
+  const tuning = useMemo(() => {
+    const elapsedSec = (performance.now() - startedAtRef.current) / 1000;
+    return levelTuning(level, elapsedSec);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [level, tuningTick]);
 
   // Click handling — raycast from canvas pointer to the swarm group.
   useEffect(() => {
@@ -399,6 +482,16 @@ function Swarm({ level, onKill, onHit, onMissClick, running }: SwarmProps) {
         return;
       }
       const b = swarmRef.current[bestIdx];
+      // Spawn a toothpaste droplet from the tooth toward the bacteria's
+      // current position so the player sees the tooth fire back.
+      idRef.current += 1;
+      projectilesRef.current.push({
+        id: idRef.current,
+        origin: new THREE.Vector3(0, 0, 0),
+        target: b.position.clone(),
+        startMs: performance.now(),
+        durationMs: 220,
+      });
       b.hp -= 1;
       b.hits += 1;
       if (b.hp <= 0) {
@@ -427,14 +520,23 @@ function Swarm({ level, onKill, onHit, onMissClick, running }: SwarmProps) {
     const now = performance.now();
     if (now - lastSpawnRef.current > tuning.spawnIntervalMs) {
       lastSpawnRef.current = now;
-      // Random point on a sphere around the tooth.
+      // Spawn on a dome/horseshoe around the tooth — front + sides + above,
+      // but never directly behind. Camera looks from (0, 4.2, 7) toward
+      // origin, so bacteria with z < -0.5 of the radius can be hidden by
+      // the tooth. We restrict spawn to z > -0.2 (front-facing hemisphere).
       const phi = Math.random() * Math.PI * 2;
-      const cosT = Math.random() * 2 - 1;
-      const sinT = Math.sqrt(1 - cosT * cosT);
+      // Tilt vertical spread upward — most bacteria come from above and
+      // around, never from directly below.
+      const cosT = -0.2 + Math.random() * 1.2; // y component in [-0.2, 1.0]
+      const sinT = Math.sqrt(Math.max(0, 1 - cosT * cosT));
+      let zComp = sinT * Math.sin(phi);
+      // Reflect to the front hemisphere if needed so the player always
+      // sees the bacteria approaching.
+      if (zComp < -0.2) zComp = Math.abs(zComp) + 0.1;
       const dir = new THREE.Vector3(
         sinT * Math.cos(phi),
-        cosT * 0.5, // squash vertical spread so the action stays on screen
-        sinT * Math.sin(phi),
+        cosT,
+        zComp,
       ).normalize();
       const pos = dir.clone().multiplyScalar(SPAWN_RADIUS);
       const towardCenter = pos.clone().negate().normalize();
@@ -468,7 +570,19 @@ function Swarm({ level, onKill, onHit, onMissClick, running }: SwarmProps) {
         killed = true;
       }
     }
-    if (killed || swarmRef.current.length > 0) force((n) => n + 1);
+    // Cull expired projectiles.
+    const cutoff = now;
+    if (projectilesRef.current.length > 0) {
+      const survivors = projectilesRef.current.filter(
+        (p) => cutoff - p.startMs < p.durationMs,
+      );
+      if (survivors.length !== projectilesRef.current.length) {
+        projectilesRef.current = survivors;
+      }
+    }
+    if (killed || swarmRef.current.length > 0 || projectilesRef.current.length > 0) {
+      force((n) => n + 1);
+    }
   });
 
   return (
@@ -476,12 +590,19 @@ function Swarm({ level, onKill, onHit, onMissClick, running }: SwarmProps) {
       {swarmRef.current.map((b) => (
         <BacteriaMesh key={b.id} bacteria={b} />
       ))}
+      {projectilesRef.current.map((p) => (
+        <Projectile key={p.id} projectile={p} />
+      ))}
     </group>
   );
 }
 
+/**
+ * Bacteria mesh — wobbly red icosahedron with little antenna spikes around
+ * it so it reads as a microbe rather than a flat sphere.
+ */
 function BacteriaMesh({ bacteria }: { bacteria: Bacteria }) {
-  const ref = useRef<THREE.Mesh>(null);
+  const ref = useRef<THREE.Group>(null);
   useFrame((_, dt) => {
     if (ref.current) {
       ref.current.position.copy(bacteria.position);
@@ -489,15 +610,69 @@ function BacteriaMesh({ bacteria }: { bacteria: Bacteria }) {
       ref.current.rotation.y += dt * 1.1;
     }
   });
+  // Spike positions on a unit cube's corners — adds personality.
+  const spikes: [number, number, number][] = [
+    [0.3, 0.3, 0],
+    [-0.3, 0.3, 0],
+    [0, 0.32, 0.3],
+    [0, 0.32, -0.3],
+    [0.25, -0.25, 0.2],
+    [-0.25, -0.25, -0.2],
+  ];
   return (
-    <mesh ref={ref} scale={bacteria.scale}>
-      <icosahedronGeometry args={[0.32, 1]} />
+    <group ref={ref} scale={bacteria.scale}>
+      <mesh castShadow>
+        <icosahedronGeometry args={[0.34, 1]} />
+        <meshStandardMaterial
+          color={bacteria.color}
+          roughness={0.45}
+          metalness={0.18}
+          emissive={bacteria.color}
+          emissiveIntensity={0.4}
+        />
+      </mesh>
+      {spikes.map((p, i) => (
+        <mesh key={i} position={p}>
+          <sphereGeometry args={[0.08, 8, 6]} />
+          <meshStandardMaterial
+            color={bacteria.color}
+            emissive={bacteria.color}
+            emissiveIntensity={0.5}
+          />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+/**
+ * Toothpaste droplet — small mint-colored sphere with a glowing trail that
+ * lerps from the tooth (origin) to where the bacteria was when shot.
+ */
+function Projectile({ projectile }: { projectile: Projectile }) {
+  const ref = useRef<THREE.Mesh>(null);
+  useFrame(() => {
+    if (!ref.current) return;
+    const t = Math.min(
+      1,
+      (performance.now() - projectile.startMs) / projectile.durationMs,
+    );
+    // Eased lerp for snappy launch.
+    const ease = 1 - Math.pow(1 - t, 2);
+    const x = projectile.origin.x + (projectile.target.x - projectile.origin.x) * ease;
+    const y = projectile.origin.y + (projectile.target.y - projectile.origin.y) * ease;
+    const z = projectile.origin.z + (projectile.target.z - projectile.origin.z) * ease;
+    ref.current.position.set(x, y, z);
+    ref.current.scale.setScalar(0.18 + t * 0.12);
+  });
+  return (
+    <mesh ref={ref}>
+      <sphereGeometry args={[1, 16, 12]} />
       <meshStandardMaterial
-        color={bacteria.color}
-        roughness={0.4}
-        metalness={0.2}
-        emissive={bacteria.color}
-        emissiveIntensity={0.4}
+        color="#bef264"
+        emissive="#bef264"
+        emissiveIntensity={1.2}
+        toneMapped={false}
       />
     </mesh>
   );
