@@ -8,7 +8,7 @@ import type { DoctorWorkspaceData } from "@/features/supervision/types";
 type ReportForm = {
   title: string;
   description: string;
-  supervisor: string;
+  supervisorIds: string[];
 };
 
 type PatientFeedbackForm = {
@@ -89,8 +89,8 @@ export function DoctorReportSurface({
       onPatientPhoneChange={(value) =>
         setSelectedReport((prev: any) => ({ ...prev, patientPhone: value }))
       }
-      onSupervisorChange={(value) =>
-        setReportForm((prev) => ({ ...prev, supervisor: value }))
+      onSupervisorIdsChange={(ids) =>
+        setReportForm((prev) => ({ ...prev, supervisorIds: ids }))
       }
       onTitleChange={(value) =>
         setReportForm((prev) => ({ ...prev, title: value }))

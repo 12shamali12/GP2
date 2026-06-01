@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import type { DoctorWorkspaceData } from "@/features/supervision/types";
 import { useTranslation } from "@/features/i18n/language-provider";
 
@@ -23,7 +24,7 @@ type DoctorReportWorkspaceProps = {
   reportForm: {
     title: string;
     description: string;
-    supervisor: string;
+    supervisorIds: string[];
   };
   reportFormData: {
     chiefComplaint: string;
@@ -55,7 +56,7 @@ type DoctorReportWorkspaceProps = {
   onCloseReportForm: () => void;
   onPatientNameChange: (value: string) => void;
   onPatientPhoneChange: (value: string) => void;
-  onSupervisorChange: (value: string) => void;
+  onSupervisorIdsChange: (ids: string[]) => void;
   onTitleChange: (value: string) => void;
   onDescriptionChange: (value: string) => void;
   onToggleTask: (taskId: string, checked: boolean) => void;
@@ -103,7 +104,7 @@ export function DoctorReportWorkspace({
   onCloseReportForm,
   onPatientNameChange,
   onPatientPhoneChange,
-  onSupervisorChange,
+  onSupervisorIdsChange,
   onTitleChange,
   onDescriptionChange,
   onToggleTask,
@@ -120,7 +121,9 @@ export function DoctorReportWorkspace({
 }: DoctorReportWorkspaceProps) {
   const t = useTranslation();
   const existingReport = selectedReport?.report || null;
-  const canSendReport = selectedReport?.status === "COMPLETED";
+  const canSendReport =
+    selectedReport?.status === "COMPLETED" &&
+    reportForm.supervisorIds.length > 0;
   const canRatePatient = selectedReport?.status === "COMPLETED";
 
   return (
@@ -382,30 +385,23 @@ export function DoctorReportWorkspace({
                 </div>
                 <div>
                   <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
-                    {t("doctor.report.label_supervisor")}
+                    {t("doctor.report.label_supervisor")}{" "}
+                    <span className="text-rose-500" aria-hidden>
+                      *
+                    </span>
                   </p>
-                  {doctorWorkspace?.reportSupervisors?.length ? (
-                    <select
-                      value={reportForm.supervisor}
-                      onChange={(event) => onSupervisorChange(event.target.value)}
-                      className="denty-field cursor-pointer text-sm"
-                    >
-                      <option value="">
-                        {t("doctor.report.choose_supervisor")}
-                      </option>
-                      {doctorWorkspace.reportSupervisors.map((supervisor) => (
-                        <option key={supervisor.id} value={supervisor.id}>
-                          {supervisor.name}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <input
-                      value={reportForm.supervisor}
-                      onChange={(event) => onSupervisorChange(event.target.value)}
-                      className="denty-field text-sm"
-                    />
-                  )}
+                  <SupervisorMultiSelect
+                    supervisors={doctorWorkspace?.reportSupervisors ?? []}
+                    selectedIds={reportForm.supervisorIds}
+                    onChange={onSupervisorIdsChange}
+                  />
+                  <p className="mt-1.5 text-[11px] text-[var(--muted-foreground)]">
+                    {reportForm.supervisorIds.length === 0
+                      ? t("doctor.report.supervisor_required")
+                      : t("doctor.report.supervisor_chosen_count", {
+                          count: reportForm.supervisorIds.length,
+                        })}
+                  </p>
                 </div>
                 <div>
                   <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted-foreground)]">
@@ -724,6 +720,175 @@ export function DoctorReportWorkspace({
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Supervisor multi-select                                                    */
+/* -------------------------------------------------------------------------- */
+
+type Supervisor = {
+  id: string;
+  name: string;
+  username: string;
+  email?: string | null;
+};
+
+type SupervisorMultiSelectProps = {
+  supervisors: Supervisor[];
+  selectedIds: string[];
+  onChange: (ids: string[]) => void;
+};
+
+/**
+ * Compact multi-select for picking the supervisors a CaseReport will be sent
+ * to. Renders the chosen supervisors as removable chips above a toggle that
+ * reveals a checkbox list. At least one supervisor is required; the parent
+ * form gates submit on that.
+ */
+function SupervisorMultiSelect({
+  supervisors,
+  selectedIds,
+  onChange,
+}: SupervisorMultiSelectProps) {
+  const t = useTranslation();
+  const [open, setOpen] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
+
+  // Close the panel on outside click.
+  useEffect(() => {
+    if (!open) return;
+    function onDocClick(event: MouseEvent) {
+      if (!wrapperRef.current) return;
+      if (event.target instanceof Node && wrapperRef.current.contains(event.target))
+        return;
+      setOpen(false);
+    }
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, [open]);
+
+  const selectedMap = new Map(supervisors.map((s) => [s.id, s]));
+  const selectedList = selectedIds
+    .map((id) => selectedMap.get(id))
+    .filter((s): s is Supervisor => Boolean(s));
+
+  function toggle(id: string) {
+    if (selectedIds.includes(id)) {
+      onChange(selectedIds.filter((existing) => existing !== id));
+    } else {
+      onChange([...selectedIds, id]);
+    }
+  }
+
+  if (supervisors.length === 0) {
+    return (
+      <p className="rounded-[12px] border border-amber-300/40 bg-amber-500/10 px-3 py-2 text-xs font-semibold text-amber-700">
+        {t("doctor.report.supervisor_none_available")}
+      </p>
+    );
+  }
+
+  return (
+    <div ref={wrapperRef} className="relative">
+      {/* Selected chips */}
+      {selectedList.length > 0 ? (
+        <div className="mb-2 flex flex-wrap gap-1.5">
+          {selectedList.map((supervisor, index) => (
+            <span
+              key={supervisor.id}
+              className="inline-flex items-center gap-1.5 rounded-full border border-teal-400/40 bg-teal-500/15 px-2.5 py-1 text-xs font-semibold text-[var(--foreground)]"
+            >
+              {index === 0 ? (
+                <span
+                  className="rounded-full bg-teal-600/90 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.18em] text-white"
+                  title={t("doctor.report.supervisor_primary_title")}
+                >
+                  {t("doctor.report.supervisor_primary")}
+                </span>
+              ) : null}
+              {supervisor.name}
+              <button
+                type="button"
+                onClick={() => toggle(supervisor.id)}
+                aria-label={t("doctor.report.supervisor_remove_aria", {
+                  name: supervisor.name,
+                })}
+                className="ml-0.5 inline-flex h-4 w-4 items-center justify-center rounded-full text-[var(--muted-foreground)] hover:bg-rose-500/15 hover:text-rose-600"
+              >
+                ✕
+              </button>
+            </span>
+          ))}
+        </div>
+      ) : null}
+
+      {/* Toggle button */}
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="denty-field flex w-full items-center justify-between gap-2 text-left text-sm"
+      >
+        <span className="truncate text-[var(--muted-foreground)]">
+          {selectedList.length === 0
+            ? t("doctor.report.choose_supervisor")
+            : t("doctor.report.supervisor_add_more")}
+        </span>
+        <span aria-hidden className="text-xs text-[var(--muted-foreground)]">
+          {open ? "▲" : "▼"}
+        </span>
+      </button>
+
+      {/* Dropdown */}
+      {open ? (
+        <div
+          role="listbox"
+          aria-multiselectable="true"
+          className="absolute left-0 right-0 z-30 mt-1.5 max-h-64 overflow-y-auto rounded-[14px] border border-white/16 bg-[rgba(15,23,42,0.96)] py-1 shadow-[0_24px_56px_rgba(2,6,18,0.55)] backdrop-blur"
+        >
+          {supervisors.map((supervisor) => {
+            const checked = selectedIds.includes(supervisor.id);
+            return (
+              <button
+                key={supervisor.id}
+                type="button"
+                role="option"
+                aria-selected={checked}
+                onClick={() => toggle(supervisor.id)}
+                className={`flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm transition ${
+                  checked
+                    ? "bg-teal-500/15 text-white"
+                    : "text-white/85 hover:bg-white/10"
+                }`}
+              >
+                <span
+                  className={`flex h-4 w-4 flex-none items-center justify-center rounded-[4px] border-2 ${
+                    checked
+                      ? "border-teal-300 bg-teal-400"
+                      : "border-white/40 bg-transparent"
+                  }`}
+                  aria-hidden
+                >
+                  {checked ? (
+                    <span className="text-[10px] font-extrabold text-slate-900">
+                      ✓
+                    </span>
+                  ) : null}
+                </span>
+                <span className="min-w-0 flex-1 truncate">
+                  {supervisor.name}
+                </span>
+                {supervisor.email ? (
+                  <span className="ml-2 truncate text-[10px] text-white/55">
+                    {supervisor.email}
+                  </span>
+                ) : null}
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -204,10 +204,14 @@ export default function DoctorPage() {
   const [noShowCount, setNoShowCount] = useState(0);
 
   const [selectedReport, setSelectedReport] = useState<any | null>(null);
-  const [reportForm, setReportForm] = useState({
+  const [reportForm, setReportForm] = useState<{
+    title: string;
+    description: string;
+    supervisorIds: string[];
+  }>({
     title: "",
     description: "",
-    supervisor: "",
+    supervisorIds: [],
   });
   const [reportFormData, setReportFormData] = useState(createEmptyReportFormData);
   const [completionNotes, setCompletionNotes] = useState("");

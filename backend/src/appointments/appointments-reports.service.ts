@@ -143,16 +143,50 @@ export class AppointmentsReportsService extends AppointmentsBaseService {
       },
     });
 
-    if (supervisorId) {
-      await this.prisma.notification.create({
-        data: {
+    // Build the full reviewer audience: primary supervisor + every
+    // additional supervisor the doctor selected in the multi-select
+    // dropdown. Extras ride along inside formData.additionalSupervisorIds
+    // as an array of user IDs.
+    const reviewerAudience = new Set<string>();
+    if (supervisorId) reviewerAudience.add(supervisorId);
+    const additionalIds = this.readAdditionalSupervisorIds(dto.formData);
+    if (additionalIds.length) {
+      // Validate every additional ID is actually a SUPERVISOR before
+      // notifying — protects against a tampered payload routing
+      // notifications at non-supervisor accounts.
+      const validated = await this.prisma.user.findMany({
+        where: { id: { in: additionalIds }, role: Role.SUPERVISOR },
+        select: { id: true },
+      });
+      validated.forEach((u) => reviewerAudience.add(u.id));
+    }
+
+    if (reviewerAudience.size > 0) {
+      const body = `${doctor.name} submitted a report${dto.title ? `: ${dto.title}` : "."}`;
+      await this.prisma.notification.createMany({
+        data: Array.from(reviewerAudience).map((recipientId) => ({
           title: "Case report ready for review",
-          body: `${doctor.name} submitted a report${dto.title ? `: ${dto.title}` : "."}`,
-          recipientId: supervisorId,
-        },
+          body,
+          recipientId,
+        })),
       });
     }
     return { message: "Report submitted." };
+  }
+
+  /**
+   * Safely extract additionalSupervisorIds[] from the formData JSON payload.
+   * formData is unknown shape (Prisma JSON), so we walk it defensively and
+   * keep only string IDs.
+   */
+  private readAdditionalSupervisorIds(formData: unknown): string[] {
+    if (!formData || typeof formData !== "object") return [];
+    const additional = (formData as Record<string, unknown>)
+      .additionalSupervisorIds;
+    if (!Array.isArray(additional)) return [];
+    return additional.filter(
+      (id): id is string => typeof id === "string" && id.length > 0,
+    );
   }
 
   async rateDoctor(id: string, dto: RateAppointmentDto) {

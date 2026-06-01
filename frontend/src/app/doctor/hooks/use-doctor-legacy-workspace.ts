@@ -7,7 +7,7 @@ import type { DoctorWorkspaceData } from "@/features/supervision/types";
 type ReportForm = {
   title: string;
   description: string;
-  supervisor: string;
+  supervisorIds: string[];
 };
 
 type UseDoctorLegacyWorkspaceParams = {
@@ -262,7 +262,7 @@ export function useDoctorLegacyWorkspace({
     setReportForm({
       title: "",
       description: "",
-      supervisor: "",
+      supervisorIds: [],
     });
     setReportMessage(null);
     setReportOpen(true);
@@ -273,14 +273,14 @@ export function useDoctorLegacyWorkspace({
 
     if (!appointment) return;
 
-    const defaultSupervisor =
-      doctorWorkspace?.reportSupervisors?.[0]?.name || "";
+    const defaultSupervisorId =
+      doctorWorkspace?.reportSupervisors?.[0]?.id || "";
 
     setSelectedReport(appointment);
     setReportForm({
       title: "",
       description: "",
-      supervisor: defaultSupervisor,
+      supervisorIds: defaultSupervisorId ? [defaultSupervisorId] : [],
     });
     setSelectedReportTaskIds([]);
     setReportMessage(null);

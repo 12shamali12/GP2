@@ -13,7 +13,8 @@ type DashboardIconName =
   | "settings"
   | "logout"
   | "menu"
-  | "close";
+  | "close"
+  | "streak";
 
 type DashboardIconProps = {
   name: DashboardIconName;
@@ -134,6 +135,23 @@ export function DashboardIcon({
       return (
         <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
           <path d="M6 6l12 12M18 6 6 18" strokeWidth="1.8" strokeLinecap="round" />
+        </svg>
+      );
+    case "streak":
+      // Stylised flame — a single continuous outline so it reads well at
+      // 16-20px and stays recognisable in both light + dark themes.
+      return (
+        <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+          <path
+            d="M12 3.5c1.6 2.2 4 4.5 4 7.4a4 4 0 0 1-4 4 4 4 0 0 1-4-4c0-1.4.6-2.6 1.5-3.5C8.8 8.6 10 7 12 3.5Z"
+            strokeWidth="1.6"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M12 21a6.5 6.5 0 0 0 6.5-6.5c0-3.4-2.1-5.7-3.6-7.8-1 2.6-2.4 4.2-3.7 5.5-1 1-1.7 2-1.7 3.3a2.5 2.5 0 1 0 5 0"
+            strokeWidth="1.6"
+            strokeLinejoin="round"
+          />
         </svg>
       );
   }

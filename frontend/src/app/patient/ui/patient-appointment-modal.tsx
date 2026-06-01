@@ -136,6 +136,19 @@ export function PatientAppointmentModal({
                       })
                     : t("patient.appt.student_clinic_doctor")}
                 </p>
+                {(() => {
+                  const supervisorName =
+                    appointment.report?.reviewer?.name ||
+                    appointment.report?.supervisorName ||
+                    null;
+                  if (!supervisorName) return null;
+                  return (
+                    <p className="mt-1 inline-flex items-center gap-1 rounded-full border border-[rgba(99,102,241,0.32)] bg-[rgba(99,102,241,0.12)] px-2 py-0.5 text-[11px] font-semibold text-[rgba(67,56,202,0.95)]">
+                      <span aria-hidden>👁️</span>
+                      {t("patient.appt.supervised_by", { name: supervisorName })}
+                    </p>
+                  );
+                })()}
               </div>
             </div>
 

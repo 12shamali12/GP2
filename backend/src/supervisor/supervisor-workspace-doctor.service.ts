@@ -400,13 +400,78 @@ export class SupervisorWorkspaceDoctorService extends SupervisorBaseService {
       }
     >();
 
-    schedule
-      .filter((assignment) => assignment.assignmentDate.getTime() === today.getTime())
-      .forEach((assignment) => {
-        assignment.supervisors.forEach((link) => {
-          availableReportSupervisorMap.set(link.supervisor.id, link.supervisor);
-        });
+    // 1. Include supervisors from every clinic the doctor has on the schedule
+    //    window (today + upcoming) — previously this was limited to "today
+    //    only" which left the dropdown empty when the doctor was filling in
+    //    a report for an earlier appointment or had no clinic shift today.
+    schedule.forEach((assignment) => {
+      assignment.supervisors.forEach((link) => {
+        availableReportSupervisorMap.set(link.supervisor.id, link.supervisor);
       });
+    });
+
+    // 2. Also include the standing supervisor↔clinic links for every clinic
+    //    the doctor has ever been booked at via an appointment. We look at
+    //    BOTH the appointment's clinicCase.clinicId AND the slot.clinicId so
+    //    the dropdown still populates when an appointment has no clinicCase
+    //    (e.g. a partner-only or follow-up booking).
+    const appointmentClinics = await this.prisma.appointment.findMany({
+      where: { doctorId: doctor.id },
+      select: {
+        clinicCase: { select: { clinicId: true } },
+        slot: { select: { clinicId: true } },
+      },
+    });
+    const standingClinicIds = new Set<string>();
+    appointmentClinics.forEach((row) => {
+      if (row.clinicCase?.clinicId) standingClinicIds.add(row.clinicCase.clinicId);
+      if (row.slot?.clinicId) standingClinicIds.add(row.slot.clinicId);
+    });
+    if (standingClinicIds.size > 0) {
+      const standingLinks = await this.prisma.clinicSupervisorLink.findMany({
+        where: { clinicId: { in: Array.from(standingClinicIds) } },
+        include: {
+          supervisor: {
+            select: {
+              id: true,
+              name: true,
+              username: true,
+              email: true,
+            },
+          },
+        },
+      });
+      standingLinks.forEach((link) => {
+        availableReportSupervisorMap.set(link.supervisor.id, link.supervisor);
+      });
+    }
+
+    // 3. ALWAYS also include every supervisor that is linked to any clinic
+    //    in the system. The doctor's multi-select needs a complete pool to
+    //    pick from regardless of whether their rotation plan / appointment
+    //    history is wired up yet. Previously this was a fallback that only
+    //    ran when Layers 1+2 produced nothing — which left a bug where a
+    //    single stale schedule supervisor blocked the broader list.
+    //
+    //    The Map de-dupes by supervisor.id so this is safe to call on top
+    //    of Layers 1+2; it just adds anyone the earlier layers missed.
+    const allLinkedSupervisors = await this.prisma.clinicSupervisorLink.findMany({
+      distinct: ["supervisorId"],
+      include: {
+        supervisor: {
+          select: {
+            id: true,
+            name: true,
+            username: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: { supervisor: { name: "asc" } },
+    });
+    allLinkedSupervisors.forEach((link) => {
+      availableReportSupervisorMap.set(link.supervisor.id, link.supervisor);
+    });
 
     return {
       doctor: {

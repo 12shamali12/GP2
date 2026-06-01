@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState, type RefObject } from "react";
 import { useTranslation } from "@/features/i18n/language-provider";
 import { useCountUp } from "@/features/ui/hooks/use-count-up";
+import { StreakSummaryWidget } from "@/features/smile-streak/components/streak-summary-widget";
 
 /** Renders an integer stat that counts up from 0 on mount / value change. */
 function StatCount({ value }: { value: number }) {
@@ -40,6 +41,7 @@ type PatientCareDeskViewProps = {
   onSelectedClinicCaseChange: (value: string) => void;
   onSelectSlot: (slot: any) => void;
   onSelectAppointment: (appointment: any) => void;
+  onOpenStreak: () => void;
 };
 
 export function PatientCareDeskView({
@@ -64,6 +66,7 @@ export function PatientCareDeskView({
   onSelectedClinicCaseChange,
   onSelectSlot,
   onSelectAppointment,
+  onOpenStreak,
 }: PatientCareDeskViewProps) {
   const t = useTranslation();
   const selectedCase =
@@ -264,6 +267,9 @@ export function PatientCareDeskView({
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
+          <div className="sm:col-span-2 xl:col-span-1">
+            <StreakSummaryWidget onOpen={onOpenStreak} />
+          </div>
           <div className="denty-stat-card p-4">
             <p className="denty-kicker !tracking-[0.18em]">
               {t("patient.care.stat_upcoming")}

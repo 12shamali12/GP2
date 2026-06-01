@@ -1,0 +1,117 @@
+@startuml figure-3-4-sequence-book-appointment
+title Figure 3.4 — Sequence: Patient requests an appointment\n(happy path + 409 Conflict on slot collision)
+
+skinparam dpi 150
+skinparam defaultFontName Cambria
+skinparam defaultFontSize 13
+skinparam shadowing false
+skinparam sequenceArrowThickness 1.5
+skinparam sequenceMessageAlign center
+skinparam sequenceParticipantBackgroundColor #E7EEF2
+skinparam sequenceParticipantBorderColor #1F2937
+skinparam sequenceLifeLineBorderColor #94A3B8
+skinparam sequenceLifeLineBackgroundColor #F8FAFC
+skinparam sequenceActorBackgroundColor #FEF3C7
+skinparam sequenceActorBorderColor #92400E
+skinparam noteBackgroundColor #FEF9C3
+skinparam noteBorderColor #A16207
+skinparam ArrowColor #334155
+skinparam ArrowFontSize 12
+
+actor       "Patient"                        as Patient
+participant "Browser\n(Next.js 16)"          as Browser
+participant "AppointmentsController\n(NestJS)" as Ctrl
+participant "AppointmentsBookings\nService"   as Svc
+participant "PrismaService\n(5.22)"          as Prisma
+database    "PostgreSQL 16"                  as DB
+participant "Notifications\nService"          as Notif
+actor       "Doctor\n(student)"               as Doctor
+
+== 1. Patient initiates booking ==
+
+Patient  -> Browser : Click "Book this slot"\non slot browser
+activate Browser
+
+Browser  -> Ctrl    : POST /appointments/book\nbody: { slotId, doctorId, clinicCaseId }\nheader: Authorization: Bearer <JWT>
+activate Ctrl
+
+note right of Ctrl
+  @UseGuards(JwtAuthGuard)
+  ValidationPipe runs class-validator on the DTO
+  before the controller body executes.
+end note
+
+== 2. Service opens a Prisma $transaction ==
+
+Ctrl -> Svc : bookAppointment(userId, dto)
+activate Svc
+
+Svc  -> Prisma : $transaction(async (tx) => ... )
+activate Prisma
+
+Prisma -> DB : SELECT slot\nWHERE id = $1\nFOR UPDATE  (row lock)
+activate DB
+DB --> Prisma : slot row
+deactivate DB
+
+== 3. Decide based on slot status ==
+
+alt slot.status = OPEN (happy path)
+
+  Prisma -> DB : UPDATE AvailabilitySlot\nSET status = 'BOOKED'\nWHERE id = $1
+  activate DB
+  DB --> Prisma : ok
+  deactivate DB
+
+  Prisma -> DB : INSERT INTO Appointment\n(slotId, doctorId, patientId, clinicCaseId,\n status='PENDING')
+  activate DB
+  DB --> Prisma : appointment row
+  deactivate DB
+
+  Prisma -> DB : INSERT INTO AppointmentEvent\n(type='REQUESTED', ...)
+  activate DB
+  DB --> Prisma : ok
+  deactivate DB
+
+  Svc -> Notif : create(doctorId,\n  "New appointment request")
+  activate Notif
+  Notif -> Prisma : insert Notification row\n(inside the same tx)
+  Prisma -> DB : INSERT INTO Notification ...
+  activate DB
+  DB --> Prisma : ok
+  deactivate DB
+  Notif --> Svc : ok
+  deactivate Notif
+
+  Prisma --> Svc  : tx commit
+  deactivate Prisma
+
+  Svc  --> Ctrl   : appointment DTO
+  deactivate Svc
+  Ctrl --> Browser : 201 Created\n{ appointment, statusPill: 'PENDING' }
+  deactivate Ctrl
+  Browser --> Patient : success toast + status pill
+  deactivate Browser
+
+  Notif -->> Doctor : in-app + email\n"New appointment request"
+
+else slot.status = BOOKED (collision — concurrent booking)
+
+  Prisma --> Svc : abort
+  deactivate Prisma
+  Svc  --> Ctrl  : throw ConflictException
+  deactivate Svc
+  Ctrl --> Browser : 409 Conflict\n{ message: 'Slot already booked' }
+  deactivate Ctrl
+  Browser --> Patient : "This slot was just\ntaken — pick another"
+  deactivate Browser
+
+end
+
+note over Prisma, DB
+  The entire branch above runs inside ONE Prisma $transaction.
+  Either the slot update + appointment insert + AppointmentEvent + Notification all
+  commit, or none do. This guarantees no double-booking under load (NFR-10).
+end note
+
+@enduml

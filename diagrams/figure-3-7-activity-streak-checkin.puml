@@ -1,0 +1,126 @@
+@startuml figure-3-7-activity-streak-checkin
+title Figure 3.7 — Activity Diagram: Daily Healthy Smile Streak check-in\n(F15 + F16 — Asia/Amman date-key, streak math, badge award)
+
+skinparam dpi 150
+skinparam defaultFontName Cambria
+skinparam defaultFontSize 13
+skinparam shadowing false
+skinparam activity {
+  BackgroundColor #E7EEF2
+  BorderColor #1F2937
+  FontColor #0F172A
+  ArrowColor #334155
+  ArrowFontSize 11
+  DiamondBackgroundColor #FEF3C7
+  DiamondBorderColor #92400E
+  DiamondFontColor #0F172A
+  StartColor #1F2937
+  EndColor #1F2937
+  BarColor #1F2937
+}
+skinparam noteBackgroundColor #FEF9C3
+skinparam noteBorderColor #A16207
+skinparam partition {
+  BorderColor #94A3B8
+  FontColor #0F172A
+  FontStyle bold
+}
+
+|#FEF3C7| Patient |
+start
+:Open the Healthy Smile Streak page;
+
+|#DBEAFE| Browser (Next.js 16) |
+:GET /smile-streak/me;
+:Render current streak,\nlongest streak, badges,\nand 3 ritual checkboxes\n(brush · floss · mouthwash);
+
+|#FEF3C7| Patient |
+:Tap the three\nritual checkboxes;
+
+if (all three rituals checked?) then (no)
+  :Submit button stays disabled;
+  stop
+else (yes)
+endif
+
+:Tap "Mark today done";
+
+|#DBEAFE| Browser (Next.js 16) |
+:POST /smile-streak/checkin\nheader: Authorization: Bearer <JWT>;
+
+|#D1FAE5| NestJS — SmileStreakController + Service |
+:Verify JWT via JwtAuthGuard\n(NFR-5);
+:Compute today's Amman date key\n(YYYY-MM-DD in Asia/Amman,\nNFR-14, NFR-15);
+
+if (SmileCheckin exists for (patient, todayKey)?) then (yes — already done today)
+  :Return 409 Conflict\n{ alreadyCheckedInToday: true };
+
+  |#DBEAFE| Browser (Next.js 16) |
+  :Show "See you tomorrow"\ncelebration card;
+
+  |#FEF3C7| Patient |
+  stop
+else (no)
+endif
+
+|#D1FAE5| NestJS — SmileStreakController + Service |
+:Compute yesterday's Amman\ndate key (today − 1 day);
+
+if (SmileCheckin exists for\n(patient, yesterdayKey)?) then (yes — streak continues)
+  :newStreak = currentStreak + 1;
+else (no — streak resets)
+  :newStreak = 1;
+endif
+
+|#EDE9FE| Prisma 5.22 + PostgreSQL 16 |
+:$transaction begin;
+:INSERT INTO SmileCheckin\n(patientId, dateKey,\nstreakAt = newStreak);
+
+if (newStreak > storedBest?) then (yes)
+  :UPDATE bestStreak\non patient profile;
+endif
+
+if (newStreak ∈ {3, 7, 30, 100}?) then (yes — milestone)
+  :INSERT INTO Notification\n(badge type, body);
+
+  |#D1FAE5| NestJS — SmileStreakController + Service |
+  :Award badge\n(F15 / FR-30);
+else (no)
+endif
+
+|#EDE9FE| Prisma 5.22 + PostgreSQL 16 |
+:tx commit;
+
+|#D1FAE5| NestJS — SmileStreakController + Service |
+:Return 201 Created\n{ newStreak, longestStreak,\nawardedBadge?, rank };
+
+|#DBEAFE| Browser (Next.js 16) |
+:Animate counter\nincrement;
+
+if (badge awarded?) then (yes)
+  :Trigger badge\nceremony animation;
+else (no)
+endif
+
+:Refresh leaderboard\nranking widget\n(F16 / FR-31);
+
+|#FEF3C7| Patient |
+:See updated streak + badges;
+stop
+
+note right
+  Date-key arithmetic uses Asia/Amman timezone for daily uniqueness
+  regardless of server timezone (NFR-14, NFR-15). A patient who checks in
+  at 11:45pm and again at 12:15am genuinely counts as two consecutive
+  days, not one. The @@unique([patientId, dateKey]) constraint on
+  SmileCheckin enforces one row per day at the storage layer.
+end note
+
+note left
+  All inserts + updates run inside ONE Prisma $transaction (NFR-29):
+  the SmileCheckin row, the bestStreak bump, and the badge Notification
+  all commit together. If the badge insert fails the streak insert is
+  rolled back too — the patient never sees a streak without its badge.
+end note
+
+@enduml

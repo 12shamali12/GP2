@@ -1,0 +1,83 @@
+@startuml figure-3-6-state-appointment
+title Figure 3.6 — State Diagram: Appointment lifecycle\n(REQUESTED → CONFIRMED → IN_PROGRESS → AWAITING_REPORT → DECISION)
+
+skinparam dpi 150
+skinparam defaultFontName Cambria
+skinparam defaultFontSize 13
+skinparam shadowing false
+skinparam state {
+  BackgroundColor #E7EEF2
+  BorderColor #1F2937
+  FontColor #0F172A
+  ArrowColor #334155
+  ArrowFontSize 11
+  AttributeFontSize 11
+}
+skinparam noteBackgroundColor #FEF9C3
+skinparam noteBorderColor #A16207
+
+[*] --> PENDING : patient submits\nrequest\n(F5 / FR-13)
+
+state PENDING #DBEAFE : Appointment row inserted with\nstatus = PENDING.\nSlot remains OPEN until APPROVED.
+
+PENDING --> APPROVED       : doctor accepts\n[POST .../accept]\n(F7 / FR-16)
+PENDING --> CANCELLED_BY_PATIENT : patient cancels\n[POST .../cancel-patient]\n(F7 / FR-15)
+PENDING --> REJECTED       : doctor declines\n[POST .../decision REJECT]
+
+state APPROVED #D1FAE5 : Slot moves to BOOKED.\nNotification fires to patient.\nAppointmentEvent recorded.
+
+APPROVED --> IN_PROGRESS   : start time reached;\npatient arrives at clinic
+APPROVED --> CANCELLED_BY_DOCTOR : doctor cancels\n[POST .../cancel]
+APPROVED --> CANCELLED_BY_PATIENT : patient cancels\n(before start)
+APPROVED --> NO_SHOW       : no activity past end time\n(auto-flagged by job;\nF25 / FR-48)
+
+state IN_PROGRESS #FDE68A : Treatment under supervision.\nNot a stored status — derived\nfrom (status = APPROVED\n AND start ≤ now ≤ end).
+
+IN_PROGRESS --> AWAITING_REPORT : doctor marks\n"session complete"\n(reportSubmitted = false,\ncompletedAt = NOW())
+
+state AWAITING_REPORT #FED7AA : Patient sees AWAITING_REPORT pill\n(F9 / FR-19). Doctor's case queue\nshows the row as needing report.
+
+AWAITING_REPORT --> REPORT_SUBMITTED : doctor submits report\n[POST /cases/:id/report]\n(F7 / FR-13;\nCaseReport.status = SUBMITTED)
+
+state REPORT_SUBMITTED #C7D2FE : Report enters supervisor queue.\nDoctor can no longer edit\nuntil decision (F7 / FR-14).
+
+REPORT_SUBMITTED --> COMPLETED : supervisor APPROVE\n(F8 / FR-15, FR-18)
+REPORT_SUBMITTED --> AWAITING_REPORT : supervisor NEEDS_EDIT\n(F8 / FR-17)\n— report unlocked, same patient
+REPORT_SUBMITTED --> REDO_REQUESTED : supervisor REDO\n(F8 / FR-16)
+
+state COMPLETED #BBF7D0 : Final approving state.\nDoctorClinicCaseProgress flips\nto COMPLETED — graduation\ncredit booked (atomic, NFR-11).
+
+state REDO_REQUESTED #FBCFE8 : Case invalidated.\nDoctorClinicCaseProgress stays OPEN.\nAppointment closes; doctor must redo the\nsame category on a different patient.
+
+REDO_REQUESTED --> CANCELLED_BY_DOCTOR : case closed\n(no graduation credit)
+
+state CANCELLED_BY_PATIENT #FEE2E2 : Patient bailed before start.\nSlot returns to OPEN.
+
+state CANCELLED_BY_DOCTOR #FEE2E2 : Doctor bailed or REDO closure.\nSlot returns to OPEN.\nDoctor performance event recorded.
+
+state REJECTED #FEE2E2 : Doctor declined the request.\nSlot returns to OPEN.
+
+state NO_SHOW #FEF3C7 : Patient missed without cancelling.\nAppointment.noShow = true.\nAppointmentEvent type = NO_SHOW.
+
+COMPLETED --> [*]
+CANCELLED_BY_PATIENT --> [*]
+CANCELLED_BY_DOCTOR --> [*]
+REJECTED --> [*]
+NO_SHOW --> [*]
+
+note bottom of REPORT_SUBMITTED
+  Persisted status = the AppointmentStatus enum in
+  prisma/schema.prisma. AWAITING_REPORT and
+  IN_PROGRESS are UI-derived states, not stored
+  values — they are computed from (status, reportSubmitted,
+  completedAt, current time).
+end note
+
+note top of COMPLETED
+  This is the only state where the doctor gets graduation
+  credit. The supervisor's APPROVE is the sole transition that
+  flips DoctorClinicCaseProgress to COMPLETED inside the
+  same Prisma $transaction as the decision write (NFR-11).
+end note
+
+@enduml

@@ -1,0 +1,136 @@
+---
+title: Figure 3.2 — DentyHub Use Case Diagram (four roles)
+config:
+  theme: default
+  layout: elk
+  elk:
+    nodePlacementStrategy: BRANDES_KOEPF
+    mergeEdges: true
+  themeVariables:
+    fontFamily: "Cambria, Georgia, serif"
+    fontSize: "14px"
+    primaryColor: "#E7EEF2"
+    primaryTextColor: "#0F172A"
+    primaryBorderColor: "#0F172A"
+    lineColor: "#1F2937"
+---
+
+flowchart LR
+
+    %% ============ ACTORS (left column) ============
+    PAT(("👤<br/><b>Patient</b>"))
+    DOC(("👤<br/><b>Doctor</b><br/>(student)"))
+    SUP(("👤<br/><b>Supervisor</b>"))
+    ADM(("👤<br/><b>Admin</b>"))
+
+    %% ============ SYSTEM BOUNDARY ============
+    subgraph System["<b>DentyHub System</b>"]
+        %% ---- Patient use cases ----
+        UC_P1(["Register +<br/>Log in"])
+        UC_P2(["Browse +<br/>Book Slot"])
+        UC_P3(["Track Appointment<br/>+ View Report"])
+        UC_P4(["Daily Smile<br/>Check-in + Badges"])
+        UC_P5(["Play Arcade<br/>(6 games)"])
+        UC_P6(["Daily Trivia<br/>Quiz"])
+        UC_P7(["Rate +<br/>Report Misconduct"])
+
+        %% ---- Doctor use cases ----
+        UC_D1(["Submit<br/>Credentials"])
+        UC_D2(["Manage<br/>Case Queue"])
+        UC_D3(["Submit<br/>Case Report"])
+        UC_D4(["Respond to<br/>Supervisor Decision"])
+        UC_D5(["Track Graduation<br/>Progress"])
+        UC_D6(["Take Exams +<br/>Clinic Tasks"])
+        UC_D7(["Set Availability<br/>+ Schedule"])
+
+        %% ---- Supervisor use cases ----
+        UC_S1(["Submit<br/>Credentials"])
+        UC_S2(["Review Reports<br/>(Approve / Edit / Redo)"])
+        UC_S3(["Grade Exams +<br/>Tasks"])
+        UC_S4(["Manage Doctors<br/>(Freeze + Group)"])
+        UC_S5(["Post to<br/>Group Feed"])
+
+        %% ---- Admin use cases ----
+        UC_A1(["Vet<br/>Credentials"])
+        UC_A2(["Manage User<br/>Directory"])
+        UC_A3(["Manage Clinics<br/>+ Shifts + Cases"])
+        UC_A4(["Manage Semesters +<br/>Cohort Progression"])
+        UC_A5(["Manage Rotation<br/>Plans"])
+        UC_A6(["Group + Partner<br/>Moderation"])
+        UC_A7(["Review User<br/>Reports"])
+
+        %% ---- Cross-cutting use cases ----
+        UC_X1(["Receive<br/>Notifications"])
+        UC_X2(["Chat 1-to-1"])
+        UC_X3(["Switch Language<br/>EN ↔ AR"])
+        UC_X4(["Update Profile +<br/>Change Password"])
+    end
+
+    %% ============ EDGES ============
+
+    %% Patient (solid)
+    PAT --- UC_P1
+    PAT --- UC_P2
+    PAT --- UC_P3
+    PAT --- UC_P4
+    PAT --- UC_P5
+    PAT --- UC_P6
+    PAT --- UC_P7
+
+    %% Doctor (solid)
+    DOC --- UC_D1
+    DOC --- UC_D2
+    DOC --- UC_D3
+    DOC --- UC_D4
+    DOC --- UC_D5
+    DOC --- UC_D6
+    DOC --- UC_D7
+
+    %% Supervisor (solid)
+    SUP --- UC_S1
+    SUP --- UC_S2
+    SUP --- UC_S3
+    SUP --- UC_S4
+    SUP --- UC_S5
+
+    %% Admin (solid)
+    ADM --- UC_A1
+    ADM --- UC_A2
+    ADM --- UC_A3
+    ADM --- UC_A4
+    ADM --- UC_A5
+    ADM --- UC_A6
+    ADM --- UC_A7
+
+    %% Cross-cutting (dashed — shared by all four)
+    PAT -.- UC_X1
+    DOC -.- UC_X1
+    SUP -.- UC_X1
+    ADM -.- UC_X1
+    PAT -.- UC_X2
+    DOC -.- UC_X2
+    SUP -.- UC_X2
+    ADM -.- UC_X2
+    PAT -.- UC_X3
+    DOC -.- UC_X3
+    SUP -.- UC_X3
+    ADM -.- UC_X3
+    PAT -.- UC_X4
+    DOC -.- UC_X4
+    SUP -.- UC_X4
+    ADM -.- UC_X4
+
+    %% ============ STYLING ============
+    classDef actor        fill:#FEF3C7,stroke:#92400E,stroke-width:3px,color:#0F172A
+    classDef ucPatient    fill:#DBEAFE,stroke:#1E3A8A,stroke-width:2px,color:#0F172A
+    classDef ucDoctor     fill:#D1FAE5,stroke:#065F46,stroke-width:2px,color:#0F172A
+    classDef ucSupervisor fill:#FCE7F3,stroke:#9D174D,stroke-width:2px,color:#0F172A
+    classDef ucAdmin      fill:#EDE9FE,stroke:#5B21B6,stroke-width:2px,color:#0F172A
+    classDef ucShared     fill:#F3F4F6,stroke:#374151,stroke-width:1.5px,color:#0F172A,stroke-dasharray:4 4
+
+    class PAT,DOC,SUP,ADM actor
+    class UC_P1,UC_P2,UC_P3,UC_P4,UC_P5,UC_P6,UC_P7 ucPatient
+    class UC_D1,UC_D2,UC_D3,UC_D4,UC_D5,UC_D6,UC_D7 ucDoctor
+    class UC_S1,UC_S2,UC_S3,UC_S4,UC_S5 ucSupervisor
+    class UC_A1,UC_A2,UC_A3,UC_A4,UC_A5,UC_A6,UC_A7 ucAdmin
+    class UC_X1,UC_X2,UC_X3,UC_X4 ucShared

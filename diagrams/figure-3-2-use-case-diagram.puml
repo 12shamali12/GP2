@@ -1,0 +1,136 @@
+@startuml figure-3-2-use-case-diagram
+title Figure 3.2 — DentyHub Use Case Diagram (four roles)
+
+skinparam dpi 150
+skinparam defaultFontName Cambria
+skinparam defaultFontSize 14
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam usecaseBackgroundColor #F8FAFC
+skinparam usecaseBorderColor #1F2937
+skinparam actorBackgroundColor #FEF3C7
+skinparam actorBorderColor #92400E
+skinparam ArrowColor #334155
+skinparam ArrowFontSize 12
+
+' ============ ACTORS ============
+' Left-to-right direction gives a portrait layout that fits a single
+' Word page; actors stack on the left, system + use cases on the right.
+
+left to right direction
+
+actor "Patient"    as Patient
+actor "Doctor\n(student)" as Doctor
+actor "Supervisor" as Supervisor
+actor "Admin"      as Admin
+
+' ============ SYSTEM BOUNDARY ============
+rectangle "<b>DentyHub System</b>" as System {
+
+  ' ---- Patient surface (blue) ----
+  package "Patient surface" #DBEAFE {
+    usecase "Register +\nLog in"               as UCP1
+    usecase "Browse +\nBook Slot"              as UCP2
+    usecase "Track Appointment\n+ View Report" as UCP3
+    usecase "Daily Smile Check-in\n+ Badges"   as UCP4
+    usecase "Play Arcade\n(6 games)"           as UCP5
+    usecase "Daily Trivia\nQuiz"               as UCP6
+    usecase "Rate + Report\nMisconduct"        as UCP7
+  }
+
+  ' ---- Doctor surface (green) ----
+  package "Doctor surface" #D1FAE5 {
+    usecase "Submit\nCredentials"               as UCD1
+    usecase "Manage\nCase Queue"                as UCD2
+    usecase "Submit\nCase Report"               as UCD3
+    usecase "Respond to\nSupervisor Decision"   as UCD4
+    usecase "Track Graduation\nProgress"        as UCD5
+    usecase "Take Exams +\nClinic Tasks"        as UCD6
+    usecase "Set Availability\n+ Schedule"      as UCD7
+  }
+
+  ' ---- Supervisor surface (pink) ----
+  package "Supervisor surface" #FCE7F3 {
+    usecase "Submit\nCredentials"                  as UCS1
+    usecase "Review Reports\n(Approve / Edit / Redo)" as UCS2
+    usecase "Grade Exams +\nTasks"                 as UCS3
+    usecase "Manage Doctors\n(Freeze + Group)"     as UCS4
+    usecase "Post to\nGroup Feed"                  as UCS5
+  }
+
+  ' ---- Admin surface (purple) ----
+  package "Admin surface" #EDE9FE {
+    usecase "Vet\nCredentials"                       as UCA1
+    usecase "Manage User\nDirectory"                 as UCA2
+    usecase "Manage Clinics +\nShifts + Cases"       as UCA3
+    usecase "Manage Semesters +\nCohort Progression" as UCA4
+    usecase "Manage Rotation\nPlans"                 as UCA5
+    usecase "Group + Partner\nModeration"            as UCA6
+    usecase "Review User\nReports"                   as UCA7
+  }
+
+  ' ---- Cross-cutting (every authenticated role) ----
+  package "Cross-cutting (every role)" #F3F4F6 {
+    usecase "Receive\nNotifications"        as UCX1
+    usecase "Chat 1-to-1"                   as UCX2
+    usecase "Switch Language\nEN  AR"      as UCX3
+    usecase "Update Profile +\nChange Password" as UCX4
+  }
+}
+
+' ============ PATIENT EDGES ============
+Patient -- UCP1
+Patient -- UCP2
+Patient -- UCP3
+Patient -- UCP4
+Patient -- UCP5
+Patient -- UCP6
+Patient -- UCP7
+
+' ============ DOCTOR EDGES ============
+Doctor -- UCD1
+Doctor -- UCD2
+Doctor -- UCD3
+Doctor -- UCD4
+Doctor -- UCD5
+Doctor -- UCD6
+Doctor -- UCD7
+
+' ============ SUPERVISOR EDGES ============
+Supervisor -- UCS1
+Supervisor -- UCS2
+Supervisor -- UCS3
+Supervisor -- UCS4
+Supervisor -- UCS5
+
+' ============ ADMIN EDGES ============
+Admin -- UCA1
+Admin -- UCA2
+Admin -- UCA3
+Admin -- UCA4
+Admin -- UCA5
+Admin -- UCA6
+Admin -- UCA7
+
+' ============ CROSS-CUTTING (dashed) ============
+Patient    ..> UCX1
+Doctor     ..> UCX1
+Supervisor ..> UCX1
+Admin      ..> UCX1
+
+Patient    ..> UCX2
+Doctor     ..> UCX2
+Supervisor ..> UCX2
+Admin      ..> UCX2
+
+Patient    ..> UCX3
+Doctor     ..> UCX3
+Supervisor ..> UCX3
+Admin      ..> UCX3
+
+Patient    ..> UCX4
+Doctor     ..> UCX4
+Supervisor ..> UCX4
+Admin      ..> UCX4
+
+@enduml

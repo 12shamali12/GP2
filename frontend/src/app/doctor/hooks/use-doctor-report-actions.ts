@@ -11,7 +11,13 @@ import {
 type ReportForm = {
   title: string;
   description: string;
-  supervisor: string;
+  /**
+   * The list of supervisor IDs the doctor has chosen to send this report to.
+   * First entry becomes the primary `reviewerSupervisorId` on the backend;
+   * the rest are stored as additional reviewers in formData. At least one
+   * entry is required by submit-time validation.
+   */
+  supervisorIds: string[];
 };
 
 type PatientFeedbackForm = {
@@ -84,10 +90,21 @@ export function useDoctorReportActions({
   const handleSelectReportAppointment = useCallback(
     (appointment: any) => {
       const existingReport = appointment.report || null;
-      const defaultSupervisor =
-        existingReport?.reviewer?.id ||
-        doctorWorkspace?.reportSupervisors?.[0]?.id ||
-        "";
+      // Seed the multi-select with whoever is already attached to the report.
+      // Primary reviewer comes first; any additional reviewers stored in
+      // formData.additionalSupervisorIds (or as a flat array) follow.
+      const additional: string[] = Array.isArray(
+        existingReport?.formData?.additionalSupervisorIds,
+      )
+        ? (existingReport.formData.additionalSupervisorIds as unknown[]).filter(
+            (id): id is string => typeof id === "string" && id.length > 0,
+          )
+        : [];
+      const seedIds: string[] = [];
+      if (existingReport?.reviewer?.id) seedIds.push(existingReport.reviewer.id);
+      additional.forEach((id) => {
+        if (!seedIds.includes(id)) seedIds.push(id);
+      });
       const doctorToPatientRating =
         appointment.ratings?.find(
           (rating: any) =>
@@ -113,7 +130,7 @@ export function useDoctorReportActions({
           appointment.slot?.purpose ||
           "Clinical case report",
         description: existingReport?.description || "",
-        supervisor: defaultSupervisor,
+        supervisorIds: seedIds,
       });
       setReportFormData(hydrateReportFormData(existingReport?.formData));
       setCompletionNotes(appointment.doctorCompletionNotes || "");
@@ -142,7 +159,7 @@ export function useDoctorReportActions({
 
   const clearReportSelection = useCallback(() => {
     setSelectedReport(null);
-    setReportForm({ title: "", description: "", supervisor: "" });
+    setReportForm({ title: "", description: "", supervisorIds: [] });
     setReportFormData(createEmptyReportFormData());
     setCompletionNotes("");
     setPatientFeedbackForm({ stars: "5", comment: "" });
@@ -166,6 +183,13 @@ export function useDoctorReportActions({
       return;
     }
 
+    if (reportForm.supervisorIds.length === 0) {
+      setReportMessage(
+        "Pick at least one supervisor to send this report to.",
+      );
+      return;
+    }
+
     if (selectedReport.status !== "COMPLETED") {
       setReportMessage(
         "Mark the visit as completed before sending the report.",
@@ -177,8 +201,11 @@ export function useDoctorReportActions({
 
     const activeIdentifier =
       user.email || user.phone || user.username || user.name || "";
-    const chosenSupervisor = doctorWorkspace?.reportSupervisors?.find(
-      (supervisor) => supervisor.id === reportForm.supervisor,
+    // First selected supervisor is the primary reviewer; the rest are
+    // additional reviewers stored in formData.additionalSupervisorIds.
+    const [primaryId, ...additionalIds] = reportForm.supervisorIds;
+    const primarySupervisor = doctorWorkspace?.reportSupervisors?.find(
+      (s) => s.id === primaryId,
     );
 
     fetch(`${apiUrl}/appointments/${selectedReport.id}/report-submitted`, {
@@ -194,16 +221,8 @@ export function useDoctorReportActions({
           undefined,
         title: reportForm.title,
         description: reportForm.description,
-        supervisorName:
-          chosenSupervisor?.name ||
-          (doctorWorkspace?.reportSupervisors?.length
-            ? undefined
-            : reportForm.supervisor || undefined),
-        supervisorIdentifier:
-          chosenSupervisor?.id ||
-          (!doctorWorkspace?.reportSupervisors?.length
-            ? reportForm.supervisor || undefined
-            : undefined),
+        supervisorName: primarySupervisor?.name || primaryId,
+        supervisorIdentifier: primarySupervisor?.id || primaryId,
         partnerDoctorId: doctorWorkspace?.partnerPair
           ? doctorWorkspace.partnerPair.doctorOne.id ===
             doctorWorkspace.doctor.id
@@ -212,7 +231,15 @@ export function useDoctorReportActions({
           : undefined,
         taskIds:
           selectedReportTaskIds.length > 0 ? selectedReportTaskIds : undefined,
-        formData: reportFormData,
+        // Persist the full multi-select set so:
+        //   - The first ID drives the primary reviewer on the schema row.
+        //   - The rest live in formData and the backend can re-load them
+        //     when the doctor re-opens the form, and the supervisor list
+        //     can route a notification to every chosen reviewer.
+        formData: {
+          ...reportFormData,
+          additionalSupervisorIds: additionalIds,
+        },
       }),
     })
       .then((res) => res.json())
@@ -230,7 +257,7 @@ export function useDoctorReportActions({
     fetchPerformance,
     reportFormData,
     reportForm.description,
-    reportForm.supervisor,
+    reportForm.supervisorIds,
     reportForm.title,
     selectedReport,
     selectedReportTaskIds,

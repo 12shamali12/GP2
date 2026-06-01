@@ -351,15 +351,6 @@ export function ToothIqGame({ level, onFinish, onCancel, hudSlot }: GameProps) {
     <div className="relative flex h-full w-full flex-col items-center justify-center gap-5 p-4 sm:p-6">
       {hudSlot ? createPortal(hud, hudSlot) : null}
 
-      <button
-        type="button"
-        onClick={onCancel}
-        aria-label={t("arcade.iq.quit_aria")}
-        className="absolute right-4 top-4 z-10 rounded-full border border-white/20 bg-black/40 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.16em] text-white/85 backdrop-blur hover:bg-black/55"
-      >
-        {t("arcade.quit.button_short")}
-      </button>
-
       <div className="w-full max-w-2xl">
         {/* Timer bar */}
         <div className="mb-5 h-2.5 w-full overflow-hidden rounded-full border border-white/15 bg-black/40">
@@ -378,17 +369,23 @@ export function ToothIqGame({ level, onFinish, onCancel, hudSlot }: GameProps) {
         {/* Question */}
         <div
           key={current.id}
-          className="rounded-[24px] border border-white/15 bg-white/8 px-5 py-6 text-center text-white shadow-[0_18px_44px_rgba(2,6,18,0.4)] backdrop-blur"
+          className="rounded-[24px] border border-white/20 px-5 py-6 text-center text-white shadow-[0_18px_44px_rgba(2,6,18,0.55)] backdrop-blur"
           style={{
+            // Solid dark indigo at high opacity so the question text is
+            // legible regardless of theme — the focus-stage backdrop can
+            // sometimes thin out in light mode and a near-transparent panel
+            // becomes unreadable against the page chrome.
+            background:
+              "linear-gradient(180deg, rgba(15,23,42,0.85), rgba(15,23,42,0.95))",
             animation: "denty-pop 360ms cubic-bezier(0.34, 1.56, 0.64, 1) both",
           }}
         >
-          <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-white/65">
+          <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-white/80">
             {endless
               ? t("arcade.iq.endless_question_label", { n: index + 1 })
               : t("arcade.iq.question_label", { n: index + 1, total: QUESTIONS_PER_ROUND })}
           </p>
-          <p className="mt-3 text-lg font-extrabold leading-snug sm:text-xl">
+          <p className="mt-3 text-lg font-extrabold leading-snug text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] sm:text-xl">
             {current.q}
           </p>
         </div>
@@ -406,29 +403,29 @@ export function ToothIqGame({ level, onFinish, onCancel, hudSlot }: GameProps) {
                 type="button"
                 disabled={chosen !== null || over !== null}
                 onClick={() => handleChoice(i)}
-                className="min-h-[3rem] rounded-[16px] border px-4 py-3 text-left text-sm font-semibold text-white transition disabled:cursor-default"
+                className="min-h-[3rem] rounded-[16px] border px-4 py-3 text-left text-sm font-semibold text-white shadow-[0_4px_12px_rgba(0,0,0,0.25)] transition hover:brightness-110 disabled:cursor-default"
                 style={{
                   borderColor: showCorrect
-                    ? "rgba(94,234,212,0.85)"
+                    ? "rgba(94,234,212,0.95)"
                     : showWrong
-                      ? "rgba(248,113,113,0.85)"
-                      : "rgba(255,255,255,0.18)",
+                      ? "rgba(248,113,113,0.95)"
+                      : "rgba(255,255,255,0.28)",
                   background: showCorrect
-                    ? "linear-gradient(135deg,rgba(20,184,166,0.45),rgba(13,148,136,0.55))"
+                    ? "linear-gradient(135deg,rgba(20,184,166,0.75),rgba(13,148,136,0.85))"
                     : showWrong
-                      ? "linear-gradient(135deg,rgba(244,63,94,0.4),rgba(190,18,60,0.5))"
-                      : "rgba(255,255,255,0.06)",
+                      ? "linear-gradient(135deg,rgba(244,63,94,0.7),rgba(190,18,60,0.8))"
+                      : "linear-gradient(180deg, rgba(15,23,42,0.78), rgba(15,23,42,0.92))",
                   boxShadow: showCorrect
-                    ? "0 0 22px rgba(94,234,212,0.45)"
+                    ? "0 0 22px rgba(94,234,212,0.55)"
                     : showWrong
-                      ? "0 0 22px rgba(248,113,113,0.4)"
-                      : "none",
+                      ? "0 0 22px rgba(248,113,113,0.5)"
+                      : "0 4px 12px rgba(0,0,0,0.25)",
                   animation: isChosen
                     ? "denty-pop 320ms cubic-bezier(0.34, 1.56, 0.64, 1) both"
                     : undefined,
                 }}
               >
-                <span className="inline-block w-6 text-[11px] font-bold uppercase tracking-[0.2em] text-white/55">
+                <span className="inline-block w-6 text-[11px] font-bold uppercase tracking-[0.2em] text-white/80">
                   {String.fromCharCode(65 + i)}
                 </span>
                 {opt}
@@ -440,17 +437,25 @@ export function ToothIqGame({ level, onFinish, onCancel, hudSlot }: GameProps) {
         {/* Explanation reveal */}
         {reveal ? (
           <div
-            className="mt-4 rounded-[18px] border border-white/16 bg-black/45 px-4 py-3 text-sm text-white/90 backdrop-blur"
+            className="mt-4 rounded-[18px] border border-white/22 bg-black/75 px-4 py-3 text-sm text-white backdrop-blur"
             style={{
               animation: "denty-pop 320ms cubic-bezier(0.34, 1.56, 0.64, 1) both",
             }}
           >
-            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-teal-200/85">
+            <p
+              className="text-[10px] font-bold uppercase tracking-[0.22em]"
+              style={{
+                color:
+                  chosen === current.correct
+                    ? "rgb(94,234,212)"
+                    : "rgb(248,113,113)",
+              }}
+            >
               {chosen === current.correct
                 ? t("arcade.iq.reveal_correct")
                 : t("arcade.iq.reveal_wrong")}
             </p>
-            <p className="mt-1">{current.explain}</p>
+            <p className="mt-1 text-white/95">{current.explain}</p>
           </div>
         ) : null}
       </div>

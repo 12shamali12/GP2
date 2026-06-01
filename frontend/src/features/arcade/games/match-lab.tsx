@@ -340,16 +340,6 @@ export function MatchLabGame({ level, onFinish, onCancel, hudSlot }: GameProps) 
     <div className="relative flex h-full w-full flex-col items-center justify-center gap-4 p-4 sm:p-6">
       {hudSlot ? createPortal(hud, hudSlot) : null}
 
-      {/* Quit (cancel) */}
-      <button
-        type="button"
-        onClick={onCancel}
-        aria-label={t("arcade.match.quit_aria")}
-        className="absolute right-4 top-4 z-10 rounded-full border border-white/20 bg-black/40 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.16em] text-white/85 backdrop-blur hover:bg-black/55"
-      >
-        {t("arcade.quit.button_short")}
-      </button>
-
       {/* Preview countdown banner */}
       {phase === "preview" ? (
         <div
@@ -364,11 +354,18 @@ export function MatchLabGame({ level, onFinish, onCancel, hudSlot }: GameProps) 
 
       {/* Between-board banner (endless only) */}
       {phase === "between" ? (
-        <div className="pointer-events-none absolute left-1/2 top-1/2 z-30 -translate-x-1/2 -translate-y-1/2 rounded-[20px] border border-emerald-300/35 bg-emerald-500/15 px-6 py-3 text-center text-white">
-          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-emerald-100/85">
+        <div
+          className="pointer-events-none absolute left-1/2 top-1/2 z-30 -translate-x-1/2 -translate-y-1/2 rounded-[22px] border-2 border-emerald-300/55 px-6 py-3 text-center text-white shadow-[0_18px_44px_rgba(16,185,129,0.45)]"
+          style={{
+            background:
+              "linear-gradient(135deg,rgba(16,185,129,0.85),rgba(20,184,166,0.92))",
+            animation: "denty-pop 360ms cubic-bezier(0.34, 1.56, 0.64, 1) both",
+          }}
+        >
+          <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-white/95">
             {t("arcade.match.between_eyebrow")}
           </p>
-          <p className="mt-1 text-xl font-extrabold">
+          <p className="mt-1 text-xl font-extrabold drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)]">
             {t("arcade.match.between_title")}
           </p>
         </div>
@@ -399,18 +396,23 @@ export function MatchLabGame({ level, onFinish, onCancel, hudSlot }: GameProps) 
               disabled={busy || over !== null || phase === "preview"}
               onClick={() => onCardTap(card.id)}
               aria-label={t("arcade.match.card_aria")}
-              className="relative aspect-square select-none rounded-[14px] border border-white/15 outline-none transition focus-visible:ring-2 focus-visible:ring-teal-300"
+              className="relative aspect-square select-none rounded-2xl border-2 outline-none transition-all duration-200 hover:scale-[1.03] focus-visible:ring-2 focus-visible:ring-teal-300 disabled:hover:scale-100"
               style={{
+                borderColor: card.matched
+                  ? "rgba(94,234,212,0.95)"
+                  : isFlipped
+                    ? "rgba(148,163,184,0.6)"
+                    : "rgba(167,139,250,0.55)",
                 background: card.matched
-                  ? "linear-gradient(135deg,rgba(16,185,129,0.35),rgba(13,148,136,0.6))"
+                  ? "linear-gradient(135deg,rgba(20,184,166,0.75),rgba(16,185,129,0.85))"
                   : isFlipped
-                    ? "linear-gradient(135deg,rgba(248,250,252,0.95),rgba(226,232,240,0.9))"
-                    : "linear-gradient(135deg,rgba(20,40,68,0.95),rgba(8,22,40,0.95))",
+                    ? "linear-gradient(135deg,rgba(255,255,255,0.98),rgba(241,245,249,0.95))"
+                    : "linear-gradient(135deg,rgba(67,56,202,0.92),rgba(124,58,237,0.92),rgba(190,24,93,0.86))",
                 boxShadow: card.matched
-                  ? "0 8px 18px rgba(16,185,129,0.35) inset, 0 6px 18px rgba(16,185,129,0.25)"
+                  ? "0 0 0 1px rgba(255,255,255,0.4) inset, 0 8px 24px rgba(16,185,129,0.5), 0 0 32px rgba(94,234,212,0.4)"
                   : isFlipped
-                    ? "0 6px 14px rgba(2,6,18,0.25)"
-                    : "0 6px 14px rgba(2,6,18,0.4)",
+                    ? "0 8px 22px rgba(2,6,18,0.32), 0 0 0 1px rgba(255,255,255,0.6) inset"
+                    : "0 10px 28px rgba(67,56,202,0.42), 0 0 0 1px rgba(255,255,255,0.18) inset",
                 transform: isFlipped ? "rotateY(0deg)" : "rotateY(180deg)",
                 transformStyle: "preserve-3d",
                 animation: isWrong
@@ -422,7 +424,7 @@ export function MatchLabGame({ level, onFinish, onCancel, hudSlot }: GameProps) 
             >
               {/* Front face: emoji */}
               <span
-                className="absolute inset-0 flex items-center justify-center text-3xl sm:text-4xl"
+                className="absolute inset-0 flex items-center justify-center text-3xl drop-shadow-[0_2px_6px_rgba(0,0,0,0.35)] sm:text-4xl"
                 style={{
                   opacity: isFlipped ? 1 : 0,
                   transition: "opacity 180ms",
@@ -430,16 +432,27 @@ export function MatchLabGame({ level, onFinish, onCancel, hudSlot }: GameProps) 
               >
                 {card.kind}
               </span>
-              {/* Back face: tooth icon */}
+              {/* Back face: stylised tooth + sparkle accent */}
               <span
-                className="absolute inset-0 flex items-center justify-center text-xl text-teal-300/80"
+                className="absolute inset-0 flex items-center justify-center"
                 style={{
                   opacity: isFlipped ? 0 : 1,
                   transition: "opacity 180ms",
                 }}
                 aria-hidden
               >
-                🦷
+                <span
+                  className="text-2xl drop-shadow-[0_2px_6px_rgba(0,0,0,0.45)] sm:text-3xl"
+                  style={{
+                    filter: "brightness(1.15)",
+                  }}
+                >
+                  🦷
+                </span>
+                <span
+                  className="pointer-events-none absolute inset-2 rounded-[10px] border border-white/20"
+                  aria-hidden
+                />
               </span>
               {/* Bonus glow */}
               {isBonus ? (
@@ -461,18 +474,36 @@ export function MatchLabGame({ level, onFinish, onCancel, hudSlot }: GameProps) 
       {/* Game-over banner */}
       {over ? (
         <div
-          className="absolute inset-x-4 top-1/2 z-40 -translate-y-1/2 rounded-[22px] border border-white/22 bg-black/70 px-6 py-5 text-center text-white shadow-[0_30px_70px_rgba(2,6,18,0.6)] backdrop-blur"
+          className="absolute inset-x-4 top-1/2 z-40 -translate-y-1/2 rounded-3xl border-2 px-6 py-5 text-center text-white shadow-[0_30px_70px_rgba(2,6,18,0.7)] backdrop-blur"
           style={{
+            borderColor:
+              over === "win"
+                ? "rgba(94,234,212,0.65)"
+                : "rgba(248,113,113,0.6)",
+            background:
+              over === "win"
+                ? "linear-gradient(135deg,rgba(13,148,136,0.92),rgba(20,184,166,0.92))"
+                : "linear-gradient(135deg,rgba(15,23,42,0.92),rgba(30,41,59,0.92))",
             animation: "denty-pop 360ms cubic-bezier(0.34, 1.56, 0.64, 1) both",
           }}
         >
-          <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-white/65">
+          <p
+            className="text-[11px] font-bold uppercase tracking-[0.24em]"
+            style={{
+              color:
+                over === "win"
+                  ? "rgba(236,253,245,0.9)"
+                  : "rgba(254,202,202,0.95)",
+            }}
+          >
             {over === "win"
               ? t("arcade.match.over_win_eyebrow")
               : t("arcade.match.over_miss_eyebrow")}
           </p>
-          <p className="mt-2 text-2xl font-extrabold">{overReason}</p>
-          <p className="mt-1 text-sm text-white/80">
+          <p className="mt-2 text-2xl font-extrabold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)]">
+            {overReason}
+          </p>
+          <p className="mt-1 text-sm text-white/95">
             {t("arcade.match.over_score", { score })}
           </p>
         </div>

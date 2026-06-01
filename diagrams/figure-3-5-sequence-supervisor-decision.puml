@@ -1,0 +1,159 @@
+@startuml figure-3-5-sequence-supervisor-decision
+title Figure 3.5 — Sequence: Supervisor decision on a submitted case report\n(approve / needs edit / redo)
+
+skinparam dpi 150
+skinparam defaultFontName Cambria
+skinparam defaultFontSize 13
+skinparam shadowing false
+skinparam sequenceArrowThickness 1.5
+skinparam sequenceMessageAlign center
+skinparam sequenceParticipantBackgroundColor #E7EEF2
+skinparam sequenceParticipantBorderColor #1F2937
+skinparam sequenceLifeLineBorderColor #94A3B8
+skinparam sequenceLifeLineBackgroundColor #F8FAFC
+skinparam sequenceActorBackgroundColor #FEF3C7
+skinparam sequenceActorBorderColor #92400E
+skinparam noteBackgroundColor #FEF9C3
+skinparam noteBorderColor #A16207
+skinparam ArrowColor #334155
+skinparam ArrowFontSize 12
+
+actor       "Supervisor"                       as Sup
+participant "Browser\n(Next.js 16)"            as Browser
+participant "SupervisorController\n(NestJS)"   as Ctrl
+participant "SupervisorService"                as Svc
+participant "PrismaService\n(5.22)"            as Prisma
+database    "PostgreSQL 16"                    as DB
+participant "Notifications\nService"            as Notif
+actor       "Doctor\n(student)"                 as Doctor
+
+== 1. Supervisor reviews the report queue ==
+
+Sup     -> Browser : Open supervisor queue;\nclick Approve / Needs edit / Redo
+activate Browser
+
+Browser -> Ctrl    : POST /supervisor/reports/:id/review\nbody: { decision, note, mark?, rating? }\nheader: Authorization: Bearer <JWT>
+activate Ctrl
+
+note right of Ctrl
+  @UseGuards(JwtAuthGuard) + role guard
+  ValidationPipe runs class-validator on the
+  ReviewReportDto (decision enum, optional note,
+  mark 0-100, rating 0-5).
+end note
+
+== 2. Service opens a Prisma $transaction ==
+
+Ctrl -> Svc : reviewReport(supervisorId, reportId, dto)
+activate Svc
+
+Svc  -> Prisma : $transaction(async (tx) => ... )
+activate Prisma
+
+Prisma -> DB : SELECT CaseReport\nWHERE id = $1\nFOR UPDATE
+activate DB
+DB --> Prisma : report + linked appointment + doctor + clinicCase
+deactivate DB
+
+== 3. Branch by decision ==
+
+alt decision = APPROVE
+
+  Prisma -> DB : UPDATE CaseReport\nSET status='REVIEWED',\n    reviewerSupervisorId=$,\n    reviewedAt=NOW(),\n    mark=$, rating=$, feedback=$
+  activate DB
+  DB --> Prisma : ok
+  deactivate DB
+
+  Prisma -> DB : UPDATE DoctorClinicCaseProgress\nSET status='COMPLETED',\n    completedAt=NOW(),\n    lastReportId=$\nWHERE doctorId=$ AND clinicCaseId=$
+  activate DB
+  DB --> Prisma : ok  -- graduation credit booked
+  deactivate DB
+
+  Svc -> Notif : create(doctorId, 'CASE_APPROVED')
+  activate Notif
+  Notif -> Prisma : INSERT INTO Notification
+  Prisma -> DB : ...
+  activate DB
+  DB --> Prisma : ok
+  deactivate DB
+  Notif --> Svc : ok
+  deactivate Notif
+
+else decision = NEEDS_EDIT
+
+  Prisma -> DB : UPDATE CaseReport\nSET status='NEEDS_EDIT',\n    feedback=$ (the supervisor's note)\n-- report unlocked; same patient + doctor binding stays
+  activate DB
+  DB --> Prisma : ok
+  deactivate DB
+
+  note right of Prisma
+    DoctorClinicCaseProgress is NOT touched.
+    The case stays bound to the same patient;
+    the doctor edits + resubmits the report.
+  end note
+
+  Svc -> Notif : create(doctorId, 'NEEDS_EDIT', note)
+  activate Notif
+  Notif -> Prisma : INSERT INTO Notification
+  Prisma -> DB : ...
+  activate DB
+  DB --> Prisma : ok
+  deactivate DB
+  Notif --> Svc : ok
+  deactivate Notif
+
+else decision = REDO
+
+  Prisma -> DB : UPDATE CaseReport\nSET status='CASE_REJECTED'
+  activate DB
+  DB --> Prisma : ok
+  deactivate DB
+
+  Prisma -> DB : UPDATE DoctorClinicCaseProgress\nSET status='OPEN',\n    lastReportId=NULL\n-- no graduation credit awarded
+  activate DB
+  DB --> Prisma : ok
+  deactivate DB
+
+  Prisma -> DB : UPDATE Appointment\nSET status='CANCELLED',\n    cancelledByDoctor=false,\n    note='supervisor REDO'
+  activate DB
+  DB --> Prisma : ok
+  deactivate DB
+
+  note right of Prisma
+    Doctor must redo the same case category
+    on a DIFFERENT patient and a FRESH
+    appointment. The original case is closed.
+  end note
+
+  Svc -> Notif : create(doctorId, 'REDO', note)
+  activate Notif
+  Notif -> Prisma : INSERT INTO Notification
+  Prisma -> DB : ...
+  activate DB
+  DB --> Prisma : ok
+  deactivate DB
+  Notif --> Svc : ok
+  deactivate Notif
+
+end
+
+Prisma --> Svc  : tx commit
+deactivate Prisma
+Svc    --> Ctrl : decision result
+deactivate Svc
+Ctrl   --> Browser : 200 OK { case, decision }
+deactivate Ctrl
+Browser --> Sup : success toast +\nrow disappears from queue
+deactivate Browser
+
+Notif -->> Doctor : in-app notification +\nemail summary
+
+note over Prisma, DB
+  All three branches run inside ONE Prisma $transaction (NFR-11):
+  decision write + progress flip + notification all commit together,
+  or none do. There is no partial state in which a doctor sees
+  COMPLETED on the progress page without the supervisor's row of
+  truth in CaseReport.
+end note
+
+@enduml

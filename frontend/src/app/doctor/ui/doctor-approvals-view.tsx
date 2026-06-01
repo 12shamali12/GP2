@@ -59,6 +59,19 @@ export function DoctorApprovalsView({
                   ? new Date(appointment.slot.startTime).toLocaleString()
                   : t("doctor.common.no_time")}
               </p>
+              {(() => {
+                const supervisorName =
+                  appointment.report?.reviewer?.name ||
+                  appointment.report?.supervisorName ||
+                  null;
+                if (!supervisorName) return null;
+                return (
+                  <p className="inline-flex items-center gap-1 rounded-full border border-[rgba(99,102,241,0.32)] bg-[rgba(99,102,241,0.12)] px-2.5 py-0.5 text-[11px] font-semibold text-[rgba(67,56,202,0.95)]">
+                    <span aria-hidden>👁️</span>
+                    {t("doctor.appt.supervised_by", { name: supervisorName })}
+                  </p>
+                );
+              })()}
               {appointment.note ? (
                 <p className="rounded-[18px] border border-[rgba(148,163,184,0.16)] bg-white/60 px-4 py-3 text-sm text-[var(--muted-foreground)]">
                   {t("doctor.approvals.note", { value: appointment.note })}

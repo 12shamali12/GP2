@@ -247,6 +247,12 @@ export function ArcadeHub({ onOpenLeaderboard }: ArcadeHubProps) {
             );
             setMode({ kind: "playing", game: mode.game, level: chosen });
           }}
+          onPlayNextLevel={(nextLevel) => {
+            // Persist the player's selected level for this game so subsequent
+            // Play Again clicks default to the new tier.
+            setSelectedLevels((prev) => ({ ...prev, [mode.game]: nextLevel }));
+            setMode({ kind: "playing", game: mode.game, level: nextLevel });
+          }}
           onOpenLeaderboard={onOpenLeaderboard}
         />
       </>
@@ -515,6 +521,11 @@ type ArcadeFullscreenStageProps = {
   onCancel: () => void;
   /** Called from the celebration's "Play again" button. */
   onPlayAgain: () => void;
+  /**
+   * Called when the player taps "Play next level" on the celebration card
+   * after a successful unlock. Receives the level number to start.
+   */
+  onPlayNextLevel: (level: number) => void;
   /** Optional — wired by the patient page to switch tabs. */
   onOpenLeaderboard?: () => void;
 };
@@ -532,6 +543,7 @@ function ArcadeFullscreenStage({
   onFinish,
   onCancel,
   onPlayAgain,
+  onPlayNextLevel,
   onOpenLeaderboard,
 }: ArcadeFullscreenStageProps) {
   const t = useTranslation();
@@ -640,6 +652,7 @@ function ArcadeFullscreenStage({
               result={result}
               onClose={onCancel}
               onPlayAgain={onPlayAgain}
+              onPlayNextLevel={onPlayNextLevel}
               onOpenLeaderboard={onOpenLeaderboard}
             />
           ) : !introDone ? (
@@ -723,6 +736,9 @@ type ArcadeResultCelebrationProps = {
   result: SubmitArcadeScoreResponse;
   onClose: () => void;
   onPlayAgain: () => void;
+  /** Start the level the player just unlocked. Shown only when
+   *  result.newLevelUnlocked is true and the new level is within 1..11. */
+  onPlayNextLevel: (level: number) => void;
   onOpenLeaderboard?: () => void;
 };
 
@@ -733,6 +749,7 @@ function ArcadeResultCelebration({
   result,
   onClose,
   onPlayAgain,
+  onPlayNextLevel,
   onOpenLeaderboard,
 }: ArcadeResultCelebrationProps) {
   const t = useTranslation();
@@ -786,10 +803,51 @@ function ArcadeResultCelebration({
         </p>
 
         <div className="mt-7 flex flex-wrap gap-3">
+          {/* Play next level — only shown when the player just unlocked a
+              higher level AND it falls within 1..11. The button takes
+              precedence over Play Again because it's the natural next step
+              after an unlock.
+
+              Note: this button does NOT use the .denty-play-button class.
+              That class' :hover changes letter-spacing, which physically
+              widens an inline-flex button, pushing siblings to the next row
+              and causing the card to resize — when the cursor falls off
+              the button the wrap resets, re-triggering hover, etc. (a fast
+              flicker). Here we use a simple translate-y + shadow change so
+              the button's layout width never changes. */}
+          {result.newLevelUnlocked &&
+          result.unlockedLevel >= 1 &&
+          result.unlockedLevel <= 11 ? (
+            <button
+              type="button"
+              onClick={() => onPlayNextLevel(result.unlockedLevel)}
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[14px] border border-amber-200/60 bg-linear-to-r from-amber-300 to-amber-500 px-5 py-2.5 text-sm font-bold uppercase tracking-[0.16em] text-slate-900 shadow-[0_12px_28px_rgba(245,158,11,0.45)] transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_34px_rgba(245,158,11,0.6)] active:translate-y-0"
+              style={{
+                animation:
+                  "denty-pop 460ms cubic-bezier(0.34, 1.56, 0.64, 1) both",
+              }}
+            >
+              <span aria-hidden>🚀</span>
+              {result.unlockedLevel >= 11
+                ? t("arcade.result.play_endless")
+                : t("arcade.result.play_next_level", {
+                    level: result.unlockedLevel,
+                  })}
+            </button>
+          ) : null}
+          {/* Play again — themed per game. The accent comes from GAME_META
+              and is also used for the card-rim glow on the arcade hub, so
+              the celebration card visually loops back to the game's
+              identity instead of generic white. */}
           <button
             type="button"
             onClick={onPlayAgain}
-            className="denty-play-button inline-flex min-h-11 items-center justify-center rounded-[14px] bg-white px-5 py-2.5 text-sm font-bold uppercase tracking-[0.16em] text-slate-900"
+            className="inline-flex min-h-11 items-center justify-center rounded-[14px] border px-5 py-2.5 text-sm font-bold uppercase tracking-[0.16em] text-slate-900 transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 active:translate-y-0"
+            style={{
+              background: `linear-gradient(135deg, ${meta.accent}, rgba(255,255,255,0.95))`,
+              borderColor: meta.accent,
+              boxShadow: `0 12px 28px ${meta.accent.replace("0.95)", "0.45)")}, 0 0 0 1px rgba(255,255,255,0.4) inset`,
+            }}
           >
             {t("arcade.result.play_again")}
           </button>

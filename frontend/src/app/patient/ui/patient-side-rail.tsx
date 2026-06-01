@@ -22,6 +22,7 @@ type PatientSideRailProps = {
     | "chat"
     | "history"
     | "game"
+    | "streak"
     | "leaderboard"
     | "settings";
   unreadNotifications: number;
@@ -32,6 +33,7 @@ type PatientSideRailProps = {
   onChat: () => void;
   onHistory: () => void;
   onGame: () => void;
+  onStreak: () => void;
   onLeaderboard: () => void;
   onSettings: () => void;
   onComingSoon: (content: ComingSoonContent) => void;
@@ -69,6 +71,7 @@ type RailActionProps = {
     | "calendar"
     | "chat"
     | "game"
+    | "streak"
     | "leaderboard"
     | "settings";
   active?: boolean;
@@ -226,6 +229,7 @@ export function PatientSideRail({
   onChat,
   onHistory,
   onGame,
+  onStreak,
   onLeaderboard,
   onSettings,
   onComingSoon,
@@ -304,6 +308,15 @@ export function PatientSideRail({
           active={activeView === "game"}
           accent={accent.bar}
           onClick={onGame}
+        />
+        <RailAction
+          eyebrow={t("nav.streak.eyebrow")}
+          label={t("nav.streak")}
+          compactLabel="Streak"
+          icon="streak"
+          active={activeView === "streak"}
+          accent={accent.bar}
+          onClick={onStreak}
         />
         <RailAction
           eyebrow="Standings"

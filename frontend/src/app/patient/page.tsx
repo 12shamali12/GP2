@@ -6,6 +6,8 @@ import { usePublicProfile } from "@/features/profiles/hooks/use-public-profile";
 import { SettingsPanel } from "@/features/settings/components/settings-panel";
 import { ArcadeHub } from "@/features/arcade/components/arcade-hub";
 import { ArcadeLeaderboardView } from "@/features/arcade/components/arcade-leaderboard";
+import { SmileStreakSurface } from "@/features/smile-streak/components/smile-streak-surface";
+import { PatientLeaderboardSwitcher } from "@/features/smile-streak/components/patient-leaderboard-switcher";
 import { PageHeader } from "@/features/ui/components/page-header";
 import { ComingSoonModal } from "@/features/ui/components/coming-soon-modal";
 import { RoleShellLayout } from "@/features/ui/components/role-shell-layout";
@@ -43,6 +45,7 @@ type PatientSurface =
   | "chat"
   | "history"
   | "game"
+  | "streak"
   | "leaderboard"
   | "settings";
 
@@ -458,6 +461,16 @@ export default function PatientPage() {
         t("patient.surface.game.badge3"),
       ],
     },
+    streak: {
+      eyebrow: t("patient.surface.streak.eyebrow"),
+      title: t("patient.surface.streak.title"),
+      description: t("patient.surface.streak.description"),
+      badges: [
+        t("patient.surface.streak.badge1"),
+        t("patient.surface.streak.badge2"),
+        t("patient.surface.streak.badge3"),
+      ],
+    },
     settings: {
       eyebrow: t("patient.surface.settings.eyebrow"),
       title: t("patient.surface.settings.title"),
@@ -508,6 +521,7 @@ export default function PatientPage() {
                 onChat={() => setActiveSurface("chat")}
                 onHistory={() => setActiveSurface("history")}
                 onGame={() => setActiveSurface("game")}
+                onStreak={() => setActiveSurface("streak")}
                 onLeaderboard={() => setActiveSurface("leaderboard")}
                 onSettings={() => setActiveSurface("settings")}
                 onComingSoon={setComingSoon}
@@ -562,6 +576,7 @@ export default function PatientPage() {
                   setSelectedSlot(slot);
                 }}
                 onSelectAppointment={setSelectedAppointment}
+                onOpenStreak={() => setActiveSurface("streak")}
               />
             </div>
 
@@ -639,7 +654,13 @@ export default function PatientPage() {
 
             <div className={activeSurface === "leaderboard" ? "denty-enter" : "hidden"}>
               <div className="denty-panel p-6 md:p-7">
-                <ArcadeLeaderboardView currentUserId={user.id} />
+                <PatientLeaderboardSwitcher currentUserId={user.id} />
+              </div>
+            </div>
+
+            <div className={activeSurface === "streak" ? "denty-enter" : "hidden"}>
+              <div className="denty-panel p-4 md:p-6">
+                <SmileStreakSurface />
               </div>
             </div>
 
