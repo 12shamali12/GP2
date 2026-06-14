@@ -1,0 +1,9 @@
+flyctl deploy --app dentyhub-api-shamali
+
+
+git add prisma/
+git commit -m "DB: describe_change"
+git push origin main
+flyctl deploy --app dentyhub-api-shamali
+
+flyctl secrets set KEY=value --app dentyhub-api-shamali

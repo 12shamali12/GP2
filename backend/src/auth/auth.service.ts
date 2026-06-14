@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -484,7 +485,7 @@ export class AuthService {
   }
 
   async updateProfile(dto: UpdateProfileDto) {
-    const { identifier, name, phone, avatar } = dto;
+    const { identifier, name, phone, avatar, email, username } = dto;
     const user = await this.prisma.user.findFirst({
       where: {
         OR: [
@@ -498,9 +499,35 @@ export class AuthService {
     });
     if (!user) throw new UnauthorizedException('Invalid credentials.');
 
+    // Uniqueness checks for login identifiers — Postgres would reject these
+    // at the constraint level, but we surface a friendlier message first.
+    if (email && email !== user.email) {
+      const collision = await this.prisma.user.findFirst({
+        where: { email, id: { not: user.id } },
+        select: { id: true },
+      });
+      if (collision) throw new ConflictException('That email is already in use.');
+    }
+    if (username && username !== user.username) {
+      const collision = await this.prisma.user.findFirst({
+        where: { username, id: { not: user.id } },
+        select: { id: true },
+      });
+      if (collision) throw new ConflictException('That username is already in use.');
+    }
+    if (phone && phone !== user.phone) {
+      const collision = await this.prisma.user.findFirst({
+        where: { phone, id: { not: user.id } },
+        select: { id: true },
+      });
+      if (collision) throw new ConflictException('That phone is already in use.');
+    }
+
     const data: Prisma.UserUpdateInput = {};
     if (name) data.name = name;
     if (phone) data.phone = phone;
+    if (email) data.email = email;
+    if (username) data.username = username;
     if (avatar !== undefined) data.avatar = avatar;
     if (dto.doctorIdNumber !== undefined)
       data.doctorIdNumber = dto.doctorIdNumber;
