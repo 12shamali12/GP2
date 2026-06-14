@@ -209,11 +209,14 @@ const REJECTED_DOCTOR = {
   phone: "0791100214",
 };
 
-const PATIENT_NAMES: ReadonlyArray<{ name: string; username: string; age: number; gender: string; email?: string; phone: string }> = [
+const PATIENT_NAMES: ReadonlyArray<{ name: string; username: string; age: number; gender: string; email?: string; phone: string; password?: string }> = [
   { name: "Ahmad Al-Rashid", username: "p.ahmad.rashid", age: 34, gender: "male", email: "ahmad.rashid@example.com", phone: "0792000301" },
   { name: "Salma Hijazi", username: "p.salma.hijazi", age: 27, gender: "female", phone: "0792000302" },
   { name: "Mahmoud Faraj", username: "p.mahmoud.faraj", age: 45, gender: "male", email: "mahmoud.faraj@example.com", phone: "0792000303" },
-  { name: "Hanan Talhouni", username: "p.hanan.talhouni", age: 52, gender: "female", phone: "0792000304" },
+  // Demo patient — every arcade level pre-unlocked + custom credentials for
+  // the viva. Matched against `p.mamoun.alshamali` below when seeding
+  // arcade attempts (see isDemoUnlockAll).
+  { name: "Mamoun Alshamali", username: "p.mamoun.alshamali", age: 52, gender: "male", phone: "0797868118", password: "Aa123456@" },
   { name: "Karim Abdullah", username: "p.karim.abdullah", age: 21, gender: "male", phone: "0792000305" },
   { name: "Lara Sabbagh", username: "p.lara.sabbagh", age: 30, gender: "female", email: "lara.sabbagh@example.com", phone: "0792000306" },
   { name: "Tamer Issa", username: "p.tamer.issa", age: 38, gender: "male", phone: "0792000307" },
@@ -507,12 +510,26 @@ async function seedDoctors(y4s2Id: string, y5s1Id: string, adminId: string) {
 
 async function seedPatients() {
   log("seeding 20 patients");
-  const passwordHash = await bcrypt.hash("Patient1!", 10);
+  const defaultPasswordHash = await bcrypt.hash("Patient1!", 10);
   const patients: User[] = [];
   for (const p of PATIENT_NAMES) {
+    // Per-patient password override (demo accounts) — rehash so the bcrypt
+    // cost stays consistent. Most patients share the default hash.
+    const passwordHash = p.password
+      ? await bcrypt.hash(p.password, 10)
+      : defaultPasswordHash;
     const user = await prisma.user.upsert({
       where: { username: p.username },
-      update: { name: p.name, phone: p.phone, age: p.age, gender: p.gender, email: p.email ?? null },
+      update: {
+        name: p.name,
+        phone: p.phone,
+        age: p.age,
+        gender: p.gender,
+        email: p.email ?? null,
+        // Update password on re-seed so credential changes here always
+        // propagate to the live record.
+        password: passwordHash,
+      },
       create: {
         username: p.username,
         phone: p.phone,
@@ -630,7 +647,7 @@ async function seedArcadeAttempts(patients: User[]) {
 
   // (game, baseScore, maxBoost) — boost scales with day-index so older
   // attempts look "warmup" and newer ones approach personal bests. The
-  // base+boost numbers are tuned so the demo-unlock patient (Hanan)
+  // base+boost numbers are tuned so the demo-unlock patient (Mamoun)
   // comfortably clears every per-level threshold in arcade.service.ts.
   const games = [
     { type: "PLAQUE_BLASTER" as const, base: 380, maxBoost: 2000 },
@@ -648,9 +665,9 @@ async function seedArcadeAttempts(patients: User[]) {
       hash = Math.imul(hash, 16777619) >>> 0;
     }
 
-    // Hanan Talhouni gets every level pre-unlocked so the demo can test
+    // Mamoun Alshamali gets every level pre-unlocked so the demo can test
     // any difficulty without grinding. Other patients get a normal spread.
-    const isDemoUnlockAll = patient.username === "p.hanan.talhouni";
+    const isDemoUnlockAll = patient.username === "p.mamoun.alshamali";
 
     for (const game of games) {
       // Per-patient skill factor 0..1 (some patients are pros, some aren't).
