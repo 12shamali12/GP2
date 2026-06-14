@@ -256,10 +256,15 @@ export function AdminShell({
 
   const sideRail = (
     <div className="denty-rail-column">
-            {/* Identity card — a separate panel pinned above the nav rail. */}
+            <aside className="frozen-stage denty-collapsible-rail rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,70,76,0.97),rgba(9,42,48,0.97))] px-3 py-4 text-white backdrop-blur-[28px]">
+            <div className="flex min-h-full flex-col gap-3">
+            {/* Identity card — inside the aside (not a sibling) so the
+                mobile drawer renders the rail as one unified panel instead
+                of two disconnected boxes. Matches the doctor / patient /
+                supervisor rail structure. */}
             <Link
               href="/admin"
-              className="denty-rail-identity block rounded-[22px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,70,76,0.97),rgba(9,42,48,0.97))] px-3 py-3 text-white backdrop-blur-[28px] transition-colors hover:border-white/18"
+              className="denty-rail-identity block rounded-[18px] border border-white/10 bg-white/4 px-3 py-3 text-white transition-colors hover:border-white/18 hover:bg-white/8"
             >
               <div className="flex items-center gap-3">
                 <span
@@ -293,8 +298,8 @@ export function AdminShell({
               </div>
             </Link>
 
-            <aside className="frozen-stage denty-collapsible-rail rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,70,76,0.97),rgba(9,42,48,0.97))] px-3 py-4 text-white backdrop-blur-[28px]">
-            <div className="flex min-h-full flex-col gap-3">
+            <div className="mx-2 my-1 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+
             {/* Admin's nav search is load-bearing (filters real nav items
                 across 11 destinations), so it stays — restyled to match the
                 rest of the rail. The other three rails dropped their stub

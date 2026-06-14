@@ -71,11 +71,13 @@ const LEVEL_THRESHOLDS: Record<ArcadeGameType, number[]> = {
   // Match Lab — base 200 per pair + time/miss bonuses. Grid grows with level
   // so a clean clear at L1 is ~1.2k, climbs to ~4k at L10. Index 9 is Lv 11.
   MATCH_LAB: [500, 800, 1200, 1700, 2300, 3000, 3800, 4700, 5800, 7000],
-  // Brush Buddy — Simon-style, 5 rounds per fixed level. Each correct step
-  // = 60 + chain bonus, round-complete = 200 + 30/step. Starting lengths
-  // intentionally short at low levels so warm-up rounds clear fast.
-  // Index 9 is Lv 11 endless.
-  BRUSH_BUDDY: [300, 600, 950, 1350, 1800, 2300, 2900, 3600, 4400, 5400],
+  // Brush Buddy — Simon-style, 5 rounds per fixed level. UX rule from
+  // shamali: completing the round (i.e. surviving to submit any score)
+  // unlocks the next level — the game's own 5-miss cap is the difficulty
+  // gate, not the score. So every threshold is set to 1: any positive
+  // score earned at level N unlocks level N+1. Pure score still drives
+  // the leaderboard.
+  BRUSH_BUDDY: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 };
 
 /**
