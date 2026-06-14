@@ -1,0 +1,18 @@
+# Don't copy these into the Docker build context.
+# Each one would either bloat the image or break the build (platform-specific
+# binaries built on Windows won't run inside an Alpine container).
+
+node_modules
+dist
+generated
+.env
+.env.*
+*.log
+.git
+.gitignore
+.vscode
+test
+coverage
+README.md
+Dockerfile
+.dockerignore

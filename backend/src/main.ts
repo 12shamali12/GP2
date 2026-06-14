@@ -9,8 +9,25 @@ import { existsSync, mkdirSync } from "fs";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // CORS:
+  //   - In production (NODE_ENV=production) we REQUIRE an explicit CORS_ORIGIN
+  //     allowlist. Without it, every browser request is rejected. This stops
+  //     a misconfigured deploy from accidentally serving any origin.
+  //   - In development (or anywhere NODE_ENV !== production) we allow all
+  //     origins so localhost:3000 → localhost:3100 just works.
+  const isProd = process.env.NODE_ENV === "production";
+  const allowlist = process.env.CORS_ORIGIN?.split(",")
+    .map((o) => o.trim())
+    .filter(Boolean);
+  if (isProd && (!allowlist || allowlist.length === 0)) {
+    throw new Error(
+      "CORS_ORIGIN is required in production. Set it to the public URL of " +
+        "the frontend (e.g. https://dentyhub.vercel.app) and redeploy.",
+    );
+  }
   app.enableCors({
-    origin: process.env.CORS_ORIGIN?.split(",").map((o) => o.trim()) ?? "*",
+    origin: allowlist && allowlist.length > 0 ? allowlist : "*",
     credentials: false,
   });
   app.use(json({ limit: "2mb" }));

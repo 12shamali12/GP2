@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { AdminShell } from "@/features/admin/components/admin-shell";
 import { getLeaderboardSnapshot } from "@/features/admin/services/admin-api";
 import type { LeaderboardSnapshot } from "@/features/admin/types/admin";
-import { LeaderboardView } from "@/features/leaderboard/components/leaderboard-view";
 import { useFeedbackToast } from "@/features/ui/hooks/use-feedback-toast";
+import { AdminLeaderboardSwitcher } from "./ui/admin-leaderboard-switcher";
 
 export default function AdminLeaderboardPage() {
   const [snapshot, setSnapshot] = useState<LeaderboardSnapshot | null>(null);
@@ -53,10 +53,10 @@ export default function AdminLeaderboardPage() {
 
   return (
     <AdminShell
-      title="Leaderboard"
-      description="Track academic performance across the full program, then switch into any semester cohort to compare students against their current peers."
+      title="Leaderboards"
+      description="Switch between three views: academic semester progress for students, the per-game per-level arcade leaderboard, and the patient Healthy Smile Streak rankings."
     >
-      <LeaderboardView snapshot={snapshot} loading={loading} />
+      <AdminLeaderboardSwitcher snapshot={snapshot} loading={loading} />
     </AdminShell>
   );
 }

@@ -1,0 +1,44 @@
+# Fly.io app config for the DentyHub backend.
+#
+# After signing up + `fly auth login`, change `app` below to a globally
+# unique name (Fly's namespace is shared across all users — pick something
+# like dentyhub-api-shamali). Then `fly launch --no-deploy` from this
+# directory, set the secrets per backend/.env.example, then `fly deploy`.
+
+app = "dentyhub-api-shamali"
+primary_region = "fra"           # Frankfurt — closest to Jordan; ~50ms RTT
+kill_signal = "SIGINT"           # graceful shutdown on deploy
+kill_timeout = "30s"
+
+[build]
+  dockerfile = "Dockerfile"
+
+# Single small VM is plenty for a demo. Free tier supports up to 3 shared-cpu
+# 256MB machines per account. Bump to 512MB if you see OOM in the logs.
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 512
+
+# Fly's edge proxy terminates TLS and forwards plain HTTP to internal_port.
+# The internal_port must match the Dockerfile EXPOSE + main.ts process.env.PORT.
+[http_service]
+  internal_port = 3000
+  force_https = true             # redirect any http:// to https://
+  auto_stop_machines = "off"     # keep alive for demo predictability
+  auto_start_machines = true
+  min_machines_running = 1
+
+  # Health check: Nest's root controller responds at GET /.
+  [[http_service.checks]]
+    grace_period = "30s"         # give the migrate step time on first boot
+    interval = "30s"
+    method = "GET"
+    timeout = "5s"
+    path = "/"
+
+# Environment variables that are SAFE to commit (non-secret).
+# Secrets (DATABASE_URL, JWT_SECRET, etc.) go via `fly secrets set ...`.
+[env]
+  NODE_ENV = "production"
+  PORT = "3000"

@@ -20,7 +20,29 @@ export class ApiError extends Error {
   }
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+// Resolve the backend URL.
+//   - If NEXT_PUBLIC_API_URL is set, use it (production case via Vercel
+//     Settings → Environment Variables).
+//   - In dev, fall back to localhost:3100 (matches backend/.env PORT=3100).
+//   - In production (window present + Vercel hostname), warn loudly into the
+//     console so the failure is obvious instead of mysterious CORS errors.
+const API_URL = (() => {
+  const fromEnv = process.env.NEXT_PUBLIC_API_URL;
+  if (fromEnv && fromEnv.trim().length > 0) return fromEnv.replace(/\/+$/, "");
+  if (
+    typeof window !== "undefined" &&
+    !/^localhost|^127\.0\.0\.1/.test(window.location.hostname)
+  ) {
+    // Visible in browser devtools — much easier to debug than a CORS error.
+    // eslint-disable-next-line no-console
+    console.error(
+      "NEXT_PUBLIC_API_URL is not set. The frontend is falling back to " +
+        "http://localhost:3000 which will fail in production. Set it in " +
+        "Vercel Settings → Environment Variables and redeploy.",
+    );
+  }
+  return "http://localhost:3100";
+})();
 
 const appendQuery = (url: URL, query?: Record<string, QueryValue>) => {
   if (!query) return;

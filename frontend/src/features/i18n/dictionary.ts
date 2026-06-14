@@ -1547,6 +1547,11 @@ const EN: Dictionary = {
   "patient.leaderboard.section_aria": "Choose leaderboard",
   "patient.leaderboard.tab_arcade": "Arcade games",
   "patient.leaderboard.tab_streak": "Smile Streak",
+  // ---- Admin leaderboard switcher ----
+  "admin.leaderboard.section_aria": "Choose leaderboard board",
+  "admin.leaderboard.tab_academic": "Academic",
+  "admin.leaderboard.tab_arcade": "Arcade games",
+  "admin.leaderboard.tab_streak": "Smile Streak",
   // ---- Streak leaderboard section ----
   "streak.lb.eyebrow": "Brush · Floss · Win",
   "streak.lb.heading": "Healthy Smile Standings",
@@ -3785,6 +3790,11 @@ const AR: Dictionary = {
   "patient.leaderboard.section_aria": "اختر لوحة المتصدرين",
   "patient.leaderboard.tab_arcade": "ألعاب الأركيد",
   "patient.leaderboard.tab_streak": "سلسلة الابتسامة",
+  // ---- Admin leaderboard switcher (AR) ----
+  "admin.leaderboard.section_aria": "اختر لوحة المتصدرين",
+  "admin.leaderboard.tab_academic": "الأكاديمية",
+  "admin.leaderboard.tab_arcade": "ألعاب الأركيد",
+  "admin.leaderboard.tab_streak": "سلسلة الابتسامة",
   // ---- Streak leaderboard section (AR) ----
   "streak.lb.eyebrow": "نظّف · خيّط · افز",
   "streak.lb.heading": "ترتيب الابتسامة الصحية",
