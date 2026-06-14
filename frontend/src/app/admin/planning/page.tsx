@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { Suspense, useEffect, useRef } from "react";
 import { AdminShell } from "@/features/admin/components/admin-shell";
 import { PlanningAssignmentsView } from "./ui/planning-assignments-view";
 import { PlanningDeleteDialog } from "./ui/planning-delete-dialog";
@@ -38,6 +38,16 @@ const accentAction =
   "inline-flex min-h-[3rem] items-center justify-center rounded-[20px] border border-[rgba(137,219,255,0.24)] bg-[linear-gradient(135deg,rgba(10,22,40,0.94),rgba(7,111,133,0.9))] px-5 py-3 text-sm font-semibold text-white shadow-[0_24px_48px_rgba(6,17,34,0.24)] transition hover:-translate-y-[1px] hover:shadow-[0_28px_56px_rgba(6,17,34,0.3)]";
 
 export default function AdminPlanningPage() {
+  // Suspense wrapper required by Next.js when a child reads useSearchParams,
+  // otherwise the production build fails to prerender this route.
+  return (
+    <Suspense fallback={null}>
+      <AdminPlanningPageInner />
+    </Suspense>
+  );
+}
+
+function AdminPlanningPageInner() {
   const t = useTranslation();
   const {
     loading,
