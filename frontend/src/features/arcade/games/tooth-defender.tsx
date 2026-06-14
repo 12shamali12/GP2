@@ -34,6 +34,12 @@ type GameProps = {
   onCancel: () => void;
   /** Top-bar portal target for the focus-mode HUD. */
   hudSlot?: HTMLElement | null;
+  /**
+   * Score that, if crossed mid-run, ends the round with a "level cleared"
+   * celebration. Null when there's no extra unlock at stake (level 11 or
+   * the player's already past this level's threshold).
+   */
+  winThreshold?: number | null;
 };
 
 const TOOTH_RADIUS = 0.85;
@@ -84,6 +90,7 @@ export function ToothDefenderGame({
   onFinish,
   onCancel,
   hudSlot,
+  winThreshold,
 }: GameProps) {
   void onCancel; // Quit is owned by the parent's Exit button.
   const t = useTranslation();
@@ -92,6 +99,9 @@ export function ToothDefenderGame({
   const [killCount, setKillCount] = useState(0);
   const [combo, setCombo] = useState(0);
   const [running, setRunning] = useState(true);
+  // Flips when the threshold cutoff fires so the end overlay celebrates
+  // "Level cleared!" instead of the default "Tooth breached" loss message.
+  const [won, setWon] = useState(false);
   // Screen-space pointer FX (DOM-overlay on top of the Canvas). Each entry
   // is positioned absolutely in % units so it survives canvas resizes.
   const [tapFx, setTapFx] = useState<
@@ -127,6 +137,17 @@ export function ToothDefenderGame({
   useEffect(() => {
     if (lives <= 0) finish();
   }, [lives, finish]);
+
+  // Threshold cutoff — end the run early once the score clears the per-level
+  // unlock target so the player gets the "level cleared!" payoff instead of
+  // having to wait for the tooth to die.
+  useEffect(() => {
+    if (winThreshold == null) return;
+    if (score >= winThreshold) {
+      setWon(true);
+      finish();
+    }
+  }, [score, winThreshold, finish]);
 
   /**
    * Emit a screen-space FX overlay (popup / ripple). xPct/yPct are 0..100
@@ -305,14 +326,22 @@ export function ToothDefenderGame({
         {!running ? (
           <div className="absolute inset-0 flex items-center justify-center bg-[rgba(6,20,31,0.55)] backdrop-blur-[6px]">
             <div
-              className="rounded-[24px] border border-rose-200/40 bg-[linear-gradient(135deg,rgba(124,45,18,0.92),rgba(76,29,149,0.92))] px-7 py-5 text-center text-white shadow-[0_30px_80px_rgba(7,18,34,0.55)]"
+              className={`rounded-[24px] border px-7 py-5 text-center text-white shadow-[0_30px_80px_rgba(7,18,34,0.55)] ${
+                won
+                  ? "border-emerald-200/60 bg-[linear-gradient(135deg,rgba(5,150,105,0.92),rgba(13,148,136,0.92))]"
+                  : "border-rose-200/40 bg-[linear-gradient(135deg,rgba(124,45,18,0.92),rgba(76,29,149,0.92))]"
+              }`}
               style={{
                 animation:
                   "denty-pop 380ms cubic-bezier(0.34, 1.56, 0.64, 1) both",
               }}
             >
-              <p className="text-[11px] font-bold uppercase tracking-[0.32em] text-rose-100/85">
-                Tooth breached
+              <p
+                className={`text-[11px] font-bold uppercase tracking-[0.32em] ${
+                  won ? "text-emerald-100/90" : "text-rose-100/85"
+                }`}
+              >
+                {won ? "Level cleared!" : "Tooth breached"}
               </p>
               <p className="mt-1 text-4xl font-extrabold tabular-nums sm:text-5xl">
                 {score}

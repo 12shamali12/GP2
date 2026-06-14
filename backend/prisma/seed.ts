@@ -629,11 +629,16 @@ async function seedArcadeAttempts(patients: User[]) {
   const todayLocal = new Date(Date.now() + AMMAN_OFFSET_MS);
 
   // (game, baseScore, maxBoost) — boost scales with day-index so older
-  // attempts look "warmup" and newer ones approach personal bests.
+  // attempts look "warmup" and newer ones approach personal bests. The
+  // base+boost numbers are tuned so the demo-unlock patient (Hanan)
+  // comfortably clears every per-level threshold in arcade.service.ts.
   const games = [
     { type: "PLAQUE_BLASTER" as const, base: 380, maxBoost: 2000 },
     { type: "TOOTH_DEFENDER" as const, base: 140, maxBoost: 1300 },
     { type: "FLOSS_RUSH" as const, base: 70, maxBoost: 800 },
+    { type: "TOOTH_IQ" as const, base: 700, maxBoost: 2400 },
+    { type: "MATCH_LAB" as const, base: 600, maxBoost: 6500 },
+    { type: "BRUSH_BUDDY" as const, base: 350, maxBoost: 5200 },
   ];
 
   for (const patient of patients) {
@@ -655,7 +660,13 @@ async function seedArcadeAttempts(patients: User[]) {
 
       const attempts: {
         patientId: string;
-        gameType: "PLAQUE_BLASTER" | "TOOTH_DEFENDER" | "FLOSS_RUSH";
+        gameType:
+          | "PLAQUE_BLASTER"
+          | "TOOTH_DEFENDER"
+          | "FLOSS_RUSH"
+          | "TOOTH_IQ"
+          | "MATCH_LAB"
+          | "BRUSH_BUDDY";
         dateKey: string;
         score: number;
         streakLevel: number;

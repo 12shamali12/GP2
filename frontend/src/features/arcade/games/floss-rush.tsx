@@ -78,6 +78,12 @@ type GameProps = {
   onCancel: () => void;
   /** Top-bar portal target for the focus-mode HUD. */
   hudSlot?: HTMLElement | null;
+  /**
+   * Score that, if crossed mid-run, ends the round with a "level cleared"
+   * celebration. Null when there's no extra unlock at stake (level 11 or
+   * the player's already past this level's threshold).
+   */
+  winThreshold?: number | null;
 };
 
 export function FlossRushGame({
@@ -85,6 +91,7 @@ export function FlossRushGame({
   onFinish,
   onCancel,
   hudSlot,
+  winThreshold,
 }: GameProps) {
   void onCancel; // Quit is owned by the parent's Exit button.
   const t = useTranslation();
@@ -109,6 +116,9 @@ export function FlossRushGame({
   const [laneGlowId, setLaneGlowId] = useState(0);
   // Crash flash — pulses red when sugar is hit (sells the game-over moment).
   const [crashed, setCrashed] = useState(false);
+  // Level-cleared flash — fires when total crosses the unlock threshold.
+  // Mutually exclusive with `crashed` (the rAF loop returns after either).
+  const [won, setWon] = useState(false);
 
   const itemsRef = useRef<Item[]>([]);
   // DOM refs per item — used to apply translateX every frame without going
@@ -323,6 +333,18 @@ export function FlossRushGame({
         return;
       }
 
+      // Threshold cutoff — once total clears the per-level unlock target,
+      // end the run early so the player gets the "level cleared!" payoff
+      // instead of being forced to keep going until they touch sugar.
+      if (winThreshold != null) {
+        const total = scoreRef.current + Math.floor(distanceRef.current);
+        if (total >= winThreshold) {
+          setWon(true);
+          finish();
+          return;
+        }
+      }
+
       raf = requestAnimationFrame(tick);
     };
 
@@ -330,7 +352,7 @@ export function FlossRushGame({
     lastSpawnRef.current = performance.now();
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [running, level, popFloat, finish]);
+  }, [running, level, popFloat, finish, winThreshold]);
 
   /* -------------------------------------------------------------------- */
   /* Render                                                               */
@@ -533,14 +555,26 @@ export function FlossRushGame({
         {!running ? (
           <div className="absolute inset-0 z-40 flex items-center justify-center bg-[rgba(6,20,31,0.55)] backdrop-blur-[6px]">
             <div
-              className="rounded-[24px] border border-amber-200/40 bg-[linear-gradient(135deg,rgba(15,118,110,0.92),rgba(8,47,73,0.92))] px-7 py-5 text-center text-white shadow-[0_30px_80px_rgba(7,18,34,0.55)]"
+              className={`rounded-[24px] border px-7 py-5 text-center text-white shadow-[0_30px_80px_rgba(7,18,34,0.55)] ${
+                won
+                  ? "border-emerald-200/60 bg-[linear-gradient(135deg,rgba(5,150,105,0.92),rgba(13,148,136,0.92))]"
+                  : "border-amber-200/40 bg-[linear-gradient(135deg,rgba(15,118,110,0.92),rgba(8,47,73,0.92))]"
+              }`}
               style={{
                 animation:
                   "denty-pop 380ms cubic-bezier(0.34, 1.56, 0.64, 1) both",
               }}
             >
-              <p className="text-[11px] font-bold uppercase tracking-[0.32em] text-amber-200/85">
-                {crashed ? "Crashed into sugar" : "Run complete"}
+              <p
+                className={`text-[11px] font-bold uppercase tracking-[0.32em] ${
+                  won ? "text-emerald-100/90" : "text-amber-200/85"
+                }`}
+              >
+                {won
+                  ? "Level cleared!"
+                  : crashed
+                    ? "Crashed into sugar"
+                    : "Run complete"}
               </p>
               <p className="mt-1 text-4xl font-extrabold tabular-nums sm:text-5xl">
                 {total.toLocaleString()}

@@ -219,6 +219,22 @@ export function ArcadeHub({ onOpenLeaderboard }: ArcadeHubProps) {
   /* -------------------------------------------------------------------- */
 
   if (mode.kind === "playing" || mode.kind === "result") {
+    // Compute the early-finish threshold for open-ended games. Only fires
+    // when winning this round at this level would *unlock* a new level —
+    // if the player is replaying a level they've already cleared, the
+    // threshold is null and the game runs to its normal end.
+    const winThreshold: number | null = (() => {
+      if (mode.kind !== "playing") return null;
+      const entry = byType.get(mode.game);
+      if (!entry) return null;
+      if (mode.level >= 11) return null;
+      const idx = mode.level - 1;
+      const threshold = entry.thresholds[idx];
+      if (threshold == null) return null;
+      const bestAtLevel = entry.bestScorePerLevel?.[idx] ?? 0;
+      if (bestAtLevel >= threshold) return null;
+      return threshold;
+    })();
     return (
       <>
         {/* Placeholder in the original surface — keeps the panel from
@@ -233,6 +249,7 @@ export function ArcadeHub({ onOpenLeaderboard }: ArcadeHubProps) {
           level={mode.level}
           result={mode.kind === "result" ? mode.response : null}
           finalScore={mode.kind === "result" ? mode.score : null}
+          winThreshold={winThreshold}
           onFinish={(s, dur) => void handleFinish(mode.game, s, dur)}
           onCancel={handleCancel}
           onPlayAgain={() => {
@@ -517,6 +534,12 @@ type ArcadeFullscreenStageProps = {
   result: SubmitArcadeScoreResponse | null;
   /** Final score for this round, used by the celebration. */
   finalScore: number | null;
+  /**
+   * Score at which open-ended games (Floss Rush, Tooth Defender) cut the
+   * round short with a "level cleared" celebration. Null when no extra unlock
+   * is at stake (level 11 or the player's already past this level).
+   */
+  winThreshold: number | null;
   onFinish: (score: number, durationMs: number) => void;
   onCancel: () => void;
   /** Called from the celebration's "Play again" button. */
@@ -540,6 +563,7 @@ function ArcadeFullscreenStage({
   level,
   result,
   finalScore,
+  winThreshold,
   onFinish,
   onCancel,
   onPlayAgain,
@@ -677,6 +701,7 @@ function ArcadeFullscreenStage({
               onFinish={onFinish}
               onCancel={onCancel}
               hudSlot={hudSlot}
+              winThreshold={winThreshold}
             />
           ) : game === "FLOSS_RUSH" ? (
             <FlossRushGame
@@ -684,6 +709,7 @@ function ArcadeFullscreenStage({
               onFinish={onFinish}
               onCancel={onCancel}
               hudSlot={hudSlot}
+              winThreshold={winThreshold}
             />
           ) : game === "TOOTH_IQ" ? (
             <ToothIqGame
